@@ -9,7 +9,7 @@ import pytz
 from collections import Counter
 
 # Set page config
-st.set_page_config(page_title="Enhanced Cybersecurity Assessment Dashboard", layout="wide")
+st.set_page_config(page_title="Orizon Dashboard", layout="wide")
 
 # Utility functions
 @st.cache_data
