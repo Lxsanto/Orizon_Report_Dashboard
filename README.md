@@ -73,7 +73,7 @@ Contributions to the Orizon Security Dashboard are welcome. Please follow these 
 5. Open a Pull Request
 
 ## License
-...
+MIT License
 
 ## Contact
 Luca Lorenzi luca.lorenzi@orizon.one
