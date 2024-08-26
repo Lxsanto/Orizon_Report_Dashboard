@@ -6,8 +6,6 @@ import json
 import networkx as nx
 from datetime import datetime, timedelta
 import pytz
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
@@ -16,12 +14,90 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from docx import Document
 from docx.shared import Inches
-from utils import taglia_fino_all_ultimo_punto
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
+import torch
+
+# Do you want to clear cached model?
+clear = False
+if clear:
+    st.cache_resource.clear()
+
+# select here LLM setups
+model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+auth_token = ""
 
 # Set page config
 st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
 
-# Custom CSS for a clean, minimalist, and technical UI
+
+
+### Utility functions ###
+
+@st.cache_resource
+def load_llama_model(model_id = "", auth_token = ''):
+
+    if not torch.cuda.is_available():
+        print("CUDA GPU not available. Model will be loaded on CPU.")
+    else:
+        print("CUDA GPU available")
+
+    tokenizer = AutoTokenizer.from_pretrained(model_id, token=auth_token)
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_id, 
+                                                    torch_dtype=torch.bfloat16, 
+                                                    device_map="auto", 
+                                                    token=auth_token
+                                                    )
+
+    if tokenizer is None or model is None:
+        st.error("Failed to load Orizon Engine!")
+        return None
+    else:
+        print(f"Model loaded on {model.device}")
+        return tokenizer, model
+
+@st.cache_data
+def load_data(file):
+    if file is not None:
+        try:
+            data = json.loads(file.getvalue().decode('utf-8'))
+            if isinstance(data, dict):
+                return pd.DataFrame(data)
+            elif isinstance(data, list):
+                return pd.DataFrame(data)
+            else:
+                st.error("Unrecognized data format. Please upload a valid JSON file.")
+                return None
+        except Exception as e:
+            st.error(f"Error loading data: {str(e)}")
+            return None
+    return None
+
+def calculate_risk_score(vulnerabilities, severity_column):
+    severity_weights = {'critical': 10, 'high': 8, 'medium': 5, 'low': 2, 'info': 1}
+    total_weight = sum(severity_weights.get(str(v).lower(), 0) for v in vulnerabilities[severity_column])
+    max_weight = len(vulnerabilities) * 10
+    return 100 - int((total_weight / max_weight) * 100) if max_weight > 0 else 100
+
+@st.cache_data
+def generate_orizon_analysis(_tokenizer, _model, prompt, max_length=None):
+    try:
+        chat_pipeline = pipeline(
+                                "text-generation",
+                                model=_model,
+                                tokenizer=_tokenizer,
+                                device_map="auto")
+        
+        response = chat_pipeline(prompt)[0]['generated_text']
+        
+        return response
+    except Exception as e:
+        st.error(f"Error generating analysis: {str(e)}")
+        return "Analysis generation failed. Please try again."
+    
+
+
+### Streamlit CSS dashboard setups ###
+
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
@@ -168,68 +244,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Importazione condizionale di transformers
-try:
-    from transformers import AutoTokenizer, AutoModelForCausalLM
-except ImportError:
-    st.error("Failed to import transformers. Please make sure it's installed correctly.")
-    AutoTokenizer = None
-    AutoModelForCausalLM = None
 
-#@st.cache_resource
-def load_llama_model():
-    with st.spinner("Initializing Orizon Engine..."):
-        try:
-            model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-            auth_token = "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"  
-            tokenizer = AutoTokenizer.from_pretrained(model_id, token=auth_token)
-            model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16, device_map="auto", token=auth_token)
-            return tokenizer, model
-        except Exception as e:
-            st.error(f"Failed to load Orizon Engine: {str(e)}")
-            return None, None
+### Prompt eng ### 
 
-# Utility functions
-#@st.cache_data
-def load_data(file):
-    if file is not None:
-        try:
-            data = json.loads(file.getvalue().decode('utf-8'))
-            if isinstance(data, dict):
-                return pd.DataFrame(data)
-            elif isinstance(data, list):
-                return pd.DataFrame(data)
-            else:
-                st.error("Unrecognized data format. Please upload a valid JSON file.")
-                return None
-        except Exception as e:
-            st.error(f"Error loading data: {str(e)}")
-            return None
-    return None
-
-def calculate_risk_score(vulnerabilities, severity_column):
-    severity_weights = {'critical': 10, 'high': 8, 'medium': 5, 'low': 2, 'info': 1}
-    total_weight = sum(severity_weights.get(str(v).lower(), 0) for v in vulnerabilities[severity_column])
-    max_weight = len(vulnerabilities) * 10
-    return 100 - int((total_weight / max_weight) * 100) if max_weight > 0 else 100
-
-#@st.cache_data
-def generate_orizon_analysis(_tokenizer, _model, prompt, max_length=800):
-    try:
-        inputs = _tokenizer(prompt, return_tensors="pt").to(_model.device)
-        outputs = _model.generate(**inputs, max_new_tokens=max_length, temperature=0.7)
-        full_output = _tokenizer.decode(outputs[0], skip_special_tokens=True)
-        
-        # Extract only the generated response, excluding the initial prompt
-        response = full_output[len(prompt):].strip()
-        response = taglia_fino_all_ultimo_punto(response)
-        
-        return response
-    except Exception as e:
-        st.error(f"Error generating analysis: {str(e)}")
-        return "Analysis generation failed. Please try again."
-
-# Analysis functions
 def analyze_overview(_tokenizer, _model, total, risk_score, critical, high, medium, low):
     prompt = f"""As a cybersecurity expert, provide a comprehensive analysis of the following security overview:
 
@@ -1209,9 +1226,6 @@ def main():
 
         # Load model
         tokenizer, model = load_llama_model()
-        if tokenizer is None or model is None:
-            st.error("Failed to initialize Orizon Engine. Please refresh the page and try again.")
-            return
 
         # Automatic column detection
         severity_column = 'severity' if 'severity' in filtered_vulnerabilities.columns else None
