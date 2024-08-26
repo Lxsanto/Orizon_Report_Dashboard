@@ -6,10 +6,8 @@ import json
 import networkx as nx
 from datetime import datetime, timedelta
 import pytz
-from collections import Counter
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-import time
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
@@ -18,8 +16,7 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from docx import Document
 from docx.shared import Inches
-import seaborn as sns
-import matplotlib.pyplot as plt
+from utils import taglia_fino_all_ultimo_punto
 
 # Set page config
 st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
@@ -179,12 +176,12 @@ except ImportError:
     AutoTokenizer = None
     AutoModelForCausalLM = None
 
-@st.cache_resource
+#@st.cache_resource
 def load_llama_model():
     with st.spinner("Initializing Orizon Engine..."):
         try:
             model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-            auth_token = "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"  
+            auth_token = "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"  
             tokenizer = AutoTokenizer.from_pretrained(model_id, token=auth_token)
             model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16, device_map="auto", token=auth_token)
             return tokenizer, model
@@ -193,7 +190,7 @@ def load_llama_model():
             return None, None
 
 # Utility functions
-@st.cache_data
+#@st.cache_data
 def load_data(file):
     if file is not None:
         try:
@@ -216,7 +213,7 @@ def calculate_risk_score(vulnerabilities, severity_column):
     max_weight = len(vulnerabilities) * 10
     return 100 - int((total_weight / max_weight) * 100) if max_weight > 0 else 100
 
-@st.cache_data
+#@st.cache_data
 def generate_orizon_analysis(_tokenizer, _model, prompt, max_length=800):
     try:
         inputs = _tokenizer(prompt, return_tensors="pt").to(_model.device)
@@ -225,6 +222,7 @@ def generate_orizon_analysis(_tokenizer, _model, prompt, max_length=800):
         
         # Extract only the generated response, excluding the initial prompt
         response = full_output[len(prompt):].strip()
+        response = taglia_fino_all_ultimo_punto(response)
         
         return response
     except Exception as e:
