@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import json
 import networkx as nx
+import time
 from datetime import datetime, timedelta
 import pytz
 from reportlab.lib import colors
@@ -14,8 +15,13 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from docx import Document
 from docx.shared import Inches
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
+from transformers import AutoTokenizer, pipeline
 import torch
+import os
+from GPU_utils import print_gpu_utilization, print_summary
+
+# Set PYTORCH_CUDA_ALLOC_CONF environment variable
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 # Do you want to clear cached model?
 clear = False
@@ -23,8 +29,9 @@ if clear:
     st.cache_resource.clear()
 
 # select here LLM setups
-model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-auth_token = ""
+model_id = "Qwen/Qwen2-1.5B-Instruct"
+auth_token = "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"
+_pipeline = None
 
 # Set page config
 st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
@@ -34,26 +41,36 @@ st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡�
 ### Utility functions ###
 
 @st.cache_resource
-def load_llama_model(model_id = "", auth_token = ''):
+def load_llama_model(model_id = model_id, auth_token = auth_token):
 
     if not torch.cuda.is_available():
         print("CUDA GPU not available. Model will be loaded on CPU.")
     else:
-        print("CUDA GPU available")
+        print("CUDA is available. Backend and pinned memory configurations are applied.")
+        print_gpu_utilization()
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id, token=auth_token)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_id, 
-                                                    torch_dtype=torch.bfloat16, 
-                                                    device_map="auto", 
-                                                    token=auth_token
-                                                    )
+    
+    try:
+        model_kwargs = {
+                "torch_dtype": torch.bfloat16
+        }
+        _tokenizer = AutoTokenizer.from_pretrained(model_id, 
+                                                   use_fast= True)
+        chat_pipeline = pipeline("text-generation", 
+                             model=model_id,
+                             token=auth_token,
+                             tokenizer=_tokenizer,
+                             device_map="auto",
+                             model_kwargs=model_kwargs)
+        
+        print(f'Pipeline loaded on {chat_pipeline.device}')
 
-    if tokenizer is None or model is None:
-        st.error("Failed to load Orizon Engine!")
-        return None
-    else:
-        print(f"Model loaded on {model.device}")
-        return tokenizer, model
+        # save the model in a global variable
+        global _pipeline
+        _pipeline = chat_pipeline
+    
+    except Exception as e:
+        st.error(f"Error loading the model: {str(e)}")
 
 @st.cache_data
 def load_data(file):
@@ -79,17 +96,17 @@ def calculate_risk_score(vulnerabilities, severity_column):
     return 100 - int((total_weight / max_weight) * 100) if max_weight > 0 else 100
 
 @st.cache_data
-def generate_orizon_analysis(_tokenizer, _model, prompt, max_length=None):
+def generate_orizon_analysis(prompt, max_new_tokens=256):
+
     try:
-        chat_pipeline = pipeline(
-                                "text-generation",
-                                model=_model,
-                                tokenizer=_tokenizer,
-                                device_map="auto")
-        
-        response = chat_pipeline(prompt)[0]['generated_text']
-        
-        return response
+        messages = [{'role': 'system', 'content': 'You are a Cybersecurity expert, i need your help'},
+            {'role': 'user', 'content': prompt}]
+        response = _pipeline(messages, max_new_tokens=1000)[0]['generated_text']
+        response_text = response[-1]['content'] 
+        print_gpu_utilization()
+
+        return response_text
+    
     except Exception as e:
         st.error(f"Error generating analysis: {str(e)}")
         return "Analysis generation failed. Please try again."
@@ -247,8 +264,8 @@ st.markdown("""
 
 ### Prompt eng ### 
 
-def analyze_overview(_tokenizer, _model, total, risk_score, critical, high, medium, low):
-    prompt = f"""As a cybersecurity expert, provide a comprehensive analysis of the following security overview:
+def analyze_overview(total, risk_score, critical, high, medium, low):
+    prompt = f"""Provide a detailed analysis of the following security overview:
 
 - Total vulnerabilities: {total}
 - Risk score: {risk_score}/100
@@ -257,659 +274,445 @@ def analyze_overview(_tokenizer, _model, total, risk_score, critical, high, medi
 - Medium vulnerabilities: {medium}
 - Low vulnerabilities: {low}
 
-Your analysis should include:
+Your analysis should cover:
 
 1. Executive Summary (2-3 sentences):
-   - Concise overview of the current security posture
-   - High-level assessment of the overall risk
+   - Brief overview of the security posture and overall risk level.
 
 2. Key Findings (4-5 bullet points):
-   - Most significant results from the data
-   - Patterns or trends in vulnerability distribution
-   - Comparison to industry benchmarks or standards (if applicable)
+   - Highlight significant results, trends in vulnerability distribution, and any comparisons to industry standards.
 
 3. Risk Assessment:
-   - Detailed interpretation of the risk score
-   - Breakdown of vulnerability severity distribution
-   - Potential impact on business operations
+   - Interpret the risk score, detail vulnerability severity, and assess potential business impact.
 
 4. Critical and High Vulnerabilities:
-   - In-depth analysis of critical and high vulnerabilities
-   - Potential consequences if exploited
-   - Urgency of remediation
+   - Analyze critical/high vulnerabilities, potential exploitation consequences, and remediation urgency.
 
 5. Medium and Low Vulnerabilities:
-   - Assessment of medium and low vulnerabilities
-   - Cumulative impact on overall security posture
-   - Prioritization strategy for addressing these issues
+   - Evaluate these vulnerabilities' impact and suggest a prioritization strategy.
 
 6. Areas of Concern (3-4 points):
-   - Identification of main security weak points
-   - Potential root causes of vulnerabilities
-   - Systemic issues that may be contributing to vulnerabilities
+   - Identify key weak points, root causes, and any systemic issues.
 
 7. Recommendations (5-6 points):
-   - Specific, actionable advice to improve security posture
-   - Short-term and long-term strategies
-   - Suggested timelines for implementation
+   - Provide actionable advice with short-term and long-term strategies and suggested timelines.
 
 8. Next Steps (3-4 points):
-   - Immediate actions to take within the next 24-48 hours
-   - Key stakeholders to involve in the remediation process
-   - Metrics to track for measuring improvement
+   - Outline immediate actions, key stakeholders to involve, and metrics to track improvement.
+"""
+    return generate_orizon_analysis(prompt)
 
-Ensure each section is clearly separated, concise, and provides valuable insights for both technical and non-technical stakeholders."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
-
-def analyze_severity_distribution(_tokenizer, _model, severity_counts):
-    prompt = f"""As a cybersecurity analyst, provide a detailed analysis of the following vulnerability severity distribution:
+def analyze_severity_distribution(severity_counts):
+    prompt = f"""Provide an analysis of the following vulnerability severity distribution:
 
 {severity_counts.to_dict()}
 
-Your analysis should include:
+Your analysis should cover:
 
-1. Distribution Overview (2-3 sentences):
-   - Summary of the overall severity distribution
-   - Identification of the most prevalent severity level
+1. Distribution Overview:
+   - Summary of severity distribution
+   - Most prevalent severity level
 
 2. Detailed Breakdown:
-   - Percentage of each severity level (calculate and provide exact percentages)
-   - Ratio of high severity (critical + high) to low severity (medium + low) vulnerabilities
-   - Comparison to industry average distributions (if known)
+   - Percentage of each severity level
+   - High (critical + high) vs. low (medium + low) severity ratio
+   - Industry comparison (if applicable)
 
-3. Critical and High Severity Analysis:
-   - Deep dive into critical and high severity vulnerabilities
-   - Potential impact on the organization's security posture
-   - Urgency of addressing these vulnerabilities
+3. Critical/High Severity:
+   - Impact of critical and high vulnerabilities
+   - Urgency of remediation
 
-4. Medium and Low Severity Considerations:
-   - Analysis of medium and low severity vulnerabilities
-   - Cumulative risk assessment of these lower severity issues
-   - Importance of addressing these alongside high-priority items
+4. Medium/Low Severity:
+   - Cumulative risk of medium and low vulnerabilities
+   - Importance of addressing alongside high-priority items
 
 5. Trend Analysis:
-   - Identification of any patterns or trends in the severity distribution
-   - Comparison to previous assessments or industry trends (if data available)
+   - Patterns in severity distribution
+   - Comparison to past data or industry trends
 
 6. Risk Implications:
-   - Overall risk assessment based on the severity distribution
-   - Potential consequences if the current distribution persists
-   - Impact on the organization's compliance and security standards
+   - Overall risk from current distribution
+   - Potential compliance/security impact
 
 7. Remediation Strategy:
-   - Proposed approach for addressing vulnerabilities across all severity levels
-   - Prioritization framework for balancing high-severity fixes with lower-severity maintenance
+   - Approach to address vulnerabilities across all severities
+   - Prioritization framework
 
-8. Recommendations (4-5 points):
-   - Specific advice to improve the severity distribution
-   - Strategies to reduce the percentage of high and critical severity vulnerabilities
-   - Suggestions for ongoing vulnerability management processes
+8. Recommendations:
+   - Advice to improve severity distribution
+   - Strategies to reduce high/critical vulnerabilities
+   - Ongoing management suggestions
 
-9. Key Performance Indicators:
-   - Metrics to monitor for tracking improvements in severity distribution
-   - Suggested targets or benchmarks for each severity level
-   - Frequency of reassessment and reporting
+9. KPIs:
+   - Metrics for tracking severity distribution improvements
+   - Targets and reassessment frequency
 
-Ensure each section provides actionable insights and is tailored to both technical and management audiences."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Provide actionable insights suitable for both technical and management audiences."""
+    return generate_orizon_analysis(prompt)
 
-def analyze_timeline(_tokenizer, _model, recent_vulnerabilities, recent_critical_high):
-    prompt = f"""As a cybersecurity trend analyst, provide a comprehensive analysis of the following vulnerability discovery trend:
+def analyze_timeline(recent_vulnerabilities, recent_critical_high):
+    prompt = f"""Provide an analysis of the following vulnerability discovery trend:
 
-- New vulnerabilities discovered in the last 30 days: {len(recent_vulnerabilities)}
-- Of which are critical or high severity: {recent_critical_high}
+- New vulnerabilities in the last 30 days: {len(recent_vulnerabilities)}
+- Critical/High severity: {recent_critical_high}
 
-Your analysis should include:
+Your analysis should cover:
 
-1. Trend Summary (2-3 sentences):
-   - Overview of the vulnerability discovery rate in the last 30 days
-   - Highlight of the proportion of critical/high severity vulnerabilities
+1. Trend Summary:
+   - Overview of the discovery rate and critical/high proportion in the last 30 days.
 
 2. Discovery Rate Analysis:
-   - Calculation of average new vulnerabilities per day
-   - Week-over-week or month-over-month comparison (if historical data is available)
-   - Identification of any spikes or anomalies in the discovery rate
+   - Average new vulnerabilities per day, with comparisons to previous periods and identification of anomalies.
 
 3. Severity Breakdown:
-   - Detailed analysis of the {recent_critical_high} critical/high severity vulnerabilities
-   - Percentage of critical/high vulnerabilities compared to total discoveries
-   - Potential reasons for the current severity distribution
+   - Analysis of the {recent_critical_high} critical/high vulnerabilities and their percentage of total discoveries.
 
 4. Impact Assessment:
-   - Evaluation of how this discovery trend affects the overall security posture
-   - Potential consequences if the current trend continues
-   - Comparison to industry benchmarks or expected discovery rates
+   - How this trend affects security posture, potential consequences, and comparison to industry benchmarks.
 
 5. Root Cause Analysis:
-   - Potential factors contributing to the current discovery trend
-   - Correlation with any recent changes in the IT environment, security practices, or scanning methodologies
+   - Factors behind the discovery trend, including recent changes in IT or security practices.
 
 6. Resource Implications:
-   - Assessment of the organization's capacity to address the current rate of discoveries
-   - Potential strain on security teams and remediation resources
+   - Organization’s capacity to address the discovery rate and impact on security resources.
 
-7. Projections and Forecasting:
-   - Estimated trend for the next 30-60 days based on current data
-   - Best-case and worst-case scenarios for vulnerability accumulation
+7. Projections:
+   - Estimated trends for the next 30-60 days with best-case and worst-case scenarios.
 
 8. Risk Mitigation Strategies:
-   - Proposed approaches to manage the flow of new vulnerabilities
-   - Strategies to prioritize and address critical/high severity issues rapidly
+   - Approaches to manage new vulnerabilities and prioritize critical/high severity issues.
 
-9. Recommendations (5-6 points):
-   - Specific actions to improve vulnerability discovery and remediation processes
-   - Suggestions for enhancing the security posture to reduce new vulnerability introductions
-   - Advice on balancing proactive security measures with reactive vulnerability management
+9. Recommendations:
+   - Actions to improve discovery and remediation processes, enhance security posture, and balance proactive/reactive measures.
 
-10. Continuous Monitoring Plan:
-    - Key metrics to track for ongoing trend analysis
-    - Suggested frequency of assessments and reporting
-    - Thresholds or triggers for escalating concern or action
+10. Continuous Monitoring:
+    - Key metrics for ongoing analysis, frequency of assessments, and escalation thresholds.
 
-Ensure the analysis is data-driven, provides actionable insights, and considers both immediate tactical responses and long-term strategic improvements."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Ensure the analysis is data-driven, actionable, and considers both tactical and strategic improvements."""
+    return generate_orizon_analysis(prompt)
 
-def analyze_top_vulnerabilities(_tokenizer, _model, most_common_type, common_types, hosts_affected, most_affected_host):
-    prompt = f"""As a senior vulnerability analyst, provide an in-depth analysis of the top vulnerabilities in the system:
+def analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host):
+    prompt = f"""Provide an in-depth analysis of the system's top vulnerabilities:
 
-- Most common vulnerability type: '{most_common_type}' (Frequency: {common_types.iloc[0]})
-- Number of affected hosts: {hosts_affected}
+- Most common vulnerability: '{most_common_type}' (Frequency: {common_types.iloc[0]})
+- Affected hosts: {hosts_affected}
 - Most vulnerable host: {most_affected_host}
 
-Your analysis should include:
+Your analysis should cover:
 
-1. Overview of Top Vulnerabilities (2-3 sentences):
-   - Summary of the most prevalent vulnerability types
-   - Quick assessment of the potential impact on the system
+1. Top Vulnerabilities Overview:
+   - Summary of prevalent types and potential impact.
 
-2. Analysis of Most Common Vulnerability Type:
-   - Detailed description of the '{most_common_type}' vulnerability
-   - Common causes and attack vectors associated with this vulnerability
-   - Potential consequences if exploited
-   - Industry context: how common is this vulnerability type across similar systems?
+2. Most Common Vulnerability:
+   - Description of '{most_common_type}', causes, attack vectors, and potential consequences.
+   - Industry context: commonality in similar systems.
 
-3. Vulnerability Spread Assessment:
-   - Analysis of the number of affected hosts ({hosts_affected})
-   - Percentage of total network affected
-   - Potential for lateral movement or escalation across the network
+3. Spread Assessment:
+   - Analysis of affected hosts ({hosts_affected}), percentage of network affected, and risk of lateral movement.
 
-4. Most Vulnerable Host Analysis:
-   - Detailed examination of why {most_affected_host} is the most affected
-   - Potential reasons for its heightened vulnerability (e.g., outdated software, misconfigurations)
-   - Risks associated with this host being compromised
-   - Recommendations for immediate mitigation specific to this host
+4. Most Vulnerable Host:
+   - Examination of why {most_affected_host} is most affected, associated risks, and immediate mitigation recommendations.
 
 5. Patterns and Trends:
-   - Identification of common themes among top vulnerabilities
-   - Any correlations between vulnerability types and specific systems or software
-   - Possible systemic issues contributing to these vulnerabilities
+   - Identification of common themes, correlations, and systemic issues.
 
 6. Risk Assessment:
-   - Overall risk evaluation based on the top vulnerabilities
-   - Potential business impact if these vulnerabilities are exploited
-   - Compliance implications, if any
+   - Evaluation of overall risk, potential business impact, and compliance implications.
 
-7. Mitigation Strategies (5-6 points):
-   - Prioritized list of remediation actions
-   - Both short-term fixes and long-term preventive measures
-   - Specific recommendations for addressing the most common vulnerability types
-   - Suggestions for improving overall system hardening
+7. Mitigation Strategies:
+   - Prioritized remediation actions, short-term fixes, long-term measures, and system hardening recommendations.
 
 8. Resource Allocation:
-   - Estimated effort required for addressing top vulnerabilities
-   - Suggestions for prioritizing remediation efforts
-   - Potential tools or processes to aid in vulnerability management
+   - Effort estimation, prioritization, and tools/processes for vulnerability management.
 
 9. Monitoring and Follow-up:
-   - Key metrics to track for assessing progress in vulnerability reduction
-   - Recommended timeframes for reassessment
-   - Suggestions for ongoing vulnerability management processes
+   - Key metrics, reassessment timeframes, and ongoing management suggestions.
 
 10. Learning Opportunities:
-    - Insights gained from this vulnerability analysis
-    - Recommendations for staff training or awareness programs
-    - Suggestions for improving the vulnerability detection and analysis process
+    - Insights, staff training recommendations, and improvements to detection and analysis processes.
 
-Ensure the analysis is thorough, provides actionable insights, and considers both immediate security improvements and long-term strategic enhancements to the security posture."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Ensure the analysis is thorough, actionable, and considers both immediate and long-term security enhancements."""
+    return generate_orizon_analysis(prompt)
 
-def generate_network_analysis(_tokenizer, _model, top_central, density, communities):
-    prompt = f"""As a network security architect, analyze the following network topology information:
+def generate_network_analysis(top_central, density, communities):
+    prompt = f"""Analyze the following network topology:
 
-- Number of central nodes identified: {len(top_central)}
+- Central nodes: {len(top_central)}
 - Network density: {density:.4f}
-- Number of identified communities: {len(communities)}
+- Identified communities: {len(communities)}
 
-Provide a comprehensive analysis including:
+Provide an analysis including:
 
-1. Topology Overview (2-3 sentences):
-   - Brief description of the overall network structure
-   - Initial assessment of the network's complexity and interconnectedness
+1. Topology Overview:
+   - Summary of network structure and complexity.
 
-2. Central Nodes Analysis:
-   - Importance and role of the {len(top_central)} most central nodes
-   - Potential security implications of these central nodes (e.g., single points of failure, high-value targets)
-   - Recommendations for protecting and monitoring these critical nodes
+2. Central Nodes:
+   - Role and security implications of {len(top_central)} central nodes.
+   - Protection and monitoring recommendations.
 
-3. Network Density Interpretation:
-   - Explanation of the density value {density:.4f} in context
-   - Implications for threat propagation and network resilience
-   - Comparison to ideal density ranges for security and performance
+3. Network Density:
+   - Interpretation of density {density:.4f} and its impact on threat propagation and resilience.
+   - Comparison to ideal security and performance ranges.
 
-4. Community Structure Evaluation:
-   - Significance of having {len(communities)} identified communities
-   - Potential security advantages or vulnerabilities of this community structure
-   - Recommendations for inter-community security measures
+4. Community Structure:
+   - Significance of {len(communities)} communities.
+   - Security implications and inter-community measures.
 
 5. Topological Vulnerabilities:
-   - Identification of potential weak points based on the network structure
-   - Analysis of possible attack vectors that could exploit the current topology
-   - Assessment of the ease of lateral movement within the network
+   - Identification of weak points, potential attack vectors, and lateral movement risk.
 
 6. Resilience and Redundancy:
-   - Evaluation of the network's ability to withstand targeted attacks
-   - Analysis of redundancy in critical paths and systems
-   - Recommendations for improving network resilience
+   - Assessment of network resilience, redundancy, and recommendations for improvement.
 
-7. Segmentation Analysis:
-   - Assessment of current network segmentation based on the topology
-   - Recommendations for optimizing segmentation to enhance security
-   - Potential implementation of zero trust architecture principles
+7. Segmentation:
+   - Evaluation of current segmentation and optimization suggestions.
+   - Potential for zero trust architecture implementation.
 
-8. Traffic Flow Implications:
-   - Analysis of how the network structure might affect traffic patterns
-   - Identification of potential bottlenecks or high-traffic areas
-   - Recommendations for traffic monitoring and analysis
+8. Traffic Flow:
+   - Impact of topology on traffic patterns, bottlenecks, and monitoring recommendations.
 
-9. Scalability and Future Growth:
-   - Assessment of the network's ability to scale based on its current structure
-   - Potential challenges in maintaining security with network growth
-   - Recommendations for scalable security architectures
+9. Scalability:
+   - Network's scalability and security challenges with growth.
+   - Scalable security architecture recommendations.
 
-10. Improvement Recommendations (5-6 points):
-    - Prioritized list of actions to enhance network security based on topological analysis
-    - Suggestions for redesigning problematic areas of the network
-    - Recommendations for implementing advanced security measures (e.g., microsegmentation, SDN)
+10. Improvement Recommendations:
+    - Prioritized actions to enhance security and redesign problematic areas.
 
-11. Monitoring and Maintenance Strategy:
-    - Key metrics to monitor for assessing ongoing network health and security
-    - Recommended frequency for topology reassessment and security audits
-    - Suggestions for automated tools or processes for continuous network analysis
+11. Monitoring and Maintenance:
+    - Key metrics, reassessment frequency, and automated tools for continuous analysis.
 
-12. Compliance and Best Practices:
-    - Evaluation of the network topology against industry standards and best practices
-    - Identification of any compliance issues based on the network structure
-    - Recommendations for aligning the network with security frameworks and regulations
+12. Compliance:
+    - Evaluation against industry standards, compliance issues, and alignment recommendations.
 
-Ensure each section provides actionable insights and considers both immediate security enhancements and long-term strategic improvements to the network architecture."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Ensure actionable insights and consider both immediate and long-term improvements to network security."""
+    return generate_orizon_analysis(prompt)
 
-def analyze_cvss_distribution(_tokenizer, _model, avg_cvss, high_cvss_count, total_vulns):
-    prompt = f"""As a CVSS expert, provide a detailed analysis of the following CVSS score distribution:
+def analyze_cvss_distribution(avg_cvss, high_cvss_count, total_vulns):
+    prompt = f"""Analyze the following CVSS score distribution:
 
 - Average CVSS score: {avg_cvss:.2f}
-- Number of high-risk vulnerabilities (CVSS > 7.0): {high_cvss_count}
-- Total number of vulnerabilities: {total_vulns}
+- High-risk vulnerabilities (CVSS > 7.0): {high_cvss_count}
+- Total vulnerabilities: {total_vulns}
 
 Your analysis should include:
 
-1. Overview (2-3 sentences):
-   - Summary of the CVSS score distribution
-   - Initial assessment of the overall severity landscape
+1. Overview:
+   - Summary of the CVSS score distribution and initial severity assessment.
 
-2. Average Score Analysis:
-   - Interpretation of the average CVSS score of {avg_cvss:.2f}
-   - Comparison with industry standards and benchmarks
-   - Implications of this average score on the overall security posture
+2. Average Score:
+   - Interpretation of {avg_cvss:.2f} average score, industry comparison, and security implications.
 
-3. High-Risk Vulnerabilities Deep Dive:
-   - Analysis of the {high_cvss_count} high-risk vulnerabilities
-   - Percentage of high-risk vulnerabilities in relation to total vulnerabilities
-   - Potential impact and urgency of addressing these high-risk issues
+3. High-Risk Vulnerabilities:
+   - Analysis of {high_cvss_count} high-risk vulnerabilities, their percentage, and urgency.
 
-4. CVSS Score Breakdown:
-   - Distribution of scores across different ranges (e.g., 0-3.9, 4.0-6.9, 7.0-8.9, 9.0-10)
-   - Identification of any patterns or clusters in the score distribution
-   - Analysis of the lowest and highest CVSS scores in the dataset
+4. Score Breakdown:
+   - Distribution across ranges, pattern identification, and analysis of extremes.
 
-5. Temporal and Environmental Considerations:
-   - Discussion on how temporal and environmental metrics might affect the base CVSS scores
-   - Recommendations for incorporating these factors into the risk assessment
+5. Temporal/Environmental Factors:
+   - Impact of these metrics on base CVSS scores and risk assessment recommendations.
 
-6. Impact on Security Posture:
-   - Assessment of how this CVSS distribution affects overall organizational risk
-   - Potential consequences if the current distribution persists
-   - Comparison of the organization's CVSS profile to industry averages or best practices
+6. Security Posture Impact:
+   - Organizational risk assessment, consequences of the current distribution, and industry comparison.
 
 7. Remediation Prioritization:
-   - Strategies for addressing vulnerabilities based on CVSS scores
-   - Balancing the focus between high-risk and lower-risk vulnerabilities
-   - Recommended approach for continuous vulnerability management
+   - Strategies for addressing vulnerabilities based on CVSS scores and continuous management.
 
 8. Resource Allocation:
-   - Suggestions for allocating security resources based on the CVSS distribution
-   - Estimated effort required to address vulnerabilities at different severity levels
+   - Allocation of security resources and effort estimation by severity levels.
 
-9. Recommendations (5-6 points):
-   - Specific actions to improve the CVSS score distribution
-   - Strategies to reduce the number and impact of high-risk vulnerabilities
-   - Suggestions for enhancing the vulnerability assessment and scoring process
+9. Recommendations:
+   - Actions to improve score distribution, reduce high-risk vulnerabilities, and enhance scoring processes.
 
 10. Compliance and Reporting:
-    - Implications of the CVSS distribution on regulatory compliance
-    - Recommendations for reporting CVSS metrics to different stakeholders (e.g., management, board, auditors)
+    - Implications for regulatory compliance and reporting to stakeholders.
 
-11. Trend Analysis and Forecasting:
-    - If historical data is available, analysis of CVSS score trends over time
-    - Predictions for future CVSS distributions if current patterns continue
+11. Trend Analysis:
+    - Historical trends (if available) and predictions for future distributions.
 
 12. Key Performance Indicators:
-    - Metrics to monitor for tracking improvements in CVSS distribution
-    - Suggested targets or benchmarks for CVSS scores
-    - Frequency of reassessment and reporting on CVSS metrics
+    - Metrics for tracking improvements, suggested targets, and reassessment frequency.
 
-Ensure the analysis is thorough, provides actionable insights, and considers both immediate tactical responses and long-term strategic improvements to vulnerability management based on CVSS scores."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Ensure the analysis is thorough, actionable, and considers both tactical and strategic improvements based on CVSS scores."""
+    return generate_orizon_analysis(prompt)
 
-def analyze_vulnerability_age(_tokenizer, _model, avg_age, old_vulnerabilities_count, total_vulns):
-    prompt = f"""As a vulnerability lifecycle management expert, provide a comprehensive analysis of the following vulnerability age distribution:
+def analyze_vulnerability_age(avg_age, old_vulnerabilities_count, total_vulns):
+    prompt = f"""Analyze the following vulnerability age distribution:
 
-- Average age of vulnerabilities: {avg_age:.1f} days
-- Number of vulnerabilities older than 90 days: {old_vulnerabilities_count}
-- Total number of vulnerabilities: {total_vulns}
+- Average age: {avg_age:.1f} days
+- Vulnerabilities older than 90 days: {old_vulnerabilities_count}
+- Total vulnerabilities: {total_vulns}
 
 Your analysis should include:
 
-1. Overview (2-3 sentences):
-   - Summary of the vulnerability age distribution
-   - Initial assessment of the vulnerability management efficiency
+1. Overview:
+   - Summary of the age distribution and initial assessment of management efficiency.
 
-2. Average Age Analysis:
-   - Interpretation of the average age of {avg_age:.1f} days
-   - Comparison with industry best practices and benchmarks
-   - Implications of this average age on the overall security posture
+2. Average Age:
+   - Interpretation of {avg_age:.1f} days, industry comparison, and security implications.
 
-3. Persistent Vulnerabilities Deep Dive:
-   - Analysis of the {old_vulnerabilities_count} vulnerabilities older than 90 days
-   - Percentage of old vulnerabilities in relation to total vulnerabilities
-   - Potential reasons for their persistence (e.g., complexity, resource constraints, risk acceptance)
+3. Persistent Vulnerabilities:
+   - Analysis of {old_vulnerabilities_count} vulnerabilities older than 90 days, their percentage, and persistence reasons.
 
-4. Age Distribution Breakdown:
-   - Distribution of vulnerabilities across different age ranges (e.g., 0-30 days, 31-60 days, 61-90 days, 90+ days)
-   - Identification of any patterns or trends in the age distribution
-   - Analysis of the oldest and newest vulnerabilities in the dataset
+4. Age Breakdown:
+   - Distribution across age ranges, pattern identification, and analysis of extremes.
 
 5. Risk Accumulation:
-   - Assessment of how vulnerability age contributes to cumulative risk
-   - Potential consequences of allowing vulnerabilities to persist
-   - Correlation between vulnerability age and severity (if data available)
+   - Assessment of cumulative risk due to vulnerability age and potential consequences.
 
 6. Remediation Velocity:
-   - Analysis of the organization's speed in addressing vulnerabilities
-   - Comparison of remediation times for different severity levels (if data available)
-   - Identification of bottlenecks in the remediation process
+   - Analysis of remediation speed, severity level comparison, and process bottlenecks.
 
-7. Impact on Security Posture:
-   - Evaluation of how the current age distribution affects overall organizational risk
-   - Potential exposure to threats due to unpatched vulnerabilities
-   - Compliance implications of vulnerability persistence
+7. Security Posture Impact:
+   - Evaluation of risk exposure, compliance implications, and threat potential due to persistence.
 
 8. Remediation Strategy:
-   - Proposed approach for addressing vulnerabilities based on their age and severity
-   - Strategies to reduce the average age of vulnerabilities
-   - Recommendations for dealing with persistent, old vulnerabilities
+   - Approach for addressing vulnerabilities by age and severity, and reducing average age.
 
 9. Resource Allocation:
-   - Suggestions for allocating security resources based on the age distribution
-   - Estimated effort required to address vulnerabilities of different ages
+   - Resource suggestions based on age distribution and effort estimation by age groups.
 
-10. Recommendations (5-6 points):
-    - Specific actions to improve vulnerability lifecycle management
-    - Strategies to prevent vulnerabilities from aging beyond acceptable thresholds
-    - Suggestions for enhancing the vulnerability assessment and remediation processes
+10. Recommendations:
+    - Actions to improve lifecycle management, prevent aging, and enhance remediation processes.
 
 11. Continuous Improvement:
-    - Recommendations for ongoing vulnerability management processes
-    - Strategies for preventing the introduction of new vulnerabilities
-    - Suggestions for improving collaboration between security, IT, and development teams
+    - Ongoing management strategies, prevention of new vulnerabilities, and team collaboration.
 
 12. Key Performance Indicators:
-    - Metrics to monitor for tracking improvements in vulnerability age management
-    - Suggested targets or benchmarks for vulnerability age
-    - Frequency of reassessment and reporting on vulnerability lifecycle metrics
+    - Metrics for tracking age management, suggested benchmarks, and reassessment frequency.
 
 13. Tools and Automation:
-    - Recommendations for tools or automation to assist in vulnerability lifecycle management
-    - Suggestions for integrating vulnerability management into CI/CD pipelines (if applicable)
+    - Tool recommendations, automation suggestions, and CI/CD integration (if applicable).
 
-Ensure the analysis is thorough, provides actionable insights, and considers both immediate tactical responses and long-term strategic improvements to vulnerability lifecycle management."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Ensure the analysis is thorough, actionable, and considers both tactical and strategic improvements to vulnerability lifecycle management."""
+    return generate_orizon_analysis(prompt)
 
-def analyze_vulnerability_types(_tokenizer, _model, most_common_type, frequency, top_10_types):
-    prompt = f"""As a vulnerability categorization expert, provide a detailed analysis of the following vulnerability type distribution:
+def analyze_vulnerability_types(most_common_type, frequency, top_10_types):
+    prompt = f"""Analyze the following vulnerability type distribution:
 
-- Most common vulnerability type: '{most_common_type}' (Frequency: {frequency})
-- Top 10 vulnerability types: {', '.join(top_10_types)}
+- Most common type: '{most_common_type}' (Frequency: {frequency})
+- Top 10 types: {', '.join(top_10_types)}
 
 Your analysis should include:
 
-1. Overview (2-3 sentences):
-   - Summary of the vulnerability type distribution
-   - Initial assessment of the organization's security challenges based on prevalent vulnerability types
+1. Overview:
+   - Summary of type distribution and initial security challenge assessment.
 
-2. Most Common Vulnerability Type Analysis:
-   - Detailed description of the '{most_common_type}' vulnerability
-   - Common causes and attack vectors associated with this vulnerability type
-   - Potential impact and exploitation scenarios
-   - Prevalence of this vulnerability type in the industry
+2. Most Common Type:
+   - Description of '{most_common_type}', causes, attack vectors, impact, and industry prevalence.
 
-3. Top 10 Vulnerability Types Breakdown:
-   - Brief description of each vulnerability type in the top 10 list
-   - Analysis of the distribution and frequency of these types
-   - Identification of any patterns or correlations among the top vulnerability types
+3. Top 10 Types:
+   - Brief description of each, distribution analysis, and pattern identification.
 
 4. Root Cause Analysis:
-   - Exploration of potential systemic issues leading to the most common vulnerability types
-   - Analysis of whether certain vulnerability types are linked to specific technologies, practices, or areas of the infrastructure
+   - Exploration of systemic issues and links to specific technologies or practices.
 
 5. Risk Assessment:
-   - Evaluation of the overall risk posed by the current vulnerability type distribution
-   - Analysis of how different vulnerability types might compound or interact to create more significant risks
+   - Evaluation of overall risk from the type distribution and interaction effects.
 
 6. Industry Comparison:
-   - Comparison of the organization's vulnerability type distribution to industry norms or benchmarks
-   - Identification of any unusual or organization-specific patterns in vulnerability types
+   - Comparison to industry benchmarks and identification of unique patterns.
 
 7. Remediation Strategies:
-   - Targeted approaches for addressing each of the top vulnerability types
-   - Prioritization framework for tackling different vulnerability categories
-   - Recommendations for tools, processes, or practices to prevent recurrence of common vulnerability types
+   - Approaches for addressing top types, prioritization framework, and prevention tools.
 
-8. Security Posture Improvement:
-   - Suggestions for enhancing overall security based on the vulnerability type analysis
-   - Recommendations for security controls or practices that could mitigate multiple vulnerability types simultaneously
+8. Security Posture:
+   - Suggestions for improving security controls and mitigating multiple types.
 
 9. Training and Awareness:
-   - Proposals for staff training programs based on prevalent vulnerability types
-   - Suggestions for developer education to prevent introduction of common vulnerabilities
+   - Proposals for staff training and developer education based on prevalent types.
 
 10. Trend Analysis:
-    - If historical data is available, analysis of how vulnerability types have evolved over time
-    - Predictions for future vulnerability landscapes based on current trends
+    - Analysis of type evolution over time and predictions for future landscapes.
 
-11. Recommendations (5-6 points):
-    - Specific actions to address the most critical vulnerability types
-    - Strategies for reducing the occurrence of common vulnerabilities
-    - Suggestions for improving vulnerability detection and categorization processes
+11. Recommendations:
+    - Actions to address critical types, reduce common vulnerabilities, and improve detection.
 
-12. Continuous Monitoring Plan:
-    - Key metrics to track for ongoing analysis of vulnerability type distribution
-    - Suggested frequency of assessments and reporting
-    - Thresholds or triggers for escalating concern or action based on vulnerability type prevalence
+12. Continuous Monitoring:
+    - Metrics for ongoing analysis, assessment frequency, and escalation thresholds.
 
 13. Tool and Process Evaluation:
-    - Assessment of current vulnerability scanning and management tools' effectiveness in identifying various vulnerability types
-    - Recommendations for tool improvements or new tools to enhance vulnerability type detection and analysis
+    - Assessment of current tools and recommendations for improvements.
 
-Ensure the analysis is comprehensive, provides actionable insights, and considers both immediate tactical responses to current vulnerability types and long-term strategic improvements to prevent future occurrences."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Ensure the analysis is comprehensive, actionable, and considers both immediate responses and long-term improvements."""
+    return generate_orizon_analysis(prompt)
 
-def analyze_remediation_priority(_tokenizer, _model, high_priority_count, total_vulns):
-    prompt = f"""As a vulnerability remediation strategist, provide a comprehensive analysis of the current remediation priority situation:
+def analyze_remediation_priority(high_priority_count, total_vulns):
+    prompt = f"""Analyze the current remediation priority situation:
 
-- Number of high-priority vulnerabilities: {high_priority_count}
-- Total number of vulnerabilities: {total_vulns}
+- High-priority vulnerabilities: {high_priority_count}
+- Total vulnerabilities: {total_vulns}
 
 Your analysis should include:
 
-1. Overview (2-3 sentences):
-   - Summary of the current remediation situation
-   - Initial assessment of the urgency and scale of remediation efforts required
+1. Overview:
+   - Summary of remediation situation and urgency assessment.
 
-2. High-Priority Vulnerabilities Analysis:
-   - Detailed examination of the {high_priority_count} high-priority vulnerabilities
-   - Percentage of high-priority vulnerabilities in relation to total vulnerabilities
-   - Potential impact and risks associated with these high-priority issues
-   - Estimation of the overall risk represented by these vulnerabilities
+2. High-Priority Vulnerabilities:
+   - Examination of {high_priority_count} high-priority issues, their percentage, impact, and overall risk.
 
 3. Remediation Challenges:
-   - Identification of potential obstacles in addressing high-priority vulnerabilities
-   - Analysis of resource requirements (time, personnel, budget) for effective remediation
-   - Consideration of potential business impact during remediation processes
+   - Identification of obstacles, resource requirements, and business impact considerations.
 
 4. Prioritization Strategy:
-   - Proposed framework for prioritizing vulnerability remediation
-   - Criteria to consider beyond just severity (e.g., exploitability, business impact, data sensitivity)
-   - Suggestions for balancing high-priority fixes with ongoing maintenance of lower-priority issues
+   - Framework for prioritization, criteria beyond severity, and balancing high and low-priority fixes.
 
 5. Risk-Based Approach:
-   - Recommendations for adopting a risk-based approach to remediation
-   - Strategies for quantifying and comparing risks across different vulnerabilities
-   - Suggestions for involving business stakeholders in risk assessment and prioritization
+   - Recommendations for a risk-based strategy, risk quantification, and stakeholder involvement.
 
 6. Remediation Timeline:
-   - Proposed timeline for addressing high-priority vulnerabilities
-   - Estimation of time required for full remediation of all identified issues
-   - Suggestions for phased approach to remediation, if applicable
+   - Proposed timeline, full remediation estimation, and phased approach suggestions.
 
 7. Resource Allocation:
-   - Recommendations for allocating personnel and resources to remediation efforts
-   - Suggestions for training or upskilling required for effective remediation
-   - Consideration of potential need for external assistance or specialized tools
+   - Recommendations for resource allocation, training, and potential need for external assistance.
 
-8. Continuous Monitoring and Reassessment:
-   - Strategies for ongoing monitoring of remediation progress
-   - Suggestions for regular reassessment of vulnerability priorities
-   - Recommendations for adjusting remediation strategies based on new findings or changing threat landscape
+8. Continuous Monitoring:
+   - Strategies for monitoring progress, reassessment of priorities, and adjusting strategies.
 
-9. Recommendations (5-6 points):
-   - Specific, actionable steps to begin addressing high-priority vulnerabilities
-   - Strategies for improving overall remediation processes
-   - Suggestions for enhancing vulnerability management lifecycle
+9. Recommendations:
+    - Actionable steps for high-priority issues, process improvement, and lifecycle enhancement.
 
 10. Metrics and KPIs:
-    - Key performance indicators to track remediation progress
-    - Suggested targets or benchmarks for remediation timelines
-    - Metrics to measure the effectiveness of the remediation process
+    - Key indicators, targets, and metrics to track remediation effectiveness.
 
 11. Communication Plan:
-    - Recommendations for reporting remediation progress to various stakeholders
-    - Strategies for maintaining transparency about security risks and remediation efforts
-    - Suggestions for educating the organization about the importance of timely remediation
+    - Reporting strategies, maintaining transparency, and educating the organization.
 
-12. Long-term Preventive Measures:
-    - Recommendations for reducing the introduction of new vulnerabilities
-    - Strategies for improving secure development practices, if applicable
-    - Suggestions for enhancing the overall security posture to minimize future high-priority vulnerabilities
+12. Long-term Measures:
+    - Recommendations for reducing new vulnerabilities, improving secure practices, and enhancing security posture.
 
 13. Compliance Considerations:
-    - Analysis of how the current remediation priorities align with relevant compliance requirements
-    - Recommendations for ensuring remediation efforts satisfy regulatory obligations
+    - Analysis of alignment with compliance requirements and satisfying regulatory obligations.
 
 14. Incident Response Integration:
-    - Suggestions for integrating remediation priorities with incident response planning
-    - Strategies for rapidly addressing high-priority vulnerabilities in the event of an active threat
+    - Suggestions for integrating remediation with incident response and rapid threat response.
 
-Ensure the analysis is thorough, provides actionable insights, and balances the need for urgent remediation of high-priority issues with sustainable, long-term vulnerability management practices."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Ensure the analysis is thorough, actionable, and balances urgent remediation with sustainable, long-term management."""
+    return generate_orizon_analysis(prompt)
 
-def analyze_vulnerability_trend(_tokenizer, _model, current_avg, trend, historical_data):
-    prompt = f"""As a cybersecurity trend analyst, provide a comprehensive analysis of the following vulnerability trend:
+def analyze_vulnerability_trend(current_avg, trend, historical_data):
+    prompt = f"""Analyze the following vulnerability trend:
 
-- Current 7-day moving average of new vulnerabilities: {current_avg:.2f}
+- 7-day moving average of new vulnerabilities: {current_avg:.2f}
 - Observed trend: {trend}
 - Historical data: {historical_data}
 
 Your analysis should include:
 
-1. Overview (2-3 sentences):
-   - Summary of the current vulnerability trend
-   - Initial assessment of the direction and significance of the trend
+1. Overview:
+   - Summary of the current trend and initial significance assessment.
 
-2. 7-Day Moving Average Analysis:
-   - Detailed interpretation of the current average of {current_avg:.2f} new vulnerabilities
-   - Comparison with previous periods (week-over-week, month-over-month)
-   - Identification of any significant changes or anomalies in the moving average
+2. 7-Day Moving Average:
+   - Interpretation of {current_avg:.2f} new vulnerabilities, comparison with previous periods, and anomaly identification.
 
 3. Trend Assessment:
-   - In-depth analysis of the {trend} trend
-   - Quantification of the trend (e.g., percentage increase/decrease over time)
-   - Identification of any patterns, cycles, or seasonality in vulnerability discovery
+   - In-depth analysis of the {trend} trend, quantification, and identification of patterns or seasonality.
 
 4. Historical Context:
-   - Comparison of current trend with historical data
-   - Identification of long-term patterns or shifts in vulnerability discovery rates
-   - Analysis of factors that may have influenced historical trends
+   - Comparison with historical data, identification of long-term patterns, and analysis of influencing factors.
 
-5. Root Cause Analysis:
-   - Exploration of potential causes for the observed trend
-   - Consideration of internal factors (e.g., changes in scanning practices, system updates)
-   - Analysis of external factors (e.g., new threat landscapes, industry-wide vulnerabilities)
-
-6. Impact on Security Posture:
-   - Assessment of how the current trend affects overall organizational risk
-   - Projection of potential consequences if the trend continues
-   - Analysis of the organization's capacity to manage vulnerabilities at the current rate
-
-7. Benchmarking:
-   - Comparison of the organization's vulnerability trend with industry standards or peers
-   - Analysis of how the current trend positions the organization in terms of security maturity
-
-8. Forecasting:
-   - Short-term projections for vulnerability discovery rates (next 30-60 days)
-   - Long-term forecast if current trends persist
-   - Best-case and worst-case scenarios for future vulnerability landscapes
-
-9. Recommendations (5-6 points):
-   - Specific actions based on the current trend and projections
-   - Strategies to capitalize on a positive trend or reverse a negative one
-   - Suggestions for improving vulnerability discovery and management processes
-
-10. Resource Implications:
-    - Analysis of resource requirements to address vulnerabilities at the current rate
-    - Recommendations for scaling remediation efforts if needed
-    - Suggestions for optimizing resource allocation based on trend analysis
-
-11. Risk Management Strategies:
-    - Proposed approaches for managing risk in light of the current trend
-    - Recommendations for adjusting security controls or practices
-    - Suggestions for enhancing resilience against potential increases in vulnerabilities
-
-12. Continuous Monitoring Plan:
-    - Key metrics to track for a more comprehensive understanding of vulnerability trends
-    - Recommended frequency for trend analysis and reporting
-    - Thresholds or triggers for escalating concern or action based on trend data
-
-13. Communication Strategy:
-    - Recommendations for reporting trend data to various stakeholders
-    - Strategies for contextualizing trend information for different audiences (e.g., technical teams, management, board)
-
-14. Trend Correlation Analysis:
-    - Exploration of correlations between vulnerability trends and other security metrics
-    - Analysis of how vulnerability trends might impact or be impacted by other areas of cybersecurity
-
-Ensure the analysis is data-driven, provides actionable insights, and considers both short-term tactical responses and long-term strategic adjustments based on the observed vulnerability trends."""
-    return generate_orizon_analysis(_tokenizer, _model, prompt)
+Ensure the analysis is data-driven, actionable, and considers both short-term responses and long-term adjustments based on observed trends."""
+    
+    return generate_orizon_analysis(prompt)
 
 # Function to format responses
 def format_analysis_response(analysis_content):
@@ -1225,7 +1028,7 @@ def main():
         st.markdown("Powered by advanced AI for comprehensive cybersecurity analysis")
 
         # Load model
-        tokenizer, model = load_llama_model()
+        pipe = load_llama_model()
 
         # Automatic column detection
         severity_column = 'severity' if 'severity' in filtered_vulnerabilities.columns else None
@@ -1285,7 +1088,7 @@ def main():
             """, unsafe_allow_html=True)
 
         with st.expander("View Executive Summary"):
-            st.markdown(format_analysis_response(analyze_overview(tokenizer, model, total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)))
+            st.markdown(format_analysis_response(analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)))
 
         # Security Posture Overview
         st.header("Security Posture Overview", anchor="security-posture-overview")
@@ -1314,7 +1117,7 @@ def main():
         with col2:
             st.subheader("Orizon Engine Analysis")
             with st.spinner("Generating overview analysis..."):
-                overview_analysis = analyze_overview(tokenizer, model, total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)
+                overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)
             st.markdown(format_analysis_response(overview_analysis))
 
         # Severity Distribution
@@ -1335,7 +1138,7 @@ def main():
         with col2:
             st.subheader("Orizon Engine Analysis")
             with st.spinner("Generating severity analysis..."):
-                severity_analysis = analyze_severity_distribution(tokenizer, model, severity_counts)
+                severity_analysis = analyze_severity_distribution(severity_counts)
             st.markdown(format_analysis_response(severity_analysis))
 
         # Vulnerability Timeline
@@ -1349,7 +1152,7 @@ def main():
             recent_vulnerabilities = filtered_vulnerabilities[filtered_vulnerabilities[created_at_column] > (datetime.now(pytz.utc) - timedelta(days=30))]
             recent_critical_high = len(recent_vulnerabilities[recent_vulnerabilities[severity_column].str.lower().isin(['critical', 'high'])])
             with st.spinner("Generating trend analysis..."):
-                trend_analysis = analyze_timeline(tokenizer, model, recent_vulnerabilities, recent_critical_high)
+                trend_analysis = analyze_timeline(recent_vulnerabilities, recent_critical_high)
             st.markdown(format_analysis_response(trend_analysis))
 
         # Top 10 Vulnerabilities
@@ -1372,7 +1175,7 @@ def main():
         hosts_affected = top_10[host_column].nunique()
         most_affected_host = top_10[host_column].value_counts().index[0]
         with st.spinner("Analyzing top vulnerabilities..."):
-            top_vuln_analysis = analyze_top_vulnerabilities(tokenizer, model, most_common_type, common_types, hosts_affected, most_affected_host)
+            top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host)
         st.markdown(format_analysis_response(top_vuln_analysis))
 
         # Network Topology View
@@ -1412,7 +1215,7 @@ def main():
         density = nx.density(G)
         communities = list(nx.community.greedy_modularity_communities(G))
         with st.spinner("Analyzing network topology..."):
-            network_analysis = generate_network_analysis(tokenizer, model, top_central, density, communities)
+            network_analysis = generate_network_analysis(top_central, density, communities)
         st.markdown(format_analysis_response(network_analysis))
 
         # Additional Cybersecurity Insights
@@ -1436,7 +1239,7 @@ def main():
             avg_cvss = filtered_vulnerabilities['cvss_score'].mean()
             high_cvss = filtered_vulnerabilities[filtered_vulnerabilities['cvss_score'] > 7]
             with st.spinner("Analyzing CVSS distribution..."):
-                cvss_analysis = analyze_cvss_distribution(tokenizer, model, avg_cvss, len(high_cvss), total_vulns)
+                cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns)
             st.markdown(format_analysis_response(cvss_analysis))
 
         # Vulnerability Age Analysis
@@ -1456,7 +1259,7 @@ def main():
             avg_age = filtered_vulnerabilities['age'].mean()
             old_vulnerabilities = filtered_vulnerabilities[filtered_vulnerabilities['age'] > 90]
             with st.spinner("Analyzing vulnerability age..."):
-                age_analysis = analyze_vulnerability_age(tokenizer, model, avg_age, len(old_vulnerabilities), total_vulns)
+                age_analysis = analyze_vulnerability_age(avg_age, len(old_vulnerabilities), total_vulns)
             st.markdown(format_analysis_response(age_analysis))
 
         # Vulnerability Types Analysis
@@ -1473,7 +1276,7 @@ def main():
         st.plotly_chart(fig_types, use_container_width=True, config={'displayModeBar': False})
         
         with st.spinner("Analyzing vulnerability types..."):
-            types_analysis = analyze_vulnerability_types(tokenizer, model, vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist())
+            types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist())
         st.markdown(format_analysis_response(types_analysis))
 
         # Remediation Priority Matrix
@@ -1485,39 +1288,10 @@ def main():
             
             high_priority = filtered_vulnerabilities[(filtered_vulnerabilities['cvss_score'] > 7) & (filtered_vulnerabilities['exploit_available'] == True)]
             with st.spinner("Analyzing remediation priorities..."):
-                remediation_analysis = analyze_remediation_priority(tokenizer, model, len(high_priority), total_vulns)
+                remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns)
             st.markdown(format_analysis_response(remediation_analysis))
         else:
             st.info("Not enough information available for remediation priority analysis.")
-
-        # Trend Forecasting
-        st.header("Vulnerability Trend Forecasting")
-        if created_at_column:
-            vulnerabilities_per_day = filtered_vulnerabilities.groupby(created_at_column).size().reset_index(name='count')
-            vulnerabilities_per_day = vulnerabilities_per_day.set_index(created_at_column)
-
-            # Simple moving average for forecasting
-            window_size = 7  # 7-day moving average
-            vulnerabilities_per_day['SMA'] = vulnerabilities_per_day['count'].rolling(window=window_size).mean()
-
-            # Forecast next 30 days
-            last_date = vulnerabilities_per_day.index[-1]
-            forecast_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=30)
-            forecast_values = [vulnerabilities_per_day['SMA'].iloc[-1]] * 30
-
-            fig_trend = go.Figure()
-            fig_trend.add_trace(go.Scatter(x=vulnerabilities_per_day.index, y=vulnerabilities_per_day['count'], mode='lines', name='Actual', line=dict(color=color_palette[0])))
-            fig_trend.add_trace(go.Scatter(x=vulnerabilities_per_day.index, y=vulnerabilities_per_day['SMA'], mode='lines', name='7-day Moving Average', line=dict(color=color_palette[2])))
-            fig_trend.add_trace(go.Scatter(x=forecast_dates, y=forecast_values, mode='lines', name='Forecast', line=dict(color=color_palette[3], dash='dash')))
-            fig_trend.update_layout(title='Vulnerability Trend and 30-day Forecast', xaxis_title='Date', yaxis_title='Number of Vulnerabilities')
-            fig_trend = apply_custom_style(fig_trend)
-            st.plotly_chart(fig_trend, use_container_width=True, config={'displayModeBar': False})
-
-            current_avg = vulnerabilities_per_day['SMA'].iloc[-1]
-            trend = 'Increasing' if vulnerabilities_per_day['SMA'].iloc[-1] > vulnerabilities_per_day['SMA'].iloc[-8] else 'Decreasing or Stable'
-            with st.spinner("Analyzing vulnerability trend..."):
-                trend_analysis = analyze_vulnerability_trend(tokenizer, model, current_avg, trend, vulnerabilities_per_day.to_dict())
-            st.markdown(format_analysis_response(trend_analysis))
 
         # Export Options
         st.header("Export Dashboard")
@@ -1548,8 +1322,7 @@ def main():
                         'severity': fig_severity,
                         'timeline': fig_timeline,
                         'network': fig_network,
-                        'types': fig_types,
-                        'trend': fig_trend
+                        'types': fig_types
                     }
                     if 'cvss_score' in filtered_vulnerabilities.columns:
                         figures['cvss'] = fig_cvss
@@ -1629,4 +1402,14 @@ def main():
         st.info("Please upload a JSON file in the sidebar to begin the analysis.")
 
 if __name__ == "__main__":
+    start = time.time()
     main()
+    end = time.time()
+
+    # Calcolo del tempo impiegato
+    elapsed_time = end - start
+
+    minutes = int(elapsed_time // 60)
+    seconds = int(elapsed_time % 60)
+
+    print(f"Running time: {minutes:.2f}:{seconds:.2f}")

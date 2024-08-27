@@ -10,3 +10,4 @@ python-docx
 seaborn
 matplotlib
 accelerate
+kaleido
