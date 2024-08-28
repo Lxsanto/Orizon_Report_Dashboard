@@ -6,7 +6,7 @@ def print_gpu_utilization():
     handle = nvmlDeviceGetHandleByIndex(0)
     info = nvmlDeviceGetMemoryInfo(handle)
     print('\n')
-    print(f"GPU memory occupied: {info.used//1024**2} MB.")
+    print(f"GPU memory occupied: {info.used//1024**2} MB / 20475 MB.")
 
 
 def print_summary(result):

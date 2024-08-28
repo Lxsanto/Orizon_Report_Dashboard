@@ -1,4 +1,5 @@
 import streamlit as st
+st.config.set_option("theme.base", "light")
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -33,6 +34,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 from PIL import Image
 import io
 from wordcloud import WordCloud
+
+# Plotly dimensions
+_width=800 
+_height=600
 
 # Set PYTORCH_CUDA_ALLOC_CONF environment variable
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
@@ -104,7 +109,7 @@ def load_data(file):
     return None
 
 def calculate_risk_score(vulnerabilities, severity_column):
-    severity_weights = {'critical': 10, 'high': 8, 'medium': 5, 'low': 2, 'info': 1}
+    severity_weights = {'critical': 10, 'high': 9, 'medium': 8, 'low': 7, 'info': 1}
     total_weight = sum(severity_weights.get(str(v).lower(), 0) for v in vulnerabilities[severity_column])
     max_weight = len(vulnerabilities) * 10
     return 100 - int((total_weight / max_weight) * 100) if max_weight > 0 else 100
@@ -1115,15 +1120,17 @@ def main():
                 title = {'text': "Risk Score"},
                 gauge = {
                     'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#1a2f4e"},
-                    'bar': {'color': color_palette[0]},
-                    'steps' : [
-                        {'range': [0, 50], 'color': color_palette[1]},
-                        {'range': [50, 75], 'color': color_palette[3]},
-                        {'range': [75, 100], 'color': color_palette[2]}],
-                    'threshold': {
-                        'line': {'color': color_palette[1], 'width': 4},
-                        'thickness': 0.75,
-                        'value': risk_score}}))
+                    'bar': {'color': color_palette[0]}},
+                #    'steps' : [
+                #        {'range': [0, 50], 'color': color_palette[1]},
+                #        {'range': [50, 75], 'color': color_palette[3]},
+                #       {'range': [75, 100], 'color': color_palette[2]}],
+                #    'threshold': {
+                #        'line': {'color': color_palette[1], 'width': 4},
+                #        'thickness': 0.75,
+                 #       'value': risk_score}}
+                 )
+                 )
             fig_risk_score = apply_custom_style(fig_risk_score)
             fig_risk_score.update_layout(height=300)
             st.plotly_chart(fig_risk_score, use_container_width=True, config={'displayModeBar': False})
@@ -1139,16 +1146,37 @@ def main():
         col1, col2 = st.columns([2, 1])
         with col1:
             severity_counts = filtered_vulnerabilities[severity_column].value_counts()
-            fig_severity = px.pie(
-                values=severity_counts.values, 
-                names=severity_counts.index, 
-                title="Vulnerability Severity Distribution",
-                color=severity_counts.index,
-                color_discrete_map={'critical': color_palette[1], 'high': color_palette[3], 'medium': color_palette[2], 'low': color_palette[0], 'info': color_palette[4]}
-            )
-            fig_severity.update_traces(textposition='inside', textinfo='percent+label')
+            _colors = {
+                                'info': '#2ca02c',
+                                'low': '#17becf',     
+                                'medium': '#1f77b4',    
+                                'high': '#ff7f0e',       
+                                'critical': '#d62728',
+                                'unknown': '#7f7f7f'       
+                            }
+            #fig_severity = px.pie(
+            #                        values=severity_counts.values, 
+            #                       names=severity_counts.index, 
+            #                       color=severity_counts.index,
+            #                        title="Vulnerability Severity Distribution",
+            #                        color_discrete_map=_colors,
+            #                        width=_width, height=_height
+            #                    )
+            #fig_severity.update_traces(textposition='inside', textinfo='percent+label')
+            #fig_severity = apply_custom_style(fig_severity)
+            #st.plotly_chart(fig_severity, use_container_width=True, config={'displayModeBar': False})
+            fig_severity = go.Figure(data=[go.Pie(
+                                                labels=severity_counts.index,
+                                                values=severity_counts.values,
+                                                hoverinfo='label+percent',
+                                                textinfo='percent+label',
+                                                textfont_size=20,
+                                                marker=dict(colors=list(_colors.values()), line=dict(color='#000000', width=2))
+                                            )])
+            
             fig_severity = apply_custom_style(fig_severity)
             st.plotly_chart(fig_severity, use_container_width=True, config={'displayModeBar': False})
+
         with col2:
             st.subheader("Orizon Engine Analysis")
             with st.spinner("Generating severity analysis..."):
@@ -1156,7 +1184,7 @@ def main():
             st.markdown(format_analysis_response(severity_analysis))
 
         # Vulnerability Timeline
-        st.header("Vulnerability Discovery Timeline", anchor="vulnerability-discovery-timeline")
+        st.header("Geolocation of company servers", anchor="Geolocation of company servers")
         col1, col2 = st.columns([2, 1])
         with col1:
             # Michele
@@ -1291,93 +1319,101 @@ def main():
                 cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns)
             st.markdown(format_analysis_response(cvss_analysis))
 
-        # Vulnerability Age Analysis
         if created_at_column:
             # Michele
-            st.subheader("Vulnerability Age Analysis")
+            st.subheader("Screenshots")
+            st.write("Il nostro sistema sta catturando una screenshot per ogni login page identificata.")
+            st.write("Vuoi che questo processo continui?")
+            scelta = st.radio("Seleziona un'opzione:", ("Si", "No"))
 
-            df = load_data_screen(file_contents)
+            if scelta == 'Si':
 
-            # Filter the dataframe
-            filtered_df = df[~df['severity'].isin(['info'])]
-            print(filtered_df[['host','severity']])
+                df = load_data_screen(file_contents)
 
-            # Get unique hosts
-            unique_hosts = filtered_df['host'].unique()
+                # Filter the dataframe
+                filtered_df = df[~df['severity'].isin(['info'])]
+                #print(filtered_df[['host','severity']])
 
-            # Setup Selenium WebDriver
-            options = webdriver.ChromeOptions()
-            options.add_argument('--headless')  # Ensure the browser does not open on the screen
-            options.add_argument('--no-sandbox')
-            options.add_argument('--disable-dev-shm-usage')
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+                # Get unique hosts
+                unique_hosts = filtered_df['host'].unique()
 
-            max_width = 600  # Replace with your desired maximum width
-            max_height = 600  # Replace with your desired maximum height
+                # Setup Selenium WebDriver
+                options = webdriver.ChromeOptions()
+                options.add_argument('--headless')  # Ensure the browser does not open on the screen
+                options.add_argument('--no-sandbox')
+                options.add_argument('--disable-dev-shm-usage')
+                driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-            # Iterate over each unique host and take a screenshot
-            screenshots = []
-            for host in unique_hosts:
-                url = check_url(driver, host)
-                if url:
-                    try:
-                        # Wait for 5 seconds before taking the screenshot
-                        time.sleep(3)
+                max_width = 600  # Replace with your desired maximum width
+                max_height = 600  # Replace with your desired maximum height
+
+                # Iterate over each unique host and take a screenshot
+                screenshots = []
+                progress_bar = st.progress(0)
+                for index, host in enumerate(unique_hosts):
+                    progress_bar.progress(index + 1, text=f'We are taking screenshots, number of sites scanned: {index + 1}')
+                    url = check_url(driver, host)
+                    if url:
+                        try:
+                            # Wait for 5 seconds before taking the screenshot
+                            time.sleep(3)
+                            
+                            # Capture screenshot as a byte stream
+                            screenshot_as_bytes = driver.get_screenshot_as_png()
+                            image = Image.open(io.BytesIO(screenshot_as_bytes))
+                            
+                            # Resize the image while maintaining the aspect ratio
+                            image.thumbnail((max_width, max_height))
+                            
+                            # Append the resized image to the list without saving to disk
+                            screenshots.append((host, image))
                         
-                        # Capture screenshot as a byte stream
-                        screenshot_as_bytes = driver.get_screenshot_as_png()
-                        image = Image.open(io.BytesIO(screenshot_as_bytes))
-                        
-                        # Resize the image while maintaining the aspect ratio
-                        image.thumbnail((max_width, max_height))
-                        
-                        # Append the resized image to the list without saving to disk
-                        screenshots.append((host, image))
-                    
-                    except (TimeoutException, NoSuchWindowException, WebDriverException) as e:
-                        print(f"Could not load {host}: {str(e)}, skipping...")
-                        continue
+                        except (TimeoutException, NoSuchWindowException, WebDriverException) as e:
+                            print(f"Could not load {host}: {str(e)}, skipping...")
+                            continue
 
-            # Close the WebDriver
-            driver.quit()
+                # Close the WebDriver
+                driver.quit()
 
-            # Display the screenshots using Plotly
-            for host, image in screenshots:
-                # Get the final width and height after resizing
-                final_width, final_height = image.size
+                # Display the screenshots using Plotly
+                for host, image in screenshots:
+                    # Get the final width and height after resizing
+                    final_width, final_height = image.size
 
-                # Create a Plotly figure
-                fig = go.Figure()
-                fig.add_layout_image(
-                    dict(
-                        source=image,
-                        xref="x",
-                        yref="y",
-                        x=0,
-                        y=final_height,
-                        sizex=final_width,
-                        sizey=final_height,
-                        sizing="stretch",
-                        opacity=1,
-                        layer="below"
+                    # Create a Plotly figure
+                    fig = go.Figure()
+                    fig.add_layout_image(
+                        dict(
+                            source=image,
+                            xref="x",
+                            yref="y",
+                            x=0,
+                            y=final_height,
+                            sizex=final_width,
+                            sizey=final_height,
+                            sizing="stretch",
+                            opacity=1,
+                            layer="below"
+                        )
                     )
-                )
-                fig.update_layout(
-                    title_text=f'Screenshot of {host}',
-                    title_x=0.5,  # Center the title
-                    title_y=0.95,  # Adjust the vertical position of the title
-                    xaxis={'visible': False, 'range': [0, final_width]},
-                    yaxis={'visible': False, 'range': [0, final_height]},
-                    width=final_width,
-                    height=final_height + 50,  # Add some space for the title
-                    margin=dict(l=0, r=0, t=50, b=0)  # Adjust the top margin for the title
-                )
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                    fig.update_layout(
+                        title_text=f'Screenshot of {host}',
+                        title_x=0.5,  # Center the title
+                        title_y=0.95,  # Adjust the vertical position of the title
+                        xaxis={'visible': False, 'range': [0, final_width]},
+                        yaxis={'visible': False, 'range': [0, final_height]},
+                        width=final_width,
+                        height=final_height + 50,  # Add some space for the title
+                        margin=dict(l=0, r=0, t=50, b=0)  # Adjust the top margin for the title
+                    )
+                    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         # Vulnerability Types Analysis
         st.subheader("Top Vulnerability Types")
         vuln_types = filtered_vulnerabilities['template_name'].value_counts().head(10)
         fig_types = px.bar(
+            width=_width,
+            height=_height,
             x=vuln_types.index, 
             y=vuln_types.values, 
             title="Top 10 Vulnerability Types",
@@ -1405,29 +1441,32 @@ def main():
         else:
             st.info("Not enough information available for remediation priority analysis.")
 
-        st.header('WorldCloued analysis')
+        st.header('WorldCloud analysis')
         df = load_data_word(file_contents)
         all_tags = df['template_name']
         tag_counts = Counter(all_tags)
 
         # Generate word cloud
-        wordcloud = WordCloud(width=800, height=400, background_color='white', 
-                      max_font_size=200, scale=2, relative_scaling=0.5, 
+        wordcloud_ = WordCloud(width=1600, height=800, background_color='white', 
+                      max_font_size=300, scale=3, relative_scaling=0.5, 
                       collocations=False, colormap='viridis').generate_from_frequencies(tag_counts)
 
         # Convert word cloud to an image array
-        wordcloud_image = wordcloud.to_array()
+        #wordcloud_image = wordcloud.to_array()
 
         # Create a plotly figure from the word cloud image
-        fig = px.imshow(wordcloud_image)
-        fig.update_layout(
-            xaxis={'visible': False},
-            yaxis={'visible': False},
-            margin=dict(l=0, r=0, t=0, b=0)
-        )
+        #fig = px.imshow(wordcloud_image)
+        #fig.update_layout(
+        #    xaxis={'visible': False},
+        #   yaxis={'visible': False},
+        #   margin=dict(l=0, r=0, t=0, b=0)
+        #)
+
+        img = wordcloud_.to_image()
+        st.image(img, use_column_width=True)
 
         # Display the word cloud
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        #st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
 
         # Export Options
