@@ -6,6 +6,7 @@ import json
 import networkx as nx
 import time
 from datetime import datetime, timedelta
+from collections import Counter
 import pytz
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
@@ -19,6 +20,19 @@ from transformers import AutoTokenizer, pipeline
 import torch
 import os
 from GPU_utils import print_gpu_utilization, print_summary
+from graph_utils import *  # all Michele utils
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.common.exceptions import (
+    NoSuchWindowException,
+    TimeoutException,
+    WebDriverException,
+)
+from webdriver_manager.chrome import ChromeDriverManager
+from PIL import Image
+import io
+from wordcloud import WordCloud
 
 # Set PYTORCH_CUDA_ALLOC_CONF environment variable
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
@@ -1145,15 +1159,50 @@ def main():
         st.header("Vulnerability Discovery Timeline", anchor="vulnerability-discovery-timeline")
         col1, col2 = st.columns([2, 1])
         with col1:
-            fig_timeline = create_attack_timeline(filtered_vulnerabilities, created_at_column, severity_column)
-            st.plotly_chart(fig_timeline, use_container_width=True, config={'displayModeBar': False})
+            # Michele
+            file_contents = uploaded_file.read()
+            
+            df = load_data_geo(file_contents)
+
+            # Define severity weights
+            severity_weights = {
+                'unknown' : 1,
+                'info': 2,
+                'low': 3,
+                'medium': 4,
+                'high': 6,
+                'critical': 10
+            }
+
+            # Apply weights to severity column
+            df['severity_weight'] = df['severity'].map(severity_weights)
+
+            # Calculate the danger score by summing the severity weights per server (host)
+            danger_score_per_server = df.groupby('host')['severity_weight'].sum().reset_index()
+
+            # Add the IP addresses to the danger_score_per_server dataframe
+            danger_score_per_server['ip'] = danger_score_per_server['host'].apply(resolve_hostname)
+
+            # Aggregate risk scores by IP using the danger_score_per_server data
+            risk_by_ip = danger_score_per_server.groupby('ip')['severity_weight'].sum().reset_index()
+
+            # Normalize risk scores to be between 0 and 100
+            min_score = risk_by_ip['severity_weight'].min()
+            max_score = risk_by_ip['severity_weight'].max()
+
+            risk_by_ip['normalized_risk_score'] = ((risk_by_ip['severity_weight'] - min_score) / (max_score - min_score)) * 100
+
+            # Create and display the Plotly map
+            geo_map = create_plotly_map(risk_by_ip)
+            st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})
         with col2:
+            # Michele
             st.subheader("Orizon Engine Analysis")
             recent_vulnerabilities = filtered_vulnerabilities[filtered_vulnerabilities[created_at_column] > (datetime.now(pytz.utc) - timedelta(days=30))]
             recent_critical_high = len(recent_vulnerabilities[recent_vulnerabilities[severity_column].str.lower().isin(['critical', 'high'])])
-            with st.spinner("Generating trend analysis..."):
-                trend_analysis = analyze_timeline(recent_vulnerabilities, recent_critical_high)
-            st.markdown(format_analysis_response(trend_analysis))
+            #with st.spinner("Generating trend analysis..."):
+            #    trend_analysis = analyze_timeline(tokenizer, model, recent_vulnerabilities, recent_critical_high)
+            #st.markdown(format_analysis_response(trend_analysis))
 
         # Top 10 Vulnerabilities
         st.header("Top 10 Critical Vulnerabilities", anchor="top-10-critical-vulnerabilities")
@@ -1244,23 +1293,86 @@ def main():
 
         # Vulnerability Age Analysis
         if created_at_column:
+            # Michele
             st.subheader("Vulnerability Age Analysis")
-            filtered_vulnerabilities['age'] = (datetime.now(pytz.utc) - filtered_vulnerabilities[created_at_column]).dt.days
-            fig_age = px.box(
-                filtered_vulnerabilities, 
-                y='age', 
-                title="Distribution of Vulnerability Age",
-                labels={'age': 'Age (days)'},
-                color_discrete_sequence=[color_palette[0]]
-            )
-            fig_age = apply_custom_style(fig_age)
-            st.plotly_chart(fig_age, use_container_width=True, config={'displayModeBar': False})
-            
-            avg_age = filtered_vulnerabilities['age'].mean()
-            old_vulnerabilities = filtered_vulnerabilities[filtered_vulnerabilities['age'] > 90]
-            with st.spinner("Analyzing vulnerability age..."):
-                age_analysis = analyze_vulnerability_age(avg_age, len(old_vulnerabilities), total_vulns)
-            st.markdown(format_analysis_response(age_analysis))
+
+            df = load_data_screen(file_contents)
+
+            # Filter the dataframe
+            filtered_df = df[~df['severity'].isin(['info'])]
+            print(filtered_df[['host','severity']])
+
+            # Get unique hosts
+            unique_hosts = filtered_df['host'].unique()
+
+            # Setup Selenium WebDriver
+            options = webdriver.ChromeOptions()
+            options.add_argument('--headless')  # Ensure the browser does not open on the screen
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+            max_width = 600  # Replace with your desired maximum width
+            max_height = 600  # Replace with your desired maximum height
+
+            # Iterate over each unique host and take a screenshot
+            screenshots = []
+            for host in unique_hosts:
+                url = check_url(driver, host)
+                if url:
+                    try:
+                        # Wait for 5 seconds before taking the screenshot
+                        time.sleep(3)
+                        
+                        # Capture screenshot as a byte stream
+                        screenshot_as_bytes = driver.get_screenshot_as_png()
+                        image = Image.open(io.BytesIO(screenshot_as_bytes))
+                        
+                        # Resize the image while maintaining the aspect ratio
+                        image.thumbnail((max_width, max_height))
+                        
+                        # Append the resized image to the list without saving to disk
+                        screenshots.append((host, image))
+                    
+                    except (TimeoutException, NoSuchWindowException, WebDriverException) as e:
+                        print(f"Could not load {host}: {str(e)}, skipping...")
+                        continue
+
+            # Close the WebDriver
+            driver.quit()
+
+            # Display the screenshots using Plotly
+            for host, image in screenshots:
+                # Get the final width and height after resizing
+                final_width, final_height = image.size
+
+                # Create a Plotly figure
+                fig = go.Figure()
+                fig.add_layout_image(
+                    dict(
+                        source=image,
+                        xref="x",
+                        yref="y",
+                        x=0,
+                        y=final_height,
+                        sizex=final_width,
+                        sizey=final_height,
+                        sizing="stretch",
+                        opacity=1,
+                        layer="below"
+                    )
+                )
+                fig.update_layout(
+                    title_text=f'Screenshot of {host}',
+                    title_x=0.5,  # Center the title
+                    title_y=0.95,  # Adjust the vertical position of the title
+                    xaxis={'visible': False, 'range': [0, final_width]},
+                    yaxis={'visible': False, 'range': [0, final_height]},
+                    width=final_width,
+                    height=final_height + 50,  # Add some space for the title
+                    margin=dict(l=0, r=0, t=50, b=0)  # Adjust the top margin for the title
+                )
+                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
         # Vulnerability Types Analysis
         st.subheader("Top Vulnerability Types")
@@ -1293,6 +1405,31 @@ def main():
         else:
             st.info("Not enough information available for remediation priority analysis.")
 
+        st.header('WorldCloued analysis')
+        df = load_data_word(file_contents)
+        all_tags = df['template_name']
+        tag_counts = Counter(all_tags)
+
+        # Generate word cloud
+        wordcloud = WordCloud(width=800, height=400, background_color='white', 
+                      max_font_size=200, scale=2, relative_scaling=0.5, 
+                      collocations=False, colormap='viridis').generate_from_frequencies(tag_counts)
+
+        # Convert word cloud to an image array
+        wordcloud_image = wordcloud.to_array()
+
+        # Create a plotly figure from the word cloud image
+        fig = px.imshow(wordcloud_image)
+        fig.update_layout(
+            xaxis={'visible': False},
+            yaxis={'visible': False},
+            margin=dict(l=0, r=0, t=0, b=0)
+        )
+
+        # Display the word cloud
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+
+
         # Export Options
         st.header("Export Dashboard")
         col1, col2 = st.columns(2)
@@ -1304,30 +1441,23 @@ def main():
                     analyses = {
                         'overview': overview_analysis,
                         'severity': severity_analysis,
-                        'timeline': trend_analysis,
                         'top_vulnerabilities': top_vuln_analysis,
                         'network': network_analysis,
-                        'types': types_analysis,
-                        'trend': trend_analysis
+                        'types': types_analysis
                     }
                     if 'cvss_score' in filtered_vulnerabilities.columns:
                         analyses['cvss'] = cvss_analysis
-                    if created_at_column:
-                        analyses['age'] = age_analysis
                     if 'remediation_analysis' in locals():
                         analyses['remediation'] = remediation_analysis
                     
                     figures = {
                         'risk_score': fig_risk_score,
                         'severity': fig_severity,
-                        'timeline': fig_timeline,
                         'network': fig_network,
                         'types': fig_types
                     }
                     if 'cvss_score' in filtered_vulnerabilities.columns:
                         figures['cvss'] = fig_cvss
-                    if created_at_column:
-                        figures['age'] = fig_age
                     if 'fig_remediation' in locals():
                         figures['remediation'] = fig_remediation
                     
