@@ -1,3 +1,4 @@
+from transformers import AutoTokenizer, pipeline
 import streamlit as st
 st.config.set_option("theme.base", "light")
 import pandas as pd
@@ -17,7 +18,6 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from docx import Document
 from docx.shared import Inches
-from transformers import AutoTokenizer, pipeline
 import torch
 import os
 from GPU_utils import print_gpu_utilization, print_summary
@@ -35,6 +35,9 @@ from PIL import Image
 import io
 from wordcloud import WordCloud
 
+# GPU setups
+are_you_on_CUDA = False
+
 # Plotly dimensions
 _width=800 
 _height=600
@@ -42,7 +45,8 @@ _height=600
 x = 10
 
 # Set PYTORCH_CUDA_ALLOC_CONF environment variable
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+if are_you_on_CUDA:
+    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 # Do you want to clear cached model?
 clear = False
@@ -65,7 +69,7 @@ st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="ðŸ›¡ï
 def load_llama_model(model_id = model_id, auth_token = auth_token):
 
     if not torch.cuda.is_available():
-        print("CUDA GPU not available. Model will be loaded on CPU.")
+        print("CUDA GPU not available!")
     else:
         print("CUDA is available. Backend and pinned memory configurations are applied.")
         print_gpu_utilization()
@@ -84,7 +88,7 @@ def load_llama_model(model_id = model_id, auth_token = auth_token):
                              device_map="auto",
                              model_kwargs=model_kwargs)
         
-        print(f'Pipeline loaded on {chat_pipeline.device}')
+        print(f'The LLM is loaded on device:{chat_pipeline.device}')
 
         # save the model in a global variable
         global _pipeline
@@ -124,7 +128,9 @@ def generate_orizon_analysis(prompt, max_new_tokens=256):
             {'role': 'user', 'content': prompt}]
         response = _pipeline(messages, max_new_tokens=1000)[0]['generated_text']
         response_text = response[-1]['content'] 
-        print_gpu_utilization()
+        
+        if are_you_on_CUDA:
+            print_gpu_utilization()
 
         return response_text
     
