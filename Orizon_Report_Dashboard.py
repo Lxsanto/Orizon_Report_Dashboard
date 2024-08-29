@@ -38,6 +38,8 @@ from wordcloud import WordCloud
 # Plotly dimensions
 _width=800 
 _height=600
+#prova
+x = 10
 
 # Set PYTORCH_CUDA_ALLOC_CONF environment variable
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
