@@ -17,7 +17,6 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from docx import Document
 from docx.shared import Inches
-from transformers import AutoTokenizer, pipeline
 import torch
 import os
 from GPU_utils import print_gpu_utilization, print_summary
@@ -34,6 +33,26 @@ from webdriver_manager.chrome import ChromeDriverManager
 from PIL import Image
 import io
 from wordcloud import WordCloud
+import subprocess
+
+# Set page config
+st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
+
+# login
+from streamlit_authenticator import Authenticate
+import yaml
+from yaml.loader import SafeLoader
+with open('password.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
+
+authenticator = Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
+    config['preauthorized']
+)
+
 
 # Plotly dimensions
 _width=800 
@@ -45,7 +64,7 @@ x = 10
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 # Do you want to clear cached model?
-clear = False
+clear = True
 if clear:
     st.cache_resource.clear()
 
@@ -54,11 +73,8 @@ model_id = "Qwen/Qwen2-1.5B-Instruct"
 auth_token = "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"
 _pipeline = None
 
-# Set page config
-st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
 
-
-
+from transformers import AutoTokenizer, pipeline
 ### Utility functions ###
 
 @st.cache_resource
@@ -991,10 +1007,17 @@ def generate_word_report(vulnerabilities, analyses, figures):
     return buffer
 
 def main():
+    
     st.sidebar.title("🛡️ Orizon Security")
     
     st.sidebar.header("Dashboard Controls")
     uploaded_file = st.sidebar.file_uploader("Upload Vulnerability JSON", type="json", key="vuln_upload")
+
+    st.sidebar.write("Premi il pulsante qui sotto per riavviare l' applicazione.")
+    st.sidebar.write("Successivamente ricarica la tua pagina nel browser.")
+    if st.sidebar.button("Riavvia App"):
+        subprocess.run(['python', 'run_streamlit_port8501.py'])
+        print('Dashboard is now restarted!')
     
     if uploaded_file:
         with st.spinner("Processing vulnerability data..."):
@@ -1573,14 +1596,26 @@ def main():
         st.info("Please upload a JSON file in the sidebar to begin the analysis.")
 
 if __name__ == "__main__":
-    start = time.time()
-    main()
-    end = time.time()
 
-    # Calcolo del tempo impiegato
-    elapsed_time = end - start
+    # login
+    name, authentication_status, username = authenticator.login(key='Login', location='main')
 
-    minutes = int(elapsed_time // 60)
-    seconds = int(elapsed_time % 60)
+    if authentication_status == False:
+        st.error('Username/password is incorrect')
+    elif authentication_status == None:
+        st.warning('Please enter your username and password')
+    elif authentication_status:
+        # true login
+        authenticator.logout('Logout', 'main')
+        st.write(f'Welcome *{name}*')
+        start = time.time()
+        main()
+        end = time.time()
 
-    print(f"Running time: {minutes:.2f}:{seconds:.2f}")
+        # Calcolo del tempo impiegato
+        elapsed_time = end - start
+
+        minutes = int(elapsed_time // 60)
+        seconds = int(elapsed_time % 60)
+
+        print(f"Running time: {minutes:.2f}:{seconds:.2f}")
