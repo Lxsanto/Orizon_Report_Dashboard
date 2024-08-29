@@ -38,11 +38,9 @@ from wordcloud import WordCloud
 # Plotly dimensions
 _width=800 
 _height=600
-#prova
-x = 10
 
 # Set PYTORCH_CUDA_ALLOC_CONF environment variable
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+#os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 # Do you want to clear cached model?
 clear = False
@@ -1049,7 +1047,7 @@ def main():
         st.markdown("Powered by advanced AI for comprehensive cybersecurity analysis")
 
         # Load model
-        pipe = load_llama_model()
+        #pipe = load_llama_model()
 
         # Automatic column detection
         severity_column = 'severity' if 'severity' in filtered_vulnerabilities.columns else None
@@ -1139,9 +1137,10 @@ def main():
         
         with col2:
             st.subheader("Orizon Engine Analysis")
+            overview_analysis = ''
             with st.spinner("Generating overview analysis..."):
-                overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)
-            st.markdown(format_analysis_response(overview_analysis))
+                #overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)
+                st.markdown(format_analysis_response(overview_analysis))
 
         # Severity Distribution
         st.header("Vulnerability Severity Distribution", anchor="vulnerability-severity-distribution")
@@ -1181,9 +1180,10 @@ def main():
 
         with col2:
             st.subheader("Orizon Engine Analysis")
+            severity_analysis = ''
             with st.spinner("Generating severity analysis..."):
-                severity_analysis = analyze_severity_distribution(severity_counts)
-            st.markdown(format_analysis_response(severity_analysis))
+                #severity_analysis = analyze_severity_distribution(severity_counts)
+                st.markdown(format_analysis_response(severity_analysis))
 
         # Vulnerability Timeline
         st.header("Geolocation of company servers", anchor="Geolocation of company servers")
@@ -1253,9 +1253,10 @@ def main():
         most_common_type = common_types.index[0]
         hosts_affected = top_10[host_column].nunique()
         most_affected_host = top_10[host_column].value_counts().index[0]
+        top_vuln_analysis = ''
         with st.spinner("Analyzing top vulnerabilities..."):
-            top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host)
-        st.markdown(format_analysis_response(top_vuln_analysis))
+            #top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host)
+            st.markdown(format_analysis_response(top_vuln_analysis))
 
         # Network Topology View
         st.header("Network Topology Analysis", anchor="network-topology-analysis")
@@ -1317,9 +1318,10 @@ def main():
             
             avg_cvss = filtered_vulnerabilities['cvss_score'].mean()
             high_cvss = filtered_vulnerabilities[filtered_vulnerabilities['cvss_score'] > 7]
+            cvss_analysis = ''
             with st.spinner("Analyzing CVSS distribution..."):
-                cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns)
-            st.markdown(format_analysis_response(cvss_analysis))
+                #cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns)
+                st.markdown(format_analysis_response(cvss_analysis))
 
         if created_at_column:
             # Michele
@@ -1425,9 +1427,10 @@ def main():
         fig_types = apply_custom_style(fig_types)
         st.plotly_chart(fig_types, use_container_width=True, config={'displayModeBar': False})
         
+        types_analysis = ''
         with st.spinner("Analyzing vulnerability types..."):
-            types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist())
-        st.markdown(format_analysis_response(types_analysis))
+            #types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist())
+            st.markdown(format_analysis_response(types_analysis))
 
         # Remediation Priority Matrix
         st.header("Remediation Priority Matrix")
