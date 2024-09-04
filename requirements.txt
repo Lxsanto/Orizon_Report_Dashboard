@@ -14,3 +14,4 @@ kaleido
 selenium
 webdriver-manager
 wordcloud
+pynvml
