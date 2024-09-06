@@ -1,15 +1,16 @@
 streamlit
+streamlit-authenticator
 pandas
 plotly
 networkx
 pytz
 torch
 transformers
+accelerate
 reportlab
 python-docx
 seaborn
 matplotlib
-accelerate
 kaleido
 selenium
 webdriver-manager
