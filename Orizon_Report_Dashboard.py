@@ -1,47 +1,55 @@
-import streamlit as st
-st.config.set_option("theme.base", "light")
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+import os
+import io
 import json
-import networkx as nx
 import time
-from datetime import datetime, timedelta
+import subprocess
 from collections import Counter
+from datetime import datetime, timedelta
+import pandas as pd
 import pytz
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
+import streamlit as st
+import plotly.express as px
+import plotly.io as pio
+from PIL import Image
+import networkx as nx
 from io import BytesIO
+from wordcloud import WordCloud
+import torch
+
+# Docx per la gestione di documenti Word
 from docx import Document
 from docx.shared import Inches
-import torch
-import os
-from GPU_utils import print_gpu_utilization, print_summary
-from graph_utils import *  # all Michele utils
 
+# Selenium per l'automazione del browser
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from selenium.common.exceptions import (
-    NoSuchWindowException,
-    TimeoutException,
-    WebDriverException,
-)
+from selenium.common.exceptions import (NoSuchWindowException, TimeoutException, WebDriverException)
 from webdriver_manager.chrome import ChromeDriverManager
-from PIL import Image
-import io
-from wordcloud import WordCloud
-import subprocess
 
-# Set page config
-st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
-
-# login
+# Streamlit Authenticator per la gestione dell'autenticazione
 from streamlit_authenticator import Authenticate
 import yaml
 from yaml.loader import SafeLoader
+
+# my functions
+from restart_utils import clear_pycache, restart_script
+from GPU_utils import print_gpu_utilization, print_summary
+from graph_utils import *  # all Michele utils
+
+# Tentativo di importazione condizionale con gestione degli errori
+try:
+    from transformers import AutoTokenizer, pipeline
+except ImportError:
+    print("Errore durante l'importazione di 'AutoTokenizer'. Pulizia della cache e riavvio dello script...")
+    clear_pycache()
+    restart_script()
+
+# Configurazione di Streamlit
+st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
+st.config.set_option("theme.base", "light")
+st.config.set_option("theme.primaryColor", "#4682b4")
+
+# Configurazione dell'autenticazione Streamlit
 with open('password.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
@@ -53,105 +61,47 @@ authenticator = Authenticate(
     config['preauthorized']
 )
 
+# Configurazione di Plotly
+template = pio.templates['ggplot2']
+pio.templates.default = 'ggplot2'
 
-# Plotly dimensions
-_width=800 
-_height=600
-#prova
-x = 10
+template.layout.font.family = "Arial, sans-serif"
+template.layout.font.size = 300
+template.layout.font.color = "rgb(51,51,51)"
+template.layout.title.font.size = 20
+template.layout.xaxis.title.font.size = 16
+template.layout.yaxis.title.font.size = 16
+template.layout.paper_bgcolor = "white"
+template.layout.plot_bgcolor = "rgb(237,237,237)"
+template.layout.xaxis.gridcolor = "white"
+template.layout.xaxis.linecolor = "white"
+template.layout.xaxis.tickcolor = "rgb(51,51,51)"
+template.layout.yaxis.gridcolor = "white"
+template.layout.yaxis.linecolor = "white"
+template.layout.yaxis.tickcolor = "rgb(51,51,51)"
 
-# Set PYTORCH_CUDA_ALLOC_CONF environment variable
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+pio.templates["Orizon_template"] = template
+pio.templates.default = "Orizon_template"
+_width = 800 
+_height = 600
 
-# Do you want to clear cached model?
-clear = True
-if clear:
-    st.cache_resource.clear()
+# Configurazione dell'ambiente CUDA
+are_you_on_CUDA = False
+run_LLM = False
+if are_you_on_CUDA:
+    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
-# select here LLM setups
+# Selezione del modello LLM
 model_id = "Qwen/Qwen2-1.5B-Instruct"
 auth_token = "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"
 _pipeline = None
 
-
-from transformers import AutoTokenizer, pipeline
-### Utility functions ###
-
-@st.cache_resource
-def load_llama_model(model_id = model_id, auth_token = auth_token):
-
-    if not torch.cuda.is_available():
-        print("CUDA GPU not available. Model will be loaded on CPU.")
-    else:
-        print("CUDA is available. Backend and pinned memory configurations are applied.")
-        print_gpu_utilization()
-
-    
-    try:
-        model_kwargs = {
-                "torch_dtype": torch.bfloat16
-        }
-        _tokenizer = AutoTokenizer.from_pretrained(model_id, 
-                                                   use_fast= True)
-        chat_pipeline = pipeline("text-generation", 
-                             model=model_id,
-                             token=auth_token,
-                             tokenizer=_tokenizer,
-                             device_map="auto",
-                             model_kwargs=model_kwargs)
-        
-        print(f'Pipeline loaded on {chat_pipeline.device}')
-
-        # save the model in a global variable
-        global _pipeline
-        _pipeline = chat_pipeline
-    
-    except Exception as e:
-        st.error(f"Error loading the model: {str(e)}")
-
-@st.cache_data
-def load_data(file):
-    if file is not None:
-        try:
-            data = json.loads(file.getvalue().decode('utf-8'))
-            if isinstance(data, dict):
-                return pd.DataFrame(data)
-            elif isinstance(data, list):
-                return pd.DataFrame(data)
-            else:
-                st.error("Unrecognized data format. Please upload a valid JSON file.")
-                return None
-        except Exception as e:
-            st.error(f"Error loading data: {str(e)}")
-            return None
-    return None
-
-def calculate_risk_score(vulnerabilities, severity_column):
-    severity_weights = {'critical': 10, 'high': 9, 'medium': 8, 'low': 7, 'info': 1}
-    total_weight = sum(severity_weights.get(str(v).lower(), 0) for v in vulnerabilities[severity_column])
-    max_weight = len(vulnerabilities) * 10
-    return 100 - int((total_weight / max_weight) * 100) if max_weight > 0 else 100
-
-@st.cache_data
-def generate_orizon_analysis(prompt, max_new_tokens=256):
-
-    try:
-        messages = [{'role': 'system', 'content': 'You are a Cybersecurity expert, i need your help'},
-            {'role': 'user', 'content': prompt}]
-        response = _pipeline(messages, max_new_tokens=1000)[0]['generated_text']
-        response_text = response[-1]['content'] 
-        print_gpu_utilization()
-
-        return response_text
-    
-    except Exception as e:
-        st.error(f"Error generating analysis: {str(e)}")
-        return "Analysis generation failed. Please try again."
-    
-
+# Pulizia della cache del modello
+clear = True
+if clear:
+    st.cache_resource.clear()
 
 ### Streamlit CSS dashboard setups ###
-
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
@@ -298,7 +248,89 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+### Utility functions ###
+@st.cache_resource
+def load_llama_model(model_id = model_id, auth_token = auth_token):
 
+    if not torch.cuda.is_available():
+        print("CUDA GPU not available!")
+    else:
+        print("CUDA is available. Backend and pinned memory configurations are applied.")
+        print_gpu_utilization()
+
+    
+    try:
+        model_kwargs = {
+                "torch_dtype": torch.bfloat16
+        }
+        _tokenizer = AutoTokenizer.from_pretrained(model_id, 
+                                                   use_fast= True)
+        chat_pipeline = pipeline("text-generation", 
+                             model=model_id,
+                             token=auth_token,
+                             tokenizer=_tokenizer,
+                             device_map="auto",
+                             model_kwargs=model_kwargs)
+        
+        print(f'Pipeline loaded on {chat_pipeline.device}')
+
+        # save the model in a global variable
+        global _pipeline
+        _pipeline = chat_pipeline
+    
+    except Exception as e:
+        st.error(f"Error loading the model: {str(e)}")
+
+@st.cache_data
+def load_data(file):
+    if file is not None:
+        try:
+            data = json.loads(file.getvalue().decode('utf-8'))
+            if isinstance(data, dict):
+                return pd.DataFrame(data)
+            elif isinstance(data, list):
+                return pd.DataFrame(data)
+            else:
+                st.error("Unrecognized data format. Please upload a valid JSON file.")
+                return None
+        except Exception as e:
+            st.error(f"Error loading data: {str(e)}")
+            return None
+    return None
+
+def calculate_risk_score(vulnerabilities, severity_column):
+    # Dizionario che associa a ciascun livello di severità un peso specifico
+    severity_weights = {'critical': 10, 'high': 8, 'medium': 6, 'low': 4, 'info': 2}
+    
+    # Calcolo del peso totale, sommando i pesi delle severità per ciascuna vulnerabilità
+    # Se la severità non è riconosciuta, si assegna un peso di 0
+    total_weight = sum(severity_weights.get(str(v).lower(), 0) for v in vulnerabilities[severity_column])
+    
+    # Calcolo del peso massimo possibile: numero di vulnerabilità * 10 (peso massimo di una singola vulnerabilità)
+    max_weight = len(vulnerabilities) * 10
+    
+    # Calcolo del punteggio di rischio come percentuale del peso totale rispetto al peso massimo
+    # Se max_weight è maggiore di 0, si calcola la percentuale; altrimenti, il punteggio è 0 (indica assenza di vulnerabilità o errore)
+    return int((total_weight / max_weight) * 100) if max_weight > 0 else 0
+
+
+@st.cache_data
+def generate_orizon_analysis(prompt, max_new_tokens=256):
+
+    try:
+        messages = [{'role': 'system', 'content': 'You are a Cybersecurity expert, i need your help'},
+            {'role': 'user', 'content': prompt}]
+        response = _pipeline(messages, max_new_tokens=1000)[0]['generated_text']
+        response_text = response[-1]['content'] 
+        if are_you_on_CUDA:
+            print_gpu_utilization()
+
+        return response_text
+    
+    except Exception as e:
+        st.error(f"Error generating analysis: {str(e)}")
+        return "Analysis generation failed. Please try again."
+    
 ### Prompt eng ### 
 
 def analyze_overview(total, risk_score, critical, high, medium, low):
@@ -751,64 +783,38 @@ Ensure the analysis is data-driven, actionable, and considers both short-term re
     
     return generate_orizon_analysis(prompt)
 
-# Function to format responses
-def format_analysis_response(analysis_content):
-    formatted_response = f"""
-# Orizon Security Analysis
-
-{analysis_content}
-"""
-    return formatted_response
-
-# Function to apply consistent style to all charts
-def apply_custom_style(fig):
-    fig.update_layout(
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Inter, sans-serif", size=12, color="#1a2f4e"),
-        title=dict(font=dict(size=18, color="#1a2f4e")),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        margin=dict(l=20, r=20, t=40, b=20)
-    )
-    fig.update_xaxes(showgrid=False, showline=True, linecolor='#64748b')
-    fig.update_yaxes(showgrid=True, gridcolor='#64748b', showline=True, linecolor='#64748b')
-    return fig
-
-# Color palette definition
-color_palette = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#6366f1']
 
 # New functions for cybersecurity-themed charts
 def create_vulnerability_heatmap(vulnerabilities, host_column, severity_column):
     pivot = vulnerabilities.pivot_table(index=host_column, columns=severity_column, aggfunc='size', fill_value=0)
     fig = px.imshow(pivot, 
                     labels=dict(x="Severity", y="Host", color="Count"),
-                    title="Vulnerability Heatmap by Host and Severity")
-    fig = apply_custom_style(fig)
+                    title="Vulnerability Heatmap by Host and Severity", width=_width, height=_height)
     return fig
 
 def create_vulnerability_radar(vulnerabilities, type_column):
-    type_counts = vulnerabilities[type_column].value_counts().nlargest(5)
-    fig = go.Figure(data=go.Scatterpolar(
-      r=type_counts.values,
-      theta=type_counts.index,
-      fill='toself'
-    ))
+    # Conta i tipi di vulnerabilità
+    type_counts = vulnerabilities[type_column].value_counts().nlargest(5).reset_index()
+    type_counts.columns = [type_column, 'count']
+    
+    # Crea il grafico radar utilizzando plotly.express
+    fig = px.line_polar(type_counts, 
+                        r='count', 
+                        theta=type_column, 
+                        line_close=True, 
+                        title="Top 5 Vulnerability Types")
+
+    # Aggiorna il layout per riempire l'area sotto il grafico e applica il template
+    fig.update_traces(fill='toself')
     fig.update_layout(
-      polar=dict(
-        radialaxis=dict(
-          visible=True,
-          range=[0, max(type_counts.values)]
-        )),
-      showlegend=False,
-      title="Top 5 Vulnerability Types"
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, max(type_counts['count'])]
+            )),
+        showlegend=False
     )
-    fig = apply_custom_style(fig)
+    
     return fig
 
 def create_attack_timeline(vulnerabilities, created_at_column, severity_column):
@@ -816,8 +822,7 @@ def create_attack_timeline(vulnerabilities, created_at_column, severity_column):
     timeline = vulnerabilities.groupby(['date', severity_column]).size().unstack(fill_value=0)
     fig = px.area(timeline, 
                   labels={'date': 'Date', 'value': 'Number of Vulnerabilities', 'variable': 'Severity'},
-                  title="Vulnerability Discovery Timeline")
-    fig = apply_custom_style(fig)
+                  title="Vulnerability Discovery Timeline", width=_width, height=_height)
     return fig
 
 def create_severity_impact_bubble(vulnerabilities, severity_column, cvss_column, host_column):
@@ -827,6 +832,8 @@ def create_severity_impact_bubble(vulnerabilities, severity_column, cvss_column,
         bubble_data = pd.merge(vulnerability_counts, avg_cvss, on=[severity_column, host_column])
         
         fig = px.scatter(bubble_data, 
+                         width=_width,
+                         height=_height,
                          x='count', 
                          y='avg_cvss', 
                          size='count', 
@@ -834,112 +841,9 @@ def create_severity_impact_bubble(vulnerabilities, severity_column, cvss_column,
                          hover_name=host_column,
                          labels={'count': 'Number of Vulnerabilities', 'avg_cvss': 'Average CVSS Score'},
                          title="Severity, Impact, and Prevalence Correlation")
-        fig = apply_custom_style(fig)
         return fig
     else:
         return None
-
-# Improved PDF report generation
-def generate_pdf_report(vulnerabilities, analyses, figures):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
-    elements = []
-
-    styles = getSampleStyleSheet()
-    
-    # Modifica gli stili esistenti invece di aggiungerne di nuovi
-    styles['Title'].fontSize = 24
-    styles['Title'].spaceAfter = 12
-    styles['Heading1'].fontSize = 18
-    styles['Heading1'].spaceAfter = 6
-    
-    # Se vuoi aggiungere un nuovo stile, usa un nome che sicuramente non esiste
-    styles.add(ParagraphStyle(name='BodyTextCustom', fontSize=10, spaceAfter=6))
-
-    # Cover page
-    elements.append(Paragraph("Orizon Security Dashboard Report", styles['Title']))
-    elements.append(Spacer(1, 12))
-    elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['BodyTextCustom']))
-    elements.append(PageBreak())
-
-    # Table of Contents
-    toc = []
-    toc.append(Paragraph("Table of Contents", styles['Heading1']))
-    for section in analyses.keys():
-        toc.append(Paragraph(section.capitalize(), styles['BodyTextCustom']))
-    elements.extend(toc)
-    elements.append(PageBreak())
-
-    for section, content in analyses.items():
-        elements.append(Paragraph(section.capitalize(), styles['Heading1']))
-        elements.append(Paragraph(content, styles['BodyTextCustom']))
-        elements.append(Spacer(1, 12))
-        
-        if section in figures:
-            img_buffer = BytesIO()
-            figures[section].write_image(img_buffer, format="png", width=800, height=400, scale=2)
-            img = Image(img_buffer, width=7.5*inch, height=3.75*inch)
-            elements.append(img)
-            elements.append(Spacer(1, 12))
-
-    # Add summary tables
-    elements.append(Paragraph("Vulnerability Summary", styles['Heading1']))
-    
-    # Severity Distribution Table
-    severity_counts = vulnerabilities['severity'].value_counts()
-    severity_data = [['Severity', 'Count', 'Percentage']]
-    for severity, count in severity_counts.items():
-        percentage = (count / len(vulnerabilities)) * 100
-        severity_data.append([severity, str(count), f"{percentage:.2f}%"])
-    
-    severity_table = Table(severity_data)
-    severity_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
-        ('TOPPADDING', (0, 1), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ]))
-    elements.append(severity_table)
-    elements.append(Spacer(1, 12))
-
-    # Top 10 Vulnerabilities Table
-    top_10 = vulnerabilities.sort_values('severity', ascending=False).head(10)
-    top_10_data = [['Host', 'Severity', 'Vulnerability', 'Description']]
-    for _, row in top_10.iterrows():
-        top_10_data.append([row['host'], row['severity'], row['template_name'], row['description'][:50] + '...'])
-    
-    top_10_table = Table(top_10_data, colWidths=[1*inch, 1*inch, 2*inch, 3*inch])
-    top_10_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
-        ('TOPPADDING', (0, 1), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ]))
-    elements.append(top_10_table)
-
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer
 
 # Function to generate Word report
 def generate_word_report(vulnerabilities, analyses, figures):
@@ -1008,22 +912,19 @@ def generate_word_report(vulnerabilities, analyses, figures):
 
 def main():
     
-    st.sidebar.title("🛡️ Orizon Security")
-    
-    st.sidebar.header("Dashboard Controls")
-    uploaded_file = st.sidebar.file_uploader("Upload Vulnerability JSON", type="json", key="vuln_upload")
+    st.sidebar.title("🛡️ Orizon Security Dashboard")
 
-    st.sidebar.write("Premi il pulsante qui sotto per riavviare l' applicazione.")
-    st.sidebar.write("Successivamente ricarica la tua pagina nel browser.")
-    if st.sidebar.button("Riavvia App"):
+    if st.sidebar.button("Restart App"):
         subprocess.run(['python', 'run_streamlit_port8501.py'])
         print('Dashboard is now restarted!')
+    
+    uploaded_file = st.sidebar.file_uploader("Upload Vulnerability JSON", type="json", key="vuln_upload")
     
     if uploaded_file:
         with st.spinner("Processing vulnerability data..."):
             vulnerabilities = load_data(uploaded_file)
         if vulnerabilities is not None and not vulnerabilities.empty:
-            st.sidebar.success("File processed successfully!")
+            st.sidebar.success("JSON file loaded successfully!")
             
             # Ensure 'created_at' is in datetime format
             if 'created_at' in vulnerabilities.columns:
@@ -1069,7 +970,7 @@ def main():
 
         # Main content
         st.title("Orizon Security Dashboard")
-        st.markdown("Powered by advanced AI for comprehensive cybersecurity analysis")
+        st.markdown("Welcome to our private Security Dashboard, here you can see the analysis of the JSON file.")
 
         # Load model
         pipe = load_llama_model()
@@ -1132,81 +1033,64 @@ def main():
             """, unsafe_allow_html=True)
 
         with st.expander("View Executive Summary"):
-            st.markdown(format_analysis_response(analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)))
+            if run_LLM:
+                st.markdown(analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns))
 
         # Security Posture Overview
         st.header("Security Posture Overview", anchor="security-posture-overview")
         col1, col2 = st.columns([3, 2])
         with col1:
-            fig_risk_score = go.Figure(go.Indicator(
+
+            if risk_score > 40 and risk_score < 60:
+                gauge_color = 'orange'
+            elif risk_score > 60:
+                gauge_color = 'red'
+            else:
+                gauge_color = 'green'
+            
+            fig_risk_score = go.Figure(
+                go.Indicator(
                 mode = "gauge+number",
                 value = risk_score,
                 domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text': "Risk Score"},
+                title = {'text': "Risk Score", 'font': {'size': 20}},
                 gauge = {
-                    'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#1a2f4e"},
-                    'bar': {'color': color_palette[0]}},
-                #    'steps' : [
-                #        {'range': [0, 50], 'color': color_palette[1]},
-                #        {'range': [50, 75], 'color': color_palette[3]},
-                #       {'range': [75, 100], 'color': color_palette[2]}],
-                #    'threshold': {
-                #        'line': {'color': color_palette[1], 'width': 4},
-                #        'thickness': 0.75,
-                 #       'value': risk_score}}
-                 )
-                 )
-            fig_risk_score = apply_custom_style(fig_risk_score)
-            fig_risk_score.update_layout(height=300)
+                    'bar': {'color': gauge_color},
+                    'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#1a2f4e"}}),
+                 layout=go.Layout(width=_width, height=_height))
+            
             st.plotly_chart(fig_risk_score, use_container_width=True, config={'displayModeBar': False})
         
         with col2:
             st.subheader("Orizon Engine Analysis")
             with st.spinner("Generating overview analysis..."):
-                overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)
-            st.markdown(format_analysis_response(overview_analysis))
+                overview_analysis = ''
+                if run_LLM:
+                    overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)
+            st.markdown(overview_analysis)
 
         # Severity Distribution
         st.header("Vulnerability Severity Distribution", anchor="vulnerability-severity-distribution")
         col1, col2 = st.columns([2, 1])
         with col1:
             severity_counts = filtered_vulnerabilities[severity_column].value_counts()
-            _colors = {
-                                'info': '#2ca02c',
-                                'low': '#17becf',     
-                                'medium': '#1f77b4',    
-                                'high': '#ff7f0e',       
-                                'critical': '#d62728',
-                                'unknown': '#7f7f7f'       
-                            }
-            #fig_severity = px.pie(
-            #                        values=severity_counts.values, 
-            #                       names=severity_counts.index, 
-            #                       color=severity_counts.index,
-            #                        title="Vulnerability Severity Distribution",
-            #                        color_discrete_map=_colors,
-            #                        width=_width, height=_height
-            #                    )
-            #fig_severity.update_traces(textposition='inside', textinfo='percent+label')
-            #fig_severity = apply_custom_style(fig_severity)
-            #st.plotly_chart(fig_severity, use_container_width=True, config={'displayModeBar': False})
-            fig_severity = go.Figure(data=[go.Pie(
-                                                labels=severity_counts.index,
-                                                values=severity_counts.values,
-                                                hoverinfo='label+percent',
-                                                textinfo='percent+label',
-                                                textfont_size=20,
-                                                marker=dict(colors=list(_colors.values()), line=dict(color='#000000', width=2))
-                                            )])
-            
-            fig_severity = apply_custom_style(fig_severity)
+            fig_severity = px.pie(
+                                    values=severity_counts.values, 
+                                   names=severity_counts.index, 
+                                   color=severity_counts.index,
+                                    title="Vulnerability Severity Distribution",
+                                    width=_width, height=_height
+                                )
+            fig_severity.update_traces(textposition='inside', textinfo='percent+label')
             st.plotly_chart(fig_severity, use_container_width=True, config={'displayModeBar': False})
 
         with col2:
             st.subheader("Orizon Engine Analysis")
             with st.spinner("Generating severity analysis..."):
-                severity_analysis = analyze_severity_distribution(severity_counts)
-            st.markdown(format_analysis_response(severity_analysis))
+                severity_analysis = ''
+                if run_LLM:
+                    severity_analysis = analyze_severity_distribution(severity_counts)
+            st.markdown(severity_analysis)
 
         # Vulnerability Timeline
         st.header("Geolocation of company servers", anchor="Geolocation of company servers")
@@ -1221,9 +1105,9 @@ def main():
             severity_weights = {
                 'unknown' : 1,
                 'info': 2,
-                'low': 3,
-                'medium': 4,
-                'high': 6,
+                'low': 4,
+                'medium': 6,
+                'high':8,
                 'critical': 10
             }
 
@@ -1262,14 +1146,12 @@ def main():
         top_10 = filtered_vulnerabilities.sort_values(severity_column, ascending=False).head(10)
         fig_top_10 = go.Figure(data=[go.Table(
             header=dict(values=['Host', 'Severity', 'Vulnerability', 'Description'],
-                        fill_color=color_palette[0],
                         align='left',
                         font=dict(color='white', size=12)),
             cells=dict(values=[top_10[host_column], top_10[severity_column], top_10['template_name'], top_10[description_column]],
                        fill_color='rgba(0,0,0,0)',
                        align='left'))
         ])
-        fig_top_10 = apply_custom_style(fig_top_10)
         st.plotly_chart(fig_top_10, use_container_width=True, config={'displayModeBar': False})
         st.subheader("Orizon Engine Analysis")
         common_types = top_10['template_name'].value_counts()
@@ -1277,8 +1159,10 @@ def main():
         hosts_affected = top_10[host_column].nunique()
         most_affected_host = top_10[host_column].value_counts().index[0]
         with st.spinner("Analyzing top vulnerabilities..."):
-            top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host)
-        st.markdown(format_analysis_response(top_vuln_analysis))
+            top_vuln_analysis = ''
+            if run_LLM:
+                top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host)
+        st.markdown(top_vuln_analysis)
 
         # Network Topology View
         st.header("Network Topology Analysis", anchor="network-topology-analysis")
@@ -1292,11 +1176,11 @@ def main():
             x1, y1 = pos[edge[1]]
             edge_x.extend([x0, x1, None])
             edge_y.extend([y0, y1, None])
-        edge_trace = go.Scatter(x=edge_x, y=edge_y, line=dict(width=0.5, color=color_palette[4]), hoverinfo='none', mode='lines')
+        edge_trace = go.Scatter(x=edge_x, y=edge_y, line=dict(width=0.5), hoverinfo='none', mode='lines')
         node_x = [pos[node][0] for node in G.nodes()]
         node_y = [pos[node][1] for node in G.nodes()]
         node_trace = go.Scatter(x=node_x, y=node_y, mode='markers', hoverinfo='text',
-                                marker=dict(showscale=True, colorscale='Viridis', size=10, 
+                                marker=dict(showscale=True, size=10, 
                                             color=[], colorbar=dict(thickness=15, title='Node Connections'),
                                             line_width=2))
         node_adjacencies = []
@@ -1308,8 +1192,7 @@ def main():
         node_trace.text = node_text
         fig_network = go.Figure(data=[edge_trace, node_trace],
                         layout=go.Layout(showlegend=False, hovermode='closest',
-                                         title="Network Topology Visualization"))
-        fig_network = apply_custom_style(fig_network)
+                                         title="Network Topology Visualization", width=_width, height=_height))
         st.plotly_chart(fig_network, use_container_width=True, config={'displayModeBar': False})
         st.subheader("Orizon Engine Analysis")
         centrality = nx.degree_centrality(G)
@@ -1317,8 +1200,9 @@ def main():
         density = nx.density(G)
         communities = list(nx.community.greedy_modularity_communities(G))
         with st.spinner("Analyzing network topology..."):
-            network_analysis = generate_network_analysis(top_central, density, communities)
-        st.markdown(format_analysis_response(network_analysis))
+            if run_LLM:
+                network_analysis = generate_network_analysis(top_central, density, communities)
+                st.markdown(network_analysis)
 
         # Additional Cybersecurity Insights
         st.header("Additional Cybersecurity Insights", anchor="additional-cybersecurity-insights")
@@ -1327,22 +1211,24 @@ def main():
         if 'cvss_score' in filtered_vulnerabilities.columns:
             st.subheader("CVSS Score Distribution")
             fig_cvss = px.histogram(
-                filtered_vulnerabilities, 
+                filtered_vulnerabilities,
+                width=_width,
+                height=_height, 
                 x='cvss_score', 
                 nbins=20, 
                 title="Distribution of CVSS Scores",
-                labels={'cvss_score': 'CVSS Score', 'count': 'Number of Vulnerabilities'},
-                color_discrete_sequence=[color_palette[0]]
+                labels={'cvss_score': 'CVSS Score', 'count': 'Number of Vulnerabilities'}
             )
             fig_cvss.update_layout(bargap=0.1)
-            fig_cvss = apply_custom_style(fig_cvss)
             st.plotly_chart(fig_cvss, use_container_width=True, config={'displayModeBar': False})
             
             avg_cvss = filtered_vulnerabilities['cvss_score'].mean()
             high_cvss = filtered_vulnerabilities[filtered_vulnerabilities['cvss_score'] > 7]
             with st.spinner("Analyzing CVSS distribution..."):
-                cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns)
-            st.markdown(format_analysis_response(cvss_analysis))
+                cvss_analysis = ''
+                if run_LLM:
+                    cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns)
+            st.markdown(cvss_analysis)
 
         if created_at_column:
             # Michele
@@ -1442,15 +1328,15 @@ def main():
             x=vuln_types.index, 
             y=vuln_types.values, 
             title="Top 10 Vulnerability Types",
-            labels={'x': 'Vulnerability Type', 'y': 'Count'},
-            color_discrete_sequence=[color_palette[0]]
+            labels={'x': 'Vulnerability Type', 'y': 'Count'}
         )
-        fig_types = apply_custom_style(fig_types)
         st.plotly_chart(fig_types, use_container_width=True, config={'displayModeBar': False})
         
         with st.spinner("Analyzing vulnerability types..."):
-            types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist())
-        st.markdown(format_analysis_response(types_analysis))
+            types_analysis = ''
+            if run_LLM:
+                types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist())
+        st.markdown(types_analysis)
 
         # Remediation Priority Matrix
         st.header("Remediation Priority Matrix")
@@ -1461,8 +1347,10 @@ def main():
             
             high_priority = filtered_vulnerabilities[(filtered_vulnerabilities['cvss_score'] > 7) & (filtered_vulnerabilities['exploit_available'] == True)]
             with st.spinner("Analyzing remediation priorities..."):
-                remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns)
-            st.markdown(format_analysis_response(remediation_analysis))
+                remediation_analysis = ''
+                if run_LLM:
+                    remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns)
+            st.markdown(remediation_analysis)
         else:
             st.info("Not enough information available for remediation priority analysis.")
 
@@ -1472,20 +1360,9 @@ def main():
         tag_counts = Counter(all_tags)
 
         # Generate word cloud
-        wordcloud_ = WordCloud(width=1600, height=800, background_color='white', 
+        wordcloud_ = WordCloud(width=_width, height=_height, background_color='white', 
                       max_font_size=300, scale=3, relative_scaling=0.5, 
-                      collocations=False, colormap='viridis').generate_from_frequencies(tag_counts)
-
-        # Convert word cloud to an image array
-        #wordcloud_image = wordcloud.to_array()
-
-        # Create a plotly figure from the word cloud image
-        #fig = px.imshow(wordcloud_image)
-        #fig.update_layout(
-        #    xaxis={'visible': False},
-        #   yaxis={'visible': False},
-        #   margin=dict(l=0, r=0, t=0, b=0)
-        #)
+                      collocations=False, colormap='rainbow').generate_from_frequencies(tag_counts)
 
         img = wordcloud_.to_image()
         st.image(img, use_column_width=True)
@@ -1498,7 +1375,7 @@ def main():
         st.header("Export Dashboard")
         col1, col2 = st.columns(2)
         with col1:
-            export_format = st.selectbox("Choose export format:", ["PDF", "Word", "CSV", "JSON"], key="export_format")
+            export_format = st.selectbox("Choose export format:", ["Word", "CSV", "JSON"], key="export_format")
         with col2:
             if st.button("Generate Report", key="generate_report"):
                 with st.spinner(f"Generating {export_format} report..."):
@@ -1506,7 +1383,6 @@ def main():
                         'overview': overview_analysis,
                         'severity': severity_analysis,
                         'top_vulnerabilities': top_vuln_analysis,
-                        'network': network_analysis,
                         'types': types_analysis
                     }
                     if 'cvss_score' in filtered_vulnerabilities.columns:
@@ -1525,15 +1401,7 @@ def main():
                     if 'fig_remediation' in locals():
                         figures['remediation'] = fig_remediation
                     
-                    if export_format == "PDF":
-                        pdf_buffer = generate_pdf_report(filtered_vulnerabilities, analyses, figures)
-                        st.download_button(
-                            label="Download PDF Report",
-                            data=pdf_buffer,
-                            file_name="orizon_security_report.pdf",
-                            mime="application/pdf",
-                        )
-                    elif export_format == "Word":
+                    if export_format == "Word":
                         word_buffer = generate_word_report(filtered_vulnerabilities, analyses, figures)
                         st.download_button(
                             label="Download Word Report",

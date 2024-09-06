@@ -44,6 +44,8 @@ def geolocate_ip(ip, token):
             return lat, lon, data.get('country', ''), data.get('city', '')
         else:
             print(f"Failed to geolocate IP {ip}, Response: {data}")
+            print(response.text)
+            print()
             return None, None, None, None
     except requests.exceptions.RequestException as e:
         print(f"Error geolocating IP {ip}: {e}")
