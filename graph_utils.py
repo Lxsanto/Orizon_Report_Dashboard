@@ -26,7 +26,6 @@ def load_data_word(file):
             data = json.loads(file)
         return pd.DataFrame(data)
 
-# Resolve hostnames to IPs
 def resolve_hostname(hostname):
     try:
         hostname = hostname.split(':')[0]
@@ -50,7 +49,8 @@ def geolocate_ip(ip, token):
     except requests.exceptions.RequestException as e:
         print(f"Error geolocating IP {ip}: {e}")
         return None, None, None, None
-    
+
+# Create the plotly map function
 def create_plotly_map(risk_by_ip):
     latitudes = []
     longitudes = []
@@ -60,20 +60,19 @@ def create_plotly_map(risk_by_ip):
     max_score = risk_by_ip['normalized_risk_score'].max()
 
     for index, row in risk_by_ip.iterrows():
-        ip = row['ip']
+        lat = row['latitude']
+        lon = row['longitude']
+        country = row['country']
+        city = row['city']
         score = row['normalized_risk_score']
         
-        lat, lon, country, city = geolocate_ip(ip, '7509bea2d10454')
-        if lat and lon:
-            latitudes.append(lat)
-            longitudes.append(lon)
-            texts.append(f"IP: {ip}<br>Location: {city}, {country}<br>Risk Score: {score:.2f}")
+        latitudes.append(lat)
+        longitudes.append(lon)
+        texts.append(f"IP: {row['ip']}<br>Location: {city}, {country}<br>Risk Score: {score:.2f}")
             
-            # Calculate the color intensity based on the normalized risk score
-            color_intensity = int(255 * score / max_score)
-            colors.append(f'rgb({color_intensity}, {255 - color_intensity}, 0)')
-        else:
-            print(f"Could not geolocate IP {ip}")
+        # Calculate the color intensity based on the normalized risk score
+        color_intensity = int(255 * score / max_score)
+        colors.append(f'rgb({color_intensity}, {255 - color_intensity}, 0)')
     
     # Create the scattergeo plot with markers
     fig = go.Figure(go.Scattergeo(
@@ -88,17 +87,6 @@ def create_plotly_map(risk_by_ip):
             line = dict(width=2, color='rgb(0, 0, 0)')  # Black outline for contrast
         )
     ))
-
-    # Add lines connecting the points (optional, depending on your data)
-    for i in range(len(latitudes) - 1):
-        for j in range(i + 1, len(latitudes)):
-            fig.add_trace(go.Scattergeo(
-                lon = [longitudes[i], longitudes[j]],
-                lat = [latitudes[i], latitudes[j]],
-                mode = 'lines',
-                line = dict(width=1, color='rgb(0, 128, 255)'),  # Same color as the markers
-                opacity=0.5  # Slight transparency for the lines
-            ))
 
     # Update the layout of the map
     fig.update_layout(

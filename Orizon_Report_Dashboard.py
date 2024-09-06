@@ -973,7 +973,7 @@ def main():
         st.markdown("Welcome to our private Security Dashboard, here you can see the analysis of the JSON file.")
 
         # Load model
-        pipe = load_llama_model()
+        #pipe = load_llama_model()
 
         # Automatic column detection
         severity_column = 'severity' if 'severity' in filtered_vulnerabilities.columns else None
@@ -1063,6 +1063,7 @@ def main():
         
         with col2:
             st.subheader("Orizon Engine Analysis")
+            overview_analysis = ''
             with st.spinner("Generating overview analysis..."):
                 overview_analysis = ''
                 if run_LLM:
@@ -1086,6 +1087,7 @@ def main():
 
         with col2:
             st.subheader("Orizon Engine Analysis")
+            severity_analysis = ''
             with st.spinner("Generating severity analysis..."):
                 severity_analysis = ''
                 if run_LLM:
@@ -1098,12 +1100,11 @@ def main():
         with col1:
             # Michele
             file_contents = uploaded_file.read()
-            
             df = load_data_geo(file_contents)
 
             # Define severity weights
             severity_weights = {
-                'unknown' : 1,
+                'unknown': 1,
                 'info': 2,
                 'low': 4,
                 'medium': 6,
@@ -1120,8 +1121,13 @@ def main():
             # Add the IP addresses to the danger_score_per_server dataframe
             danger_score_per_server['ip'] = danger_score_per_server['host'].apply(resolve_hostname)
 
+            # Geolocate IPs to get location information (country, city)
+            geolocation_data = danger_score_per_server['ip'].apply(lambda ip: pd.Series(geolocate_ip(ip, '7509bea2d10454')))
+            geolocation_data.columns = ['latitude', 'longitude', 'country', 'city']
+            danger_score_per_server = pd.concat([danger_score_per_server, geolocation_data], axis=1)
+
             # Aggregate risk scores by IP using the danger_score_per_server data
-            risk_by_ip = danger_score_per_server.groupby('ip')['severity_weight'].sum().reset_index()
+            risk_by_ip = danger_score_per_server.groupby(['ip', 'country', 'city', 'latitude', 'longitude'])['severity_weight'].sum().reset_index()
 
             # Normalize risk scores to be between 0 and 100
             min_score = risk_by_ip['severity_weight'].min()
@@ -1132,6 +1138,26 @@ def main():
             # Create and display the Plotly map
             geo_map = create_plotly_map(risk_by_ip)
             st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})
+
+            # Display the data in the table
+            st.subheader("Risk Scores by IP")
+
+            # Select columns to display, including location information
+            selected_columns = ['ip', 'country', 'city', 'severity_weight', 'normalized_risk_score']
+
+            # Pagination
+            items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=20, step=10)
+            total_pages = len(risk_by_ip) // items_per_page + (1 if len(risk_by_ip) % items_per_page > 0 else 0)
+            current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
+
+            start_idx = (current_page - 1) * items_per_page
+            end_idx = start_idx + items_per_page
+
+            # Display the selected page of the table
+            st.dataframe(risk_by_ip[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
+
+            # Show the pagination information
+            st.write(f"Showing {start_idx+1} to {min(end_idx, len(risk_by_ip))} of {len(risk_by_ip)} entries")
         with col2:
             # Michele
             st.subheader("Orizon Engine Analysis")
@@ -1158,6 +1184,7 @@ def main():
         most_common_type = common_types.index[0]
         hosts_affected = top_10[host_column].nunique()
         most_affected_host = top_10[host_column].value_counts().index[0]
+        top_vuln_analysis = ''
         with st.spinner("Analyzing top vulnerabilities..."):
             top_vuln_analysis = ''
             if run_LLM:
@@ -1224,6 +1251,7 @@ def main():
             
             avg_cvss = filtered_vulnerabilities['cvss_score'].mean()
             high_cvss = filtered_vulnerabilities[filtered_vulnerabilities['cvss_score'] > 7]
+            cvss_analysis = ''
             with st.spinner("Analyzing CVSS distribution..."):
                 cvss_analysis = ''
                 if run_LLM:
@@ -1243,7 +1271,6 @@ def main():
 
                 # Filter the dataframe
                 filtered_df = df[~df['severity'].isin(['info'])]
-                #print(filtered_df[['host','severity']])
 
                 # Get unique hosts
                 unique_hosts = filtered_df['host'].unique()
@@ -1262,11 +1289,11 @@ def main():
                 screenshots = []
                 progress_bar = st.progress(0)
                 for index, host in enumerate(unique_hosts):
-                    progress_bar.progress(index + 1, text=f'We are taking screenshots, number of sites scanned: {index + 1}')
+                    progress_bar.progress((index + 1) / len(unique_hosts), text=f'We are taking screenshots, number of sites scanned: {index + 1}')
                     url = check_url(driver, host)
                     if url:
                         try:
-                            # Wait for 5 seconds before taking the screenshot
+                            # Wait for 3 seconds before taking the screenshot
                             time.sleep(3)
                             
                             # Capture screenshot as a byte stream
@@ -1286,38 +1313,9 @@ def main():
                 # Close the WebDriver
                 driver.quit()
 
-                # Display the screenshots using Plotly
+                # Display the screenshots using Streamlit's st.image
                 for host, image in screenshots:
-                    # Get the final width and height after resizing
-                    final_width, final_height = image.size
-
-                    # Create a Plotly figure
-                    fig = go.Figure()
-                    fig.add_layout_image(
-                        dict(
-                            source=image,
-                            xref="x",
-                            yref="y",
-                            x=0,
-                            y=final_height,
-                            sizex=final_width,
-                            sizey=final_height,
-                            sizing="stretch",
-                            opacity=1,
-                            layer="below"
-                        )
-                    )
-                    fig.update_layout(
-                        title_text=f'Screenshot of {host}',
-                        title_x=0.5,  # Center the title
-                        title_y=0.95,  # Adjust the vertical position of the title
-                        xaxis={'visible': False, 'range': [0, final_width]},
-                        yaxis={'visible': False, 'range': [0, final_height]},
-                        width=final_width,
-                        height=final_height + 50,  # Add some space for the title
-                        margin=dict(l=0, r=0, t=50, b=0)  # Adjust the top margin for the title
-                    )
-                    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                    st.image(image, caption=f'Screenshot of {host}', use_column_width=True)
 
         # Vulnerability Types Analysis
         st.subheader("Top Vulnerability Types")
@@ -1332,6 +1330,7 @@ def main():
         )
         st.plotly_chart(fig_types, use_container_width=True, config={'displayModeBar': False})
         
+        types_analysis = ''
         with st.spinner("Analyzing vulnerability types..."):
             types_analysis = ''
             if run_LLM:
