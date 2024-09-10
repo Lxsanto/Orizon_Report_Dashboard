@@ -1,5 +1,6 @@
 import os
 import io
+import zipfile
 import json
 import time
 import subprocess
@@ -10,7 +11,6 @@ import pytz
 import streamlit as st
 import plotly.express as px
 import plotly.io as pio
-from PIL import Image
 import networkx as nx
 from io import BytesIO
 from wordcloud import WordCloud
@@ -19,12 +19,6 @@ import torch
 # Docx per la gestione di documenti Word
 from docx import Document
 from docx.shared import Inches
-
-# Selenium per l'automazione del browser
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.common.exceptions import (NoSuchWindowException, TimeoutException, WebDriverException)
-from webdriver_manager.chrome import ChromeDriverManager
 
 # Streamlit Authenticator per la gestione dell'autenticazione
 from streamlit_authenticator import Authenticate
@@ -44,10 +38,26 @@ except ImportError:
     clear_pycache()
     restart_script()
 
+logo = Image.open("/Users/alessio/Documents/GitHub/Orizon_Report_dashboard_main/logo1.png")
+
+# Definizione dei colori del branding kit
+kelly_green = "#4AC300"
+mariana_blue = "#002430"
+burnt_red = "#E5625E"
+dodger_blue = "#2191FB"
+dawn_mist = "#DBE2E9"
+simple_white = "#FFFFFF"
+
 # Configurazione di Streamlit
-st.set_page_config(page_title="Orizon Security", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Orizon Security", layout="wide", initial_sidebar_state="expanded")
+with st.sidebar:
+    st.image(logo)
 st.config.set_option("theme.base", "light")
-st.config.set_option("theme.primaryColor", "#4682b4")
+st.config.set_option("theme.primaryColor", kelly_green)
+st.config.set_option("theme.backgroundColor", simple_white)
+st.config.set_option("theme.secondaryBackgroundColor", dawn_mist)
+st.config.set_option("theme.textColor", mariana_blue)
+st.config.set_option("theme.font", 'sans serif')
 
 # Configurazione dell'autenticazione Streamlit
 with open('password.yaml') as file:
@@ -65,20 +75,24 @@ authenticator = Authenticate(
 template = pio.templates['ggplot2']
 pio.templates.default = 'ggplot2'
 
-template.layout.font.family = "Arial, sans-serif"
-template.layout.font.size = 300
-template.layout.font.color = "rgb(51,51,51)"
+template.layout.font.family = "Gill Sans, sans-serif"
+template.layout.font.size = 12  # Ridotto da 300 a una dimensione più ragionevole
+template.layout.font.color = mariana_blue
 template.layout.title.font.size = 20
 template.layout.xaxis.title.font.size = 16
 template.layout.yaxis.title.font.size = 16
-template.layout.paper_bgcolor = "white"
-template.layout.plot_bgcolor = "rgb(237,237,237)"
-template.layout.xaxis.gridcolor = "white"
-template.layout.xaxis.linecolor = "white"
-template.layout.xaxis.tickcolor = "rgb(51,51,51)"
-template.layout.yaxis.gridcolor = "white"
-template.layout.yaxis.linecolor = "white"
-template.layout.yaxis.tickcolor = "rgb(51,51,51)"
+template.layout.paper_bgcolor = simple_white
+template.layout.plot_bgcolor = dawn_mist  # Cambiato da rosso a un colore più neutro
+template.layout.xaxis.gridcolor = simple_white
+template.layout.xaxis.linecolor = mariana_blue
+template.layout.xaxis.tickcolor = mariana_blue
+template.layout.yaxis.gridcolor = simple_white
+template.layout.yaxis.linecolor = mariana_blue
+template.layout.yaxis.tickcolor = mariana_blue
+
+# Definizione della palette di colori personalizzata
+colors = [kelly_green, dodger_blue, burnt_red, mariana_blue]
+template.layout.colorway = colors
 
 pio.templates["Orizon_template"] = template
 pio.templates.default = "Orizon_template"
@@ -103,149 +117,148 @@ if clear:
 
 ### Streamlit CSS dashboard setups ###
 st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-    
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8f9fa;
-        color: #1a2f4e;
-    }
-    
-    h1, h2, h3 {
-        color: #1a2f4e;
-        font-weight: 600;
-    }
-    
-    .stAlert {
-        background-color: #f8f9fa;
-        color: #1a2f4e;
-        border: none;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-    
-    .stButton>button {
-        border-radius: 6px;
-        background-color: #3b82f6;
-        color: #f8f9fa;
-        font-weight: 500;
-        padding: 0.5rem 1rem;
-        border: none;
-        transition: all 0.2s ease;
-    }
-    
-    .stButton>button:hover {
-        opacity: 0.8;
-        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-    }
-    
-    .stProgress .st-bo {
-        background-color: #3b82f6;
-    }
-    
-    div[data-testid="stMetricValue"] {
-        font-size: 2rem;
-        font-weight: 600;
-        color: #1a2f4e;
-    }
-    
-    div[data-testid="stMetricLabel"] {
-        font-size: 0.9rem;
-        font-weight: 400;
-        color: #64748b;
-    }
-    
-    .plot-container {
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        background-color: #f8f9fa;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .stSelectbox, .stMultiSelect {
-        background-color: #f8f9fa;
-        color: #1a2f4e;
-        border-radius: 6px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
-    
-    .sidebar .sidebar-content {
-        background-color: #f8f9fa;
-    }
+                <style>
+                @import url('https://fonts.googleapis.com/css2?family=Gill+Sans&display=swap');
 
-    .tooltip {
-        position: relative;
-        display: inline-block;
-        border-bottom: 1px dotted #1a2f4e;
-    }
+                body {
+                    font-family: 'Gill Sans', sans-serif;
+                    background-color: #FFFFFF;
+                    color: #002430;
+                }
 
-    .tooltip .tooltiptext {
-        visibility: hidden;
-        width: 200px;
-        background-color: #1a2f4e;
-        color: #f8f9fa;
-        text-align: center;
-        border-radius: 6px;
-        padding: 5px 0;
-        position: absolute;
-        z-index: 1;
-        bottom: 125%;
-        left: 50%;
-        margin-left: -100px;
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
+                h1, h2, h3 {
+                    color: #002430;
+                    font-weight: 600;
+                }
 
-    .tooltip:hover .tooltiptext {
-        visibility: visible;
-        opacity: 1;
-    }
+                .stAlert {
+                    background-color: #DBE2E9;
+                    color: #002430;
+                    border: none;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                }
 
-    .kpi-card {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        padding: 1rem;
-        text-align: center;
-    }
+                .stButton > button {
+                    background-color: #2191FB;  /* Dodger Blue */
+                    color: #FFFFFF;  /* Simple White */
+                    border: none;
+                    border-radius: 4px;
+                    padding: 0.5rem 1rem;
+                    font-weight: 600;
+                }
 
-    .kpi-value {
-        font-size: 2rem;
-        font-weight: 600;
-        color: #3b82f6;
-    }
+                .stButton > button:hover {
+                    background-color: #4AC300;  /* Kelly Green */
+                    color: #FFFFFF;  /* Simple White */
+                }
 
-    .kpi-label {
-        font-size: 0.9rem;
-        color: #64748b;
-    }
+                .stProgress .st-bo {
+                    background-color: #4AC300;
+                }
 
-    .section-nav {
-        position: sticky;
-        top: 0;
-        background-color: #f8f9fa;
-        z-index: 1000;
-        padding: 1rem 0;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid #64748b;
-    }
+                div[data-testid="stMetricValue"] {
+                    font-size: 2rem;
+                    font-weight: 600;
+                    color: #002430;
+                }
 
-    .section-nav a {
-        color: #1a2f4e;
-        text-decoration: none;
-        margin-right: 1rem;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        transition: background-color 0.2s ease;
-    }
+                div[data-testid="stMetricLabel"] {
+                    font-size: 0.9rem;
+                    font-weight: 400;
+                    color: #002430;
+                }
 
-    .section-nav a:hover {
-        background-color: #3b82f6;
-        color: #f8f9fa;
-    }
-    </style>
+                .plot-container {
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                    background-color: #FFFFFF;
+                    padding: 1rem;
+                    margin-bottom: 1.5rem;
+                }
+
+                .stSelectbox, .stMultiSelect {
+                    background-color: #FFFFFF;
+                    color: #002430;
+                    border-radius: 6px;
+                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+                }
+
+                .sidebar .sidebar-content {
+                    background-color: #FFFFFF;
+                }
+
+                .tooltip {
+                    position: relative;
+                    display: inline-block;
+                    border-bottom: 1px dotted #002430;
+                }
+
+                .tooltip .tooltiptext {
+                    visibility: hidden;
+                    width: 200px;
+                    background-color: #002430;
+                    color: #FFFFFF;
+                    text-align: center;
+                    border-radius: 6px;
+                    padding: 5px 0;
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 125%;
+                    left: 50%;
+                    margin-left: -100px;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                }
+
+                .tooltip:hover .tooltiptext {
+                    visibility: visible;
+                    opacity: 1;
+                }
+
+                .kpi-card {
+                    background-color: #FFFFFF;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    padding: 1rem;
+                    text-align: center;
+                }
+
+                .kpi-value {
+                    font-size: 2rem;
+                    font-weight: 600;
+                    color: #4AC300;
+                }
+
+                .kpi-label {
+                    font-size: 0.9rem;
+                    color: #002430;
+                }
+
+                .section-nav {
+                    position: sticky;
+                    top: 0;
+                    background-color: #FFFFFF;
+                    z-index: 1000;
+                    padding: 1rem 0;
+                    margin-bottom: 1rem;
+                    border-bottom: 1px solid #002430;
+                }
+
+                .section-nav a {
+                    color: #002430;
+                    text-decoration: none;
+                    margin-right: 1rem;
+                    padding: 0.5rem 1rem;
+                    border-radius: 4px;
+                    transition: background-color 0.2s ease;
+                }
+
+                .section-nav a:hover {
+                    background-color: #2191FB;
+                    color: #FFFFFF;
+                }
+                </style>
     """, unsafe_allow_html=True)
 
 ### Utility functions ###
@@ -912,7 +925,7 @@ def generate_word_report(vulnerabilities, analyses, figures):
 
 def main():
     
-    st.sidebar.title("🛡️ Orizon Security Dashboard")
+    st.sidebar.title("Orizon Security Dashboard")
 
     if st.sidebar.button("Restart App"):
         subprocess.run(['python', 'run_streamlit_port8501.py'])
@@ -1042,11 +1055,11 @@ def main():
         with col1:
 
             if risk_score > 40 and risk_score < 60:
-                gauge_color = 'orange'
+                gauge_color = dodger_blue
             elif risk_score > 60:
-                gauge_color = 'red'
+                gauge_color = burnt_red
             else:
-                gauge_color = 'green'
+                gauge_color = kelly_green
             
             fig_risk_score = go.Figure(
                 go.Indicator(
@@ -1056,8 +1069,8 @@ def main():
                 title = {'text': "Risk Score", 'font': {'size': 20}},
                 gauge = {
                     'bar': {'color': gauge_color},
-                    'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#1a2f4e"}}),
-                 layout=go.Layout(width=_width, height=_height))
+                    'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': mariana_blue}}),
+                 layout=go.Layout(width=_width, height=_height, font={'color': mariana_blue}))
             
             st.plotly_chart(fig_risk_score, use_container_width=True, config={'displayModeBar': False})
         
@@ -1261,11 +1274,19 @@ def main():
         if created_at_column:
             # Michele
             st.subheader("Screenshots")
-            st.write("Il nostro sistema sta catturando una screenshot per ogni login page identificata.")
-            st.write("Vuoi che questo processo continui?")
-            scelta = st.radio("Seleziona un'opzione:", ("Si", "No"))
+            st.write("We are taking screenshots...")
 
-            if scelta == 'Si':
+            scelta = 'No'
+            if st.button('Click here to interrupt the process'):
+                scelta = 'Yes'
+
+            if scelta == 'No':
+
+                screenshots = []
+                errors = []
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                summary = st.empty()
 
                 df = load_data_screen(file_contents)
 
@@ -1275,47 +1296,69 @@ def main():
                 # Get unique hosts
                 unique_hosts = filtered_df['host'].unique()
 
-                # Setup Selenium WebDriver
-                options = webdriver.ChromeOptions()
-                options.add_argument('--headless')  # Ensure the browser does not open on the screen
-                options.add_argument('--no-sandbox')
-                options.add_argument('--disable-dev-shm-usage')
-                driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-
-                max_width = 600  # Replace with your desired maximum width
-                max_height = 600  # Replace with your desired maximum height
+                # setup Selenium WebDriver
+                driver = setup_driver()
+                max_width, max_height = 1920, 1080
 
                 # Iterate over each unique host and take a screenshot
-                screenshots = []
-                progress_bar = st.progress(0)
                 for index, host in enumerate(unique_hosts):
-                    progress_bar.progress((index + 1) / len(unique_hosts), text=f'We are taking screenshots, number of sites scanned: {index + 1}')
-                    url = check_url(driver, host)
-                    if url:
-                        try:
-                            # Wait for 3 seconds before taking the screenshot
-                            time.sleep(3)
-                            
-                            # Capture screenshot as a byte stream
-                            screenshot_as_bytes = driver.get_screenshot_as_png()
-                            image = Image.open(io.BytesIO(screenshot_as_bytes))
-                            
-                            # Resize the image while maintaining the aspect ratio
-                            image.thumbnail((max_width, max_height))
-                            
-                            # Append the resized image to the list without saving to disk
-                            screenshots.append((host, image))
-                        
-                        except (TimeoutException, NoSuchWindowException, WebDriverException) as e:
-                            print(f"Could not load {host}: {str(e)}, skipping...")
-                            continue
+                    
+                    progress = (index + 1) / len(unique_hosts)
+                    progress_bar.progress(progress)
+                    status_text.text(f'Numbers of scanned sites: {index + 1}/{len(unique_hosts)}')
 
-                # Close the WebDriver
+                    host, image, error_type = take_screenshot(driver, host, max_width, max_height)
+                    if host and image:
+                        screenshots.append((host, image))
+                    else:
+                        errors.append((host, error_type))
+                    
+                    summary.text(f"Validated Screenshots: {len(screenshots)}, Errors: {len(errors)}")
+                
+                # Mostra riepilogo degli errori
+                if errors:
+                    st.subheader("Errors recap")
+                    for host, error_type in errors:
+                        st.error(f'Error for \"{host}\": {error_type}')
+
                 driver.quit()
+                st.success("Process successfully completed")
+
+                # esistono delle screenshot
+                if screenshots:
+                    st.subheader("Screenshot gallery")
+                    cols = st.columns(3)
+                    for i, (host, image) in enumerate(screenshots):
+                        with cols[i % 3]:
+                            st.image(image, caption=host, use_column_width=True)
+
+                    # Creiamo un file zip in memoria
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                        for host, image in screenshots:
+                            # Convertiamo l'immagine in PNG
+                            img_byte_arr = io.BytesIO()
+                            image.save(img_byte_arr, format='PNG')
+                            img_byte_arr = img_byte_arr.getvalue()
+                            
+                            # Aggiungiamo l'immagine al file zip
+                            zip_file.writestr(f"image_{host}.png", img_byte_arr)
+
+                    # Resettiamo il puntatore del buffer
+                    zip_buffer.seek(0)
+
+                    # Utilizziamo st.download_button per creare un pulsante di download
+                    st.download_button(
+                        label="Download images",
+                        data=zip_buffer,
+                        file_name="screenshots.zip",
+                        mime="application/zip"
+                    )
+
 
                 # Display the screenshots using Streamlit's st.image
-                for host, image in screenshots:
-                    st.image(image, caption=f'Screenshot of {host}', use_column_width=True)
+                #for host, image in screenshots:
+                #    st.image(image, caption=f'Screenshot of {host}', use_column_width=True)
 
         # Vulnerability Types Analysis
         st.subheader("Top Vulnerability Types")
@@ -1358,17 +1401,25 @@ def main():
         all_tags = df['template_name']
         tag_counts = Counter(all_tags)
 
-        # Generate word cloud
-        wordcloud_ = WordCloud(width=_width, height=_height, background_color='white', 
-                      max_font_size=300, scale=3, relative_scaling=0.5, 
-                      collocations=False, colormap='rainbow').generate_from_frequencies(tag_counts)
+        # Creazione di una colormap personalizzata
+        from matplotlib.colors import LinearSegmentedColormap
+
+        colors = [kelly_green, dodger_blue, burnt_red, mariana_blue]
+        n_bins = len(colors)
+        cmap_name = 'brand_colors'
+        cm = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+
+        # Creazione del WordCloud
+        wordcloud_ = WordCloud(width=_width, height=_height, 
+                            background_color='white', 
+                            max_font_size=300, 
+                            scale=3, 
+                            relative_scaling=0.5, 
+                            collocations=False, 
+                            colormap=cm).generate_from_frequencies(tag_counts)
 
         img = wordcloud_.to_image()
         st.image(img, use_column_width=True)
-
-        # Display the word cloud
-        #st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-
 
         # Export Options
         st.header("Export Dashboard")
