@@ -15,6 +15,7 @@ import networkx as nx
 from io import BytesIO
 from wordcloud import WordCloud
 import torch
+import cProfile
 
 # Docx per la gestione di documenti Word
 from docx import Document
@@ -1108,6 +1109,7 @@ def main():
                     severity_analysis = analyze_severity_distribution(severity_counts)
             st.markdown(severity_analysis)
 
+
         # Vulnerability Timeline
         st.header("Geolocation of company servers", anchor="Geolocation of company servers")
         col1, col2 = st.columns([2, 1])
@@ -1135,8 +1137,23 @@ def main():
             # Add the IP addresses to the danger_score_per_server dataframe
             danger_score_per_server['ip'] = danger_score_per_server['host'].apply(resolve_hostname)
 
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            summary = st.empty()
+
             # Geolocate IPs to get location information (country, city)
-            geolocation_data = danger_score_per_server['ip'].apply(lambda ip: pd.Series(geolocate_ip(ip, '7509bea2d10454')))
+            ip_list = danger_score_per_server['ip'].to_list()
+            geo_results = []
+
+            for index, ip in enumerate(ip_list):
+                progress = (index + 1) / len(ip_list)
+                progress_bar.progress(progress)
+                status_text.text(f'Numbers of scanned hosts: {index + 1}/{len(ip_list)}')
+                d = geolocate_ip(ip, 'f2cfc8c5c8c358')
+                geo_results.append(d)
+            
+            geolocation_data = pd.DataFrame(geo_results)
+            #geolocation_data = danger_score_per_server['ip'].apply(lambda ip: pd.Series(geolocate_ip(ip, 'f2cfc8c5c8c358')))
             geolocation_data.columns = ['latitude', 'longitude', 'country', 'city']
             danger_score_per_server = pd.concat([danger_score_per_server, geolocation_data], axis=1)
 
