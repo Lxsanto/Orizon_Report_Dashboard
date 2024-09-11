@@ -38,7 +38,7 @@ except ImportError:
     clear_pycache()
     restart_script()
 
-logo = Image.open("/Users/alessio/Documents/GitHub/Orizon_Report_dashboard_main/logo1.png")
+logo = Image.open("logo1.png")
 
 # Definizione dei colori del branding kit
 kelly_green = "#4AC300"
@@ -100,8 +100,8 @@ _width = 800
 _height = 600
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -986,7 +986,8 @@ def main():
         st.markdown("Welcome to our private Security Dashboard, here you can see the analysis of the JSON file.")
 
         # Load model
-        #pipe = load_llama_model()
+        if run_LLM:
+            load_llama_model()
 
         # Automatic column detection
         severity_column = 'severity' if 'severity' in filtered_vulnerabilities.columns else None
