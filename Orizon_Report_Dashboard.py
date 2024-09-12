@@ -293,22 +293,6 @@ def load_LLM(model_id = model_id, auth_token = auth_token):
     except Exception as e:
         st.error(f"Error loading the model: {str(e)}")
 
-@st.cache_data
-def load_data(file):
-    if file is not None:
-        try:
-            data = json.loads(file.getvalue().decode('utf-8'))
-            if isinstance(data, dict):
-                return pd.DataFrame(data)
-            elif isinstance(data, list):
-                return pd.DataFrame(data)
-            else:
-                st.error("Unrecognized data format. Please upload a valid JSON file.")
-                return None
-        except Exception as e:
-            st.error(f"Error loading data: {str(e)}")
-            return None
-    return None
 
 @st.cache_data
 def calculate_risk_score(vulnerabilities, severity_column):
@@ -908,7 +892,139 @@ def generate_word_report(vulnerabilities, analyses, figures):
     buffer.seek(0)
     return buffer
 
+@st.cache_data
+def process_and_filter_vulnerabilities(uploaded_file):
+    vulnerabilities = load_data(uploaded_file)
+
+    if vulnerabilities is not None and not vulnerabilities.empty:
+        st.sidebar.success("JSON file loaded successfully!")
+        
+        if 'created_at' in vulnerabilities.columns:
+            vulnerabilities['created_at'] = pd.to_datetime(vulnerabilities['created_at'], errors='coerce')
+            vulnerabilities = vulnerabilities.dropna(subset=['created_at'])
+            return vulnerabilities
+        else:
+            st.error("The 'created_at' column is missing from the data. Please check your JSON file.")
+            return None
+    else:
+        st.error("Failed to load data or the file is empty.")
+        return None
+
+@st.cache_data
+def create_risk_score_gauge(risk_score):
+
+    # Determinazione del colore del gauge basato sul risk_score
+    if 20 < risk_score < 60:
+        gauge_color = sunglow
+    elif risk_score >= 60:
+        gauge_color = burnt_red
+    else:
+        gauge_color = kelly_green
+    
+    # Creazione della figura
+    fig = go.Figure(
+        go.Indicator(
+            mode="gauge+number",
+            value=risk_score,
+            domain={'x': [0, 1], 'y': [0, 1]},
+            title={'text': "Risk Score", 'font': {'size': 20}},
+            gauge={
+                'bar': {'color': gauge_color},
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': mariana_blue}
+            }
+        ),
+        layout=go.Layout(
+            width=_width,
+            height=_height,
+            font={'color': mariana_blue}
+        )
+    )
+    
+    return fig
+
+@st.cache_data
+def pie(severity_counts):
+
+    fig_severity = go.Figure(data=[go.Pie(
+        labels=severity_counts.index,
+        values=severity_counts.values,
+        textinfo='percent+label',
+        textposition='inside',
+        hole=0.3,
+        pull=[0.1] * len(severity_counts),  # This creates the exploded effect
+        marker=dict(colors=severity_counts.index),  # Use the same colors as before
+    )])
+
+    fig_severity.update_layout(
+        title_text="Vulnerability Severity Distribution",
+        title_x=0.5,  # Center the title
+        width=_width,
+        height=_height,
+        scene=dict(
+            xaxis_title='',
+            yaxis_title='',
+            zaxis_title='',
+            aspectmode='manual',
+            aspectratio=dict(x=1, y=1, z=0.5)  # This gives a 3D effect
+        ),
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+    )
+
+    fig_severity.update_traces(
+        textfont_size=12,
+        marker=dict(line=dict(color='#000000', width=2))  # Add a black outline to each slice
+    )
+
+    return fig_severity
+
+@st.cache_data
+def Geolocation_of_servers(file_contents, api_key):
+    # Load and preprocess data
+    df = load_data_geo(file_contents)
+    
+    severity_weights = {
+        'unknown': 1, 'info': 2, 'low': 4, 'medium': 6, 'high': 8, 'critical': 10
+    }
+    
+    df['severity_weight'] = df['severity'].map(severity_weights)
+    danger_score_per_server = df.groupby('host')['severity_weight'].sum().reset_index()
+    danger_score_per_server['ip'] = danger_score_per_server['host'].apply(resolve_hostname)
+    
+    # Geolocate IPs
+    ip_list = danger_score_per_server['ip'].to_list()
+    geo_results = []
+    for ip in ip_list:
+        d = geolocate_ip(ip, api_key)
+        geo_results.append(d)
+    
+    geolocation_data = pd.DataFrame(geo_results, columns=['latitude', 'longitude', 'country', 'city'])
+    
+    # Combine data and aggregate risk scores
+    risk_by_ip = pd.concat([danger_score_per_server, geolocation_data], axis=1)
+    risk_by_ip = risk_by_ip.groupby(['ip', 'country', 'city', 'latitude', 'longitude'])['severity_weight'].sum().reset_index()
+    
+    # Normalize risk scores
+    max_score = risk_by_ip['severity_weight'].max()
+    risk_by_ip['normalized_risk_score'] = (risk_by_ip['severity_weight'] / max_score) * 100
+    risk_by_ip.loc[risk_by_ip['severity_weight'] == max_score, 'normalized_risk_score'] = 100
+
+    geo_map = create_plotly_map(risk_by_ip)
+    geo_map_1 = create_country_bubble_plot(risk_by_ip)
+
+    # Group hosts by IP
+    hosts_by_ip = danger_score_per_server.groupby('ip')['host'].agg(list).reset_index()
+    hosts_by_ip.columns = ['ip', 'associated_hosts']
+
+    # Merge the hosts information with the risk_by_ip dataframe
+    risk_by_ip = risk_by_ip.merge(hosts_by_ip, on='ip', how='left')
+    
+    return geo_map, geo_map_1, risk_by_ip
+
 def main():
+    # profiler
+    profiler = cProfile.Profile()
+    profiler.enable()
     
     st.sidebar.title("Orizon Security Dashboard")
 
@@ -919,52 +1035,8 @@ def main():
     uploaded_file = st.sidebar.file_uploader("Upload Vulnerability JSON", type="json", key="vuln_upload")
     
     if uploaded_file:
-        with st.spinner("Processing vulnerability data..."):
-            vulnerabilities = load_data(uploaded_file)
-        if vulnerabilities is not None and not vulnerabilities.empty:
-            st.sidebar.success("JSON file loaded successfully!")
-            
-            # Ensure 'created_at' is in datetime format
-            if 'created_at' in vulnerabilities.columns:
-                vulnerabilities['created_at'] = pd.to_datetime(vulnerabilities['created_at'], errors='coerce')
-                
-                # Remove rows with invalid dates
-                vulnerabilities = vulnerabilities.dropna(subset=['created_at'])
-                
-                if not vulnerabilities.empty:
-                    # Global filters
-                    st.sidebar.subheader("Global Filters")
-                    min_date = vulnerabilities['created_at'].min().date()
-                    max_date = vulnerabilities['created_at'].max().date()
-                    date_range = st.sidebar.date_input(
-                        "Date Range",
-                        value=(min_date, max_date),
-                        min_value=min_date,
-                        max_value=max_date,
-                        key="date_filter"
-                    )
-                    severity_filter = st.sidebar.multiselect(
-                        "Severity",
-                        options=vulnerabilities['severity'].unique(),
-                        default=vulnerabilities['severity'].unique(),
-                        key="severity_filter"
-                    )
-                    
-                    # Apply filters
-                    mask = (
-                        (vulnerabilities['created_at'].dt.date >= date_range[0]) &
-                        (vulnerabilities['created_at'].dt.date <= date_range[1]) &
-                        (vulnerabilities['severity'].isin(severity_filter))
-                    )
-                    filtered_vulnerabilities = vulnerabilities[mask]
-                    
-                    st.sidebar.info(f"Showing {len(filtered_vulnerabilities)} out of {len(vulnerabilities)} vulnerabilities")
-                else:
-                    st.error("No valid data after date conversion. Please check your data format.")
-                    return
-            else:
-                st.error("The 'created_at' column is missing from the data. Please check your JSON file.")
-                return
+
+        filtered_vulnerabilities = process_and_filter_vulnerabilities(uploaded_file)
 
         # Main content
         st.title("Orizon Security Dashboard")
@@ -986,7 +1058,6 @@ def main():
         <div class="section-nav">
             <a href="#security-posture-overview">Overview</a>
             <a href="#vulnerability-severity-distribution">Severity</a>
-            <a href="#vulnerability-discovery-timeline">Timeline</a>
             <a href="#top-10-critical-vulnerabilities">Top Vulnerabilities</a>
             <a href="#network-topology-analysis">Network Analysis</a>
             <a href="#additional-cybersecurity-insights">Additional Insights</a>
@@ -1037,31 +1108,13 @@ def main():
         col1, col2 = st.columns([3, 2])
         with col1:
 
-            if risk_score > 20 and risk_score < 60:
-                gauge_color = sunglow
-            elif risk_score > 60:
-                gauge_color = burnt_red
-            else:
-                gauge_color = kelly_green
-            
-            fig_risk_score = go.Figure(
-                go.Indicator(
-                mode = "gauge+number",
-                value = risk_score,
-                domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text': "Risk Score", 'font': {'size': 20}},
-                gauge = {
-                    'bar': {'color': gauge_color},
-                    'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': mariana_blue}}),
-                 layout=go.Layout(width=_width, height=_height, font={'color': mariana_blue}))
-            
+            fig_risk_score = create_risk_score_gauge(risk_score)
             st.plotly_chart(fig_risk_score, use_container_width=True, config={'displayModeBar': False})
         
         with col2:
             st.subheader("Orizon Engine Analysis")
             overview_analysis = ''
             with st.spinner("Generating overview analysis..."):
-                overview_analysis = ''
                 if run_LLM:
                     overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe)
             st.markdown(overview_analysis)
@@ -1071,37 +1124,7 @@ def main():
         col1, col2 = st.columns([2, 1])
         with col1:
             severity_counts = filtered_vulnerabilities[severity_column].value_counts()
-
-            fig_severity = go.Figure(data=[go.Pie(
-                labels=severity_counts.index,
-                values=severity_counts.values,
-                textinfo='percent+label',
-                textposition='inside',
-                hole=0.3,
-                pull=[0.1] * len(severity_counts),  # This creates the exploded effect
-                marker=dict(colors=severity_counts.index),  # Use the same colors as before
-            )])
-
-            fig_severity.update_layout(
-                title_text="Vulnerability Severity Distribution",
-                title_x=0.5,  # Center the title
-                width=_width,
-                height=_height,
-                scene=dict(
-                    xaxis_title='',
-                    yaxis_title='',
-                    zaxis_title='',
-                    aspectmode='manual',
-                    aspectratio=dict(x=1, y=1, z=0.5)  # This gives a 3D effect
-                ),
-                showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
-            )
-
-            fig_severity.update_traces(
-                textfont_size=12,
-                marker=dict(line=dict(color='#000000', width=2))  # Add a black outline to each slice
-            )
+            fig_severity = pie(severity_counts)
 
             st.plotly_chart(fig_severity, use_container_width=True, config={'displayModeBar': False})
 
@@ -1109,93 +1132,26 @@ def main():
             st.subheader("Orizon Engine Analysis")
             severity_analysis = ''
             with st.spinner("Generating severity analysis..."):
-                severity_analysis = ''
                 if run_LLM:
                     severity_analysis = analyze_severity_distribution(severity_counts, _pipe= pipe)
             st.markdown(severity_analysis)
 
 
-        # Vulnerability Timeline
+        # Geolocation of servers
         st.header("Geolocation of company servers", anchor="Geolocation of company servers")
-        ### dopo aver visualizzato l'header di streamlit lo script si blocca e sembra come se fosse dentro un loop che dura molto tempo
         
         col1, col2 = st.columns([2, 1])
         with col1:
-            # Michele
-
-            # profiler
-            profiler = cProfile.Profile()
-            profiler.enable()
 
             file_contents = uploaded_file.read()
-            df = load_data_geo(file_contents)
+            geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key='f2cfc8c5c8c358')
 
-            # Define severity weights
-            severity_weights = {
-                'unknown': 1,
-                'info': 2,
-                'low': 4,
-                'medium': 6,
-                'high':8,
-                'critical': 10
-            }
-
-            # Apply weights to severity column
-            df['severity_weight'] = df['severity'].map(severity_weights)
-
-            # Calculate the danger score by summing the severity weights per server (host)
-            danger_score_per_server = df.groupby('host')['severity_weight'].sum().reset_index()
-
-            # Add the IP addresses to the danger_score_per_server dataframe
-            danger_score_per_server['ip'] = danger_score_per_server['host'].apply(resolve_hostname)
-
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            summary = st.empty()
-
-            # Geolocate IPs to get location information (country, city)
-            ip_list = danger_score_per_server['ip'].to_list()
-            geo_results = []
-
-            for index, ip in enumerate(ip_list):
-                progress = (index + 1) / len(ip_list)
-                progress_bar.progress(progress)
-                status_text.text(f'Numbers of scanned hosts: {index + 1}/{len(ip_list)}')
-                d = geolocate_ip(ip, 'f2cfc8c5c8c358')
-                geo_results.append(d)
-            
-            geolocation_data = pd.DataFrame(geo_results)
-            #geolocation_data = danger_score_per_server['ip'].apply(lambda ip: pd.Series(geolocate_ip(ip, 'f2cfc8c5c8c358')))
-            geolocation_data.columns = ['latitude', 'longitude', 'country', 'city']
-            danger_score_per_server = pd.concat([danger_score_per_server, geolocation_data], axis=1)
-
-            # Aggregate risk scores by IP using the danger_score_per_server data
-            risk_by_ip = danger_score_per_server.groupby(['ip', 'country', 'city', 'latitude', 'longitude'])['severity_weight'].sum().reset_index()
-
-            # Find the maximum severity_weight
-            max_score = risk_by_ip['severity_weight'].max()
-
-            # Calculate the normalized risk score
-            risk_by_ip['normalized_risk_score'] = (risk_by_ip['severity_weight'] / max_score) * 100
-
-            # Ensure the highest risk score is exactly 100
-            risk_by_ip.loc[risk_by_ip['severity_weight'] == max_score, 'normalized_risk_score'] = 100
-
-            # Create and display the Plotly map
-            geo_map = create_plotly_map(risk_by_ip)
-            geo_map_1 = create_country_bubble_plot(risk_by_ip)
+            # Create and display the Plotly maps
             st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})
             st.plotly_chart(geo_map_1, use_container_width=True, config={'displayModeBar': False})
 
             # Display the data in the table
             st.subheader("Risk Scores by IP")
-
-            # Group hosts by IP
-            hosts_by_ip = danger_score_per_server.groupby('ip')['host'].agg(list).reset_index()
-            hosts_by_ip.columns = ['ip', 'associated_hosts']
-
-            # Merge the hosts information with the risk_by_ip dataframe
-            risk_by_ip = risk_by_ip.merge(hosts_by_ip, on='ip', how='left')
 
             # Update the selected columns to include the new 'associated_hosts' column
             selected_columns = ['ip', 'associated_hosts', 'country', 'city', 'severity_weight', 'normalized_risk_score']
@@ -1214,11 +1170,6 @@ def main():
             # Show the pagination information
             st.write(f"Showing {start_idx+1} to {min(end_idx, len(risk_by_ip))} of {len(risk_by_ip)} entries")
 
-            profiler.disable()
-            profiler.print_stats(sort='cumulative')
-        
-
-
         # Top 10 Vulnerabilities
         st.header("Top 10 Critical Vulnerabilities", anchor="top-10-critical-vulnerabilities")
     
@@ -1229,18 +1180,8 @@ def main():
         # Apply the custom sorting
         filtered_vulnerabilities['severity_num'] = filtered_vulnerabilities[severity_column].apply(severity_to_num)
         top_10 = filtered_vulnerabilities.sort_values(['severity_num', severity_column], ascending=[False, False]).head(10)
-
-        # # Create the table
-        # fig_top_10 = go.Figure(data=[go.Table(
-        #     header=dict(values=['Host', 'Severity', 'Vulnerability', 'Description'],
-        #                 align='left',
-        #                 font=dict(color='white', size=12)),
-        #     cells=dict(values=[top_10[host_column], top_10[severity_column], top_10['template_name'], top_10[description_column]],
-        #             align='left'))
-        # ])
     
     
-
         # Apply the custom sorting
         filtered_vulnerabilities['severity_num'] = filtered_vulnerabilities[severity_column].apply(severity_to_num)
         sorted_vulnerabilities = filtered_vulnerabilities.sort_values(['severity_num', severity_column], ascending=[False, False])
@@ -1581,6 +1522,9 @@ def main():
 
     else:
         st.info("Please upload a JSON file in the sidebar to begin the analysis.")
+    
+    profiler.disable()
+    profiler.print_stats(sort='cumulative')
 
 if __name__ == "__main__":
 

@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from PIL import Image
 import io
 import numpy as np
+import streamlit as st
 
 # Selenium per l'automazione del browser
 from selenium import webdriver
@@ -45,6 +46,22 @@ def setup_driver():
     driver = webdriver.Chrome(service=service, options=options)
     
     return driver
+
+def load_data(file):
+    if file is not None:
+        try:
+            data = json.loads(file.getvalue().decode('utf-8'))
+            if isinstance(data, dict):
+                return pd.DataFrame(data)
+            elif isinstance(data, list):
+                return pd.DataFrame(data)
+            else:
+                st.error("Unrecognized data format. Please upload a valid JSON file.")
+                return None
+        except Exception as e:
+            st.error(f"Error loading data: {str(e)}")
+            return None
+    return None
 
 def load_data_geo(file):
     if file is not None:
@@ -84,7 +101,6 @@ def geolocate_ip(ip, token):
     except requests.exceptions.RequestException as e:
         print(f"Error geolocating IP {ip}: {e}")
         return None, None, None, None
-
 
 # Create the plotly map function
 def create_plotly_map(risk_by_ip):
@@ -293,12 +309,13 @@ def is_image_blank(image):
     extrema = image.convert("L").getextrema()
     return extrema == (255, 255) or (extrema[1] - extrema[0]) < 10
 
-def take_screenshot(driver, host, max_width, max_height, max_retries=3):
+@st.cache_data
+def take_screenshot(_driver, host, max_width, max_height, max_retries=3):
 
     image, error_type = None, None
 
     _start_time = time.time()
-    url = check_url(driver, host)
+    url = check_url(_driver, host)
     
     # controlla se url valido
     if not url:
@@ -312,32 +329,32 @@ def take_screenshot(driver, host, max_width, max_height, max_retries=3):
 
     try:
         # Naviga alla pagina
-        driver.get(url)
+        _driver.get(url)
 
         # Aspetta che il body sia presente
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        WebDriverWait(_driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         
         # Aspetta che la pagina sia "pronta"
-        WebDriverWait(driver, 5).until(
+        WebDriverWait(_driver, 5).until(
             lambda d: d.execute_script('return document.readyState') == 'complete'
         )
         
         # Scorri la pagina per assicurarsi che tutto sia caricato
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        _driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(0.5)  # Breve pausa dopo lo scroll
-        driver.execute_script("window.scrollTo(0, 0);")
+        _driver.execute_script("window.scrollTo(0, 0);")
         
         # Gestisci eventuali popup
-        handle_popups(driver)
+        handle_popups(_driver)
         
         # Imposta la dimensione della finestra
-        driver.set_window_size(1920, 1080)
+        _driver.set_window_size(1920, 1080)
         
         # Aspetta ancora un momento prima di catturare lo screenshot
         time.sleep(0.5)
         
         # Cattura screenshot come byte stream
-        screenshot_as_bytes = driver.get_screenshot_as_png()
+        screenshot_as_bytes = _driver.get_screenshot_as_png()
         image = Image.open(io.BytesIO(screenshot_as_bytes))
 
         # Verifica che l'immagine non sia completamente bianca
@@ -352,8 +369,8 @@ def take_screenshot(driver, host, max_width, max_height, max_retries=3):
             image.save(debug_filename)
             
             # Debug: Ottieni informazioni aggiuntive sulla pagina
-            page_title = driver.title
-            page_url = driver.current_url
+            page_title = _driver.title
+            page_url = _driver.current_url
             
             print(f"Debug info per {host}:")
             print(f"  - URL finale: {page_url}")
@@ -382,7 +399,7 @@ def take_screenshot(driver, host, max_width, max_height, max_retries=3):
 
     # Cattura uno screenshot dell'errore se possibile
     try:
-        error_screenshot = driver.get_screenshot_as_png()
+        error_screenshot = _driver.get_screenshot_as_png()
         image = Image.open(io.BytesIO(error_screenshot))
     except:
         pass
