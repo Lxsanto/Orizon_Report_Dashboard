@@ -48,6 +48,7 @@ burnt_red = "#E5625E"
 dodger_blue = "#2191FB"
 dawn_mist = "#DBE2E9"
 simple_white = "#FFFFFF"
+sunglow = "#FFC857"
 
 # Configurazione di Streamlit
 st.set_page_config(page_title="Orizon Security", layout="wide", initial_sidebar_state="expanded")
@@ -313,19 +314,35 @@ def load_data(file):
     return None
 
 def calculate_risk_score(vulnerabilities, severity_column):
-    # Dizionario che associa a ciascun livello di severità un peso specifico
-    severity_weights = {'critical': 10, 'high': 8, 'medium': 6, 'low': 4, 'info': 2}
+    # Severity weights
+    severity_weights = {'critical': 80, 'high': 60, 'medium': 40, 'low': 10, 'info': 1}
     
-    # Calcolo del peso totale, sommando i pesi delle severità per ciascuna vulnerabilità
-    # Se la severità non è riconosciuta, si assegna un peso di 0
-    total_weight = sum(severity_weights.get(str(v).lower(), 0) for v in vulnerabilities[severity_column])
+    # Count vulnerabilities by severity
+    severity_counts = {severity: 0 for severity in severity_weights}
+    for v in vulnerabilities[severity_column]:
+        severity = str(v).lower()
+        if severity in severity_counts:
+            severity_counts[severity] += 1
     
-    # Calcolo del peso massimo possibile: numero di vulnerabilità * 10 (peso massimo di una singola vulnerabilità)
-    max_weight = len(vulnerabilities) * 10
+    # Calculate weighted score
+    weighted_score = sum(severity_weights[severity] * count for severity, count in severity_counts.items())
     
-    # Calcolo del punteggio di rischio come percentuale del peso totale rispetto al peso massimo
-    # Se max_weight è maggiore di 0, si calcola la percentuale; altrimenti, il punteggio è 0 (indica assenza di vulnerabilità o errore)
-    return int((total_weight / max_weight) * 100) if max_weight > 0 else 0
+    # Calculate risk score
+    total_vulnerabilities = sum(severity_counts.values())
+    if total_vulnerabilities == 0:
+        return 0
+    
+    # Base the score primarily on the weighted score, but consider the number of vulnerabilities
+    risk_score = (weighted_score / total_vulnerabilities) * 2
+    
+    # Ensure medium vulnerabilities have a significant impact
+    if severity_counts['medium'] > 0:
+        risk_score = max(risk_score, 40 + (severity_counts['medium'] - 1) * 5)
+    
+    # Cap the score at 100
+    risk_score = min(risk_score, 100)
+    
+    return int(risk_score)
 
 
 @st.cache_data
@@ -1056,8 +1073,8 @@ def main():
         col1, col2 = st.columns([3, 2])
         with col1:
 
-            if risk_score > 40 and risk_score < 60:
-                gauge_color = dodger_blue
+            if risk_score > 20 and risk_score < 60:
+                gauge_color = sunglow
             elif risk_score > 60:
                 gauge_color = burnt_red
             else:
@@ -1090,14 +1107,38 @@ def main():
         col1, col2 = st.columns([2, 1])
         with col1:
             severity_counts = filtered_vulnerabilities[severity_column].value_counts()
-            fig_severity = px.pie(
-                                    values=severity_counts.values, 
-                                   names=severity_counts.index, 
-                                   color=severity_counts.index,
-                                    title="Vulnerability Severity Distribution",
-                                    width=_width, height=_height
-                                )
-            fig_severity.update_traces(textposition='inside', textinfo='percent+label')
+
+            fig_severity = go.Figure(data=[go.Pie(
+                labels=severity_counts.index,
+                values=severity_counts.values,
+                textinfo='percent+label',
+                textposition='inside',
+                hole=0.3,
+                pull=[0.1] * len(severity_counts),  # This creates the exploded effect
+                marker=dict(colors=severity_counts.index),  # Use the same colors as before
+            )])
+
+            fig_severity.update_layout(
+                title_text="Vulnerability Severity Distribution",
+                title_x=0.5,  # Center the title
+                width=_width,
+                height=_height,
+                scene=dict(
+                    xaxis_title='',
+                    yaxis_title='',
+                    zaxis_title='',
+                    aspectmode='manual',
+                    aspectratio=dict(x=1, y=1, z=0.5)  # This gives a 3D effect
+                ),
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+            )
+
+            fig_severity.update_traces(
+                textfont_size=12,
+                marker=dict(line=dict(color='#000000', width=2))  # Add a black outline to each slice
+            )
+
             st.plotly_chart(fig_severity, use_container_width=True, config={'displayModeBar': False})
 
         with col2:
@@ -1160,21 +1201,33 @@ def main():
             # Aggregate risk scores by IP using the danger_score_per_server data
             risk_by_ip = danger_score_per_server.groupby(['ip', 'country', 'city', 'latitude', 'longitude'])['severity_weight'].sum().reset_index()
 
-            # Normalize risk scores to be between 0 and 100
-            min_score = risk_by_ip['severity_weight'].min()
+            # Find the maximum severity_weight
             max_score = risk_by_ip['severity_weight'].max()
 
-            risk_by_ip['normalized_risk_score'] = ((risk_by_ip['severity_weight'] - min_score) / (max_score - min_score)) * 100
+            # Calculate the normalized risk score
+            risk_by_ip['normalized_risk_score'] = (risk_by_ip['severity_weight'] / max_score) * 100
+
+            # Ensure the highest risk score is exactly 100
+            risk_by_ip.loc[risk_by_ip['severity_weight'] == max_score, 'normalized_risk_score'] = 100
 
             # Create and display the Plotly map
             geo_map = create_plotly_map(risk_by_ip)
+            geo_map_1 = create_country_bubble_plot(risk_by_ip)
             st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(geo_map_1, use_container_width=True, config={'displayModeBar': False})
 
             # Display the data in the table
             st.subheader("Risk Scores by IP")
 
-            # Select columns to display, including location information
-            selected_columns = ['ip', 'country', 'city', 'severity_weight', 'normalized_risk_score']
+            # Group hosts by IP
+            hosts_by_ip = danger_score_per_server.groupby('ip')['host'].agg(list).reset_index()
+            hosts_by_ip.columns = ['ip', 'associated_hosts']
+
+            # Merge the hosts information with the risk_by_ip dataframe
+            risk_by_ip = risk_by_ip.merge(hosts_by_ip, on='ip', how='left')
+
+            # Update the selected columns to include the new 'associated_hosts' column
+            selected_columns = ['ip', 'associated_hosts', 'country', 'city', 'severity_weight', 'normalized_risk_score']
 
             # Pagination
             items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=20, step=10)
@@ -1200,16 +1253,46 @@ def main():
 
         # Top 10 Vulnerabilities
         st.header("Top 10 Critical Vulnerabilities", anchor="top-10-critical-vulnerabilities")
-        top_10 = filtered_vulnerabilities.sort_values(severity_column, ascending=False).head(10)
-        fig_top_10 = go.Figure(data=[go.Table(
-            header=dict(values=['Host', 'Severity', 'Vulnerability', 'Description'],
-                        align='left',
-                        font=dict(color='white', size=12)),
-            cells=dict(values=[top_10[host_column], top_10[severity_column], top_10['template_name'], top_10[description_column]],
-                       fill_color='rgba(0,0,0,0)',
-                       align='left'))
-        ])
-        st.plotly_chart(fig_top_10, use_container_width=True, config={'displayModeBar': False})
+    
+        def severity_to_num(severity):
+            severity_order = {'Critical': 6, 'High': 5, 'Medium': 4, 'Low': 3, 'Info': 2, 'Unknown': 1}
+            return severity_order.get(severity.capitalize(), 0)
+
+        # Apply the custom sorting
+        filtered_vulnerabilities['severity_num'] = filtered_vulnerabilities[severity_column].apply(severity_to_num)
+        top_10 = filtered_vulnerabilities.sort_values(['severity_num', severity_column], ascending=[False, False]).head(10)
+
+        # # Create the table
+        # fig_top_10 = go.Figure(data=[go.Table(
+        #     header=dict(values=['Host', 'Severity', 'Vulnerability', 'Description'],
+        #                 align='left',
+        #                 font=dict(color='white', size=12)),
+        #     cells=dict(values=[top_10[host_column], top_10[severity_column], top_10['template_name'], top_10[description_column]],
+        #             align='left'))
+        # ])
+    
+    
+
+        # Apply the custom sorting
+        filtered_vulnerabilities['severity_num'] = filtered_vulnerabilities[severity_column].apply(severity_to_num)
+        sorted_vulnerabilities = filtered_vulnerabilities.sort_values(['severity_num', severity_column], ascending=[False, False])
+
+        # Select the columns to display
+        selected_columns = [host_column, severity_column, 'template_name', description_column]
+
+        # Pagination
+        severities_page = st.slider("Severities per page", min_value=10, max_value=100, value=20, step=10)
+        total_pages = len(sorted_vulnerabilities) // severities_page + (1 if len(sorted_vulnerabilities) % severities_page > 0 else 0)
+        current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
+
+        start_idx = (current_page - 1) * severities_page
+        end_idx = start_idx + severities_page
+
+        # Display the selected page of the table
+        st.dataframe(sorted_vulnerabilities[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
+
+        # Show the pagination information
+        st.write(f"Showing {start_idx+1} to {min(end_idx, len(sorted_vulnerabilities))} of {len(sorted_vulnerabilities)} entries")
         st.subheader("Orizon Engine Analysis")
         common_types = top_10['template_name'].value_counts()
         most_common_type = common_types.index[0]
@@ -1504,7 +1587,7 @@ def main():
         selected_columns = st.multiselect(
             "Select columns to display",
             options=filtered_vulnerabilities.columns,
-            default=[host_column, severity_column, 'template_name', description_column],
+            default=[host_column, severity_column, 'template_name', 'template_url', description_column],
             key="column_selector"
         )
         
@@ -1515,7 +1598,7 @@ def main():
             filtered_data = filtered_vulnerabilities
         
         # Display filtered data
-        st.dataframe(filtered_data[selected_columns], height=400, use_container_width=True)
+        #st.dataframe(filtered_data[selected_columns], height=400, use_container_width=True)
         
         # Add pagination
         items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=50, step=10)
