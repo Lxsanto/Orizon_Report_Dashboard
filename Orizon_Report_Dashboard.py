@@ -101,7 +101,7 @@ _width = 800
 _height = 600
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = True
+are_you_on_CUDA = False
 run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
@@ -109,10 +109,9 @@ if are_you_on_CUDA:
 # Selezione del modello LLM
 model_id = "Qwen/Qwen2-1.5B-Instruct"
 auth_token = "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"
-_pipeline = None
 
-# Pulizia della cache del modello
-clear = True
+# Pulizia della cache di Streamlit
+clear = False
 if clear:
     st.cache_resource.clear()
 
@@ -264,7 +263,7 @@ st.markdown("""
 
 ### Utility functions ###
 @st.cache_resource
-def load_llama_model(model_id = model_id, auth_token = auth_token):
+def load_LLM(model_id = model_id, auth_token = auth_token):
 
     if not torch.cuda.is_available():
         print("CUDA GPU not available!")
@@ -288,9 +287,7 @@ def load_llama_model(model_id = model_id, auth_token = auth_token):
         
         print(f'Pipeline loaded on {chat_pipeline.device}')
 
-        # save the model in a global variable
-        global _pipeline
-        _pipeline = chat_pipeline
+        return chat_pipeline
     
     except Exception as e:
         st.error(f"Error loading the model: {str(e)}")
@@ -312,6 +309,7 @@ def load_data(file):
             return None
     return None
 
+@st.cache_data
 def calculate_risk_score(vulnerabilities, severity_column):
     # Dizionario che associa a ciascun livello di severità un peso specifico
     severity_weights = {'critical': 10, 'high': 8, 'medium': 6, 'low': 4, 'info': 2}
@@ -329,7 +327,7 @@ def calculate_risk_score(vulnerabilities, severity_column):
 
 
 @st.cache_data
-def generate_orizon_analysis(prompt, max_new_tokens=256):
+def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=256):
 
     try:
         messages = [{'role': 'system', 'content': 'You are a Cybersecurity expert, i need your help'},
@@ -347,7 +345,8 @@ def generate_orizon_analysis(prompt, max_new_tokens=256):
     
 ### Prompt eng ### 
 
-def analyze_overview(total, risk_score, critical, high, medium, low):
+@st.cache_data
+def analyze_overview(total, risk_score, critical, high, medium, low, _pipe):
     prompt = f"""Provide a detailed analysis of the following security overview:
 
 - Total vulnerabilities: {total}
@@ -383,9 +382,10 @@ Your analysis should cover:
 8. Next Steps (3-4 points):
    - Outline immediate actions, key stakeholders to involve, and metrics to track improvement.
 """
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def analyze_severity_distribution(severity_counts):
+@st.cache_data
+def analyze_severity_distribution(severity_counts, _pipe):
     prompt = f"""Provide an analysis of the following vulnerability severity distribution:
 
 {severity_counts.to_dict()}
@@ -431,9 +431,10 @@ Your analysis should cover:
    - Targets and reassessment frequency
 
 Provide actionable insights suitable for both technical and management audiences."""
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def analyze_timeline(recent_vulnerabilities, recent_critical_high):
+@st.cache_data
+def analyze_timeline(recent_vulnerabilities, recent_critical_high, _pipe):
     prompt = f"""Provide an analysis of the following vulnerability discovery trend:
 
 - New vulnerabilities in the last 30 days: {len(recent_vulnerabilities)}
@@ -472,9 +473,10 @@ Your analysis should cover:
     - Key metrics for ongoing analysis, frequency of assessments, and escalation thresholds.
 
 Ensure the analysis is data-driven, actionable, and considers both tactical and strategic improvements."""
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host):
+@st.cache_data
+def analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe):
     prompt = f"""Provide an in-depth analysis of the system's top vulnerabilities:
 
 - Most common vulnerability: '{most_common_type}' (Frequency: {common_types.iloc[0]})
@@ -515,9 +517,10 @@ Your analysis should cover:
     - Insights, staff training recommendations, and improvements to detection and analysis processes.
 
 Ensure the analysis is thorough, actionable, and considers both immediate and long-term security enhancements."""
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def generate_network_analysis(top_central, density, communities):
+@st.cache_data
+def generate_network_analysis(top_central, density, communities, _pipe):
     prompt = f"""Analyze the following network topology:
 
 - Central nodes: {len(top_central)}
@@ -568,9 +571,10 @@ Provide an analysis including:
     - Evaluation against industry standards, compliance issues, and alignment recommendations.
 
 Ensure actionable insights and consider both immediate and long-term improvements to network security."""
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def analyze_cvss_distribution(avg_cvss, high_cvss_count, total_vulns):
+@st.cache_data
+def analyze_cvss_distribution(avg_cvss, high_cvss_count, total_vulns, _pipe):
     prompt = f"""Analyze the following CVSS score distribution:
 
 - Average CVSS score: {avg_cvss:.2f}
@@ -616,9 +620,10 @@ Your analysis should include:
     - Metrics for tracking improvements, suggested targets, and reassessment frequency.
 
 Ensure the analysis is thorough, actionable, and considers both tactical and strategic improvements based on CVSS scores."""
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def analyze_vulnerability_age(avg_age, old_vulnerabilities_count, total_vulns):
+@st.cache_data
+def analyze_vulnerability_age(avg_age, old_vulnerabilities_count, total_vulns, _pipe):
     prompt = f"""Analyze the following vulnerability age distribution:
 
 - Average age: {avg_age:.1f} days
@@ -667,9 +672,10 @@ Your analysis should include:
     - Tool recommendations, automation suggestions, and CI/CD integration (if applicable).
 
 Ensure the analysis is thorough, actionable, and considers both tactical and strategic improvements to vulnerability lifecycle management."""
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def analyze_vulnerability_types(most_common_type, frequency, top_10_types):
+@st.cache_data
+def analyze_vulnerability_types(most_common_type, frequency, top_10_types, _pipe):
     prompt = f"""Analyze the following vulnerability type distribution:
 
 - Most common type: '{most_common_type}' (Frequency: {frequency})
@@ -717,9 +723,10 @@ Your analysis should include:
     - Assessment of current tools and recommendations for improvements.
 
 Ensure the analysis is comprehensive, actionable, and considers both immediate responses and long-term improvements."""
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def analyze_remediation_priority(high_priority_count, total_vulns):
+@st.cache_data
+def analyze_remediation_priority(high_priority_count, total_vulns, _pipe):
     prompt = f"""Analyze the current remediation priority situation:
 
 - High-priority vulnerabilities: {high_priority_count}
@@ -770,9 +777,10 @@ Your analysis should include:
     - Suggestions for integrating remediation with incident response and rapid threat response.
 
 Ensure the analysis is thorough, actionable, and balances urgent remediation with sustainable, long-term management."""
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-def analyze_vulnerability_trend(current_avg, trend, historical_data):
+@st.cache_data
+def analyze_vulnerability_trend(current_avg, trend, historical_data, _pipe):
     prompt = f"""Analyze the following vulnerability trend:
 
 - 7-day moving average of new vulnerabilities: {current_avg:.2f}
@@ -795,50 +803,9 @@ Your analysis should include:
 
 Ensure the analysis is data-driven, actionable, and considers both short-term responses and long-term adjustments based on observed trends."""
     
-    return generate_orizon_analysis(prompt)
+    return generate_orizon_analysis(prompt, _pipe)
 
-
-# New functions for cybersecurity-themed charts
-def create_vulnerability_heatmap(vulnerabilities, host_column, severity_column):
-    pivot = vulnerabilities.pivot_table(index=host_column, columns=severity_column, aggfunc='size', fill_value=0)
-    fig = px.imshow(pivot, 
-                    labels=dict(x="Severity", y="Host", color="Count"),
-                    title="Vulnerability Heatmap by Host and Severity", width=_width, height=_height)
-    return fig
-
-def create_vulnerability_radar(vulnerabilities, type_column):
-    # Conta i tipi di vulnerabilità
-    type_counts = vulnerabilities[type_column].value_counts().nlargest(5).reset_index()
-    type_counts.columns = [type_column, 'count']
-    
-    # Crea il grafico radar utilizzando plotly.express
-    fig = px.line_polar(type_counts, 
-                        r='count', 
-                        theta=type_column, 
-                        line_close=True, 
-                        title="Top 5 Vulnerability Types")
-
-    # Aggiorna il layout per riempire l'area sotto il grafico e applica il template
-    fig.update_traces(fill='toself')
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, max(type_counts['count'])]
-            )),
-        showlegend=False
-    )
-    
-    return fig
-
-def create_attack_timeline(vulnerabilities, created_at_column, severity_column):
-    vulnerabilities['date'] = pd.to_datetime(vulnerabilities[created_at_column]).dt.date
-    timeline = vulnerabilities.groupby(['date', severity_column]).size().unstack(fill_value=0)
-    fig = px.area(timeline, 
-                  labels={'date': 'Date', 'value': 'Number of Vulnerabilities', 'variable': 'Severity'},
-                  title="Vulnerability Discovery Timeline", width=_width, height=_height)
-    return fig
-
+@st.cache_data
 def create_severity_impact_bubble(vulnerabilities, severity_column, cvss_column, host_column):
     if all(col in vulnerabilities.columns for col in [severity_column, cvss_column, host_column]):
         vulnerability_counts = vulnerabilities.groupby([severity_column, host_column]).size().reset_index(name='count')
@@ -986,9 +953,10 @@ def main():
         st.title("Orizon Security Dashboard")
         st.markdown("Welcome to our private Security Dashboard, here you can see the analysis of the JSON file.")
 
+        pipe = None
         # Load model
         if run_LLM:
-            load_llama_model()
+            pipe = load_LLM()
 
         # Automatic column detection
         severity_column = 'severity' if 'severity' in filtered_vulnerabilities.columns else None
@@ -1047,10 +1015,6 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-        with st.expander("View Executive Summary"):
-            if run_LLM:
-                st.markdown(analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns))
-
         # Security Posture Overview
         st.header("Security Posture Overview", anchor="security-posture-overview")
         col1, col2 = st.columns([3, 2])
@@ -1082,7 +1046,7 @@ def main():
             with st.spinner("Generating overview analysis..."):
                 overview_analysis = ''
                 if run_LLM:
-                    overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns)
+                    overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe)
             st.markdown(overview_analysis)
 
         # Severity Distribution
@@ -1106,15 +1070,22 @@ def main():
             with st.spinner("Generating severity analysis..."):
                 severity_analysis = ''
                 if run_LLM:
-                    severity_analysis = analyze_severity_distribution(severity_counts)
+                    severity_analysis = analyze_severity_distribution(severity_counts, _pipe= pipe)
             st.markdown(severity_analysis)
 
 
         # Vulnerability Timeline
         st.header("Geolocation of company servers", anchor="Geolocation of company servers")
+        ### dopo aver visualizzato l'header di streamlit lo script si blocca e sembra come se fosse dentro un loop che dura molto tempo
+        
         col1, col2 = st.columns([2, 1])
         with col1:
             # Michele
+
+            # profiler
+            profiler = cProfile.Profile()
+            profiler.enable()
+
             file_contents = uploaded_file.read()
             df = load_data_geo(file_contents)
 
@@ -1189,14 +1160,11 @@ def main():
 
             # Show the pagination information
             st.write(f"Showing {start_idx+1} to {min(end_idx, len(risk_by_ip))} of {len(risk_by_ip)} entries")
-        with col2:
-            # Michele
-            st.subheader("Orizon Engine Analysis")
-            recent_vulnerabilities = filtered_vulnerabilities[filtered_vulnerabilities[created_at_column] > (datetime.now(pytz.utc) - timedelta(days=30))]
-            recent_critical_high = len(recent_vulnerabilities[recent_vulnerabilities[severity_column].str.lower().isin(['critical', 'high'])])
-            #with st.spinner("Generating trend analysis..."):
-            #    trend_analysis = analyze_timeline(tokenizer, model, recent_vulnerabilities, recent_critical_high)
-            #st.markdown(format_analysis_response(trend_analysis))
+
+            profiler.disable()
+            profiler.print_stats(sort='cumulative')
+        
+
 
         # Top 10 Vulnerabilities
         st.header("Top 10 Critical Vulnerabilities", anchor="top-10-critical-vulnerabilities")
@@ -1219,7 +1187,7 @@ def main():
         with st.spinner("Analyzing top vulnerabilities..."):
             top_vuln_analysis = ''
             if run_LLM:
-                top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host)
+                top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe)
         st.markdown(top_vuln_analysis)
 
         # Network Topology View
@@ -1259,7 +1227,7 @@ def main():
         communities = list(nx.community.greedy_modularity_communities(G))
         with st.spinner("Analyzing network topology..."):
             if run_LLM:
-                network_analysis = generate_network_analysis(top_central, density, communities)
+                network_analysis = generate_network_analysis(top_central, density, communities, _pipe=pipe)
                 st.markdown(network_analysis)
 
         # Additional Cybersecurity Insights
@@ -1286,7 +1254,7 @@ def main():
             with st.spinner("Analyzing CVSS distribution..."):
                 cvss_analysis = ''
                 if run_LLM:
-                    cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns)
+                    cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns, _pipe = pipe)
             st.markdown(cvss_analysis)
 
         if created_at_column:
@@ -1395,7 +1363,7 @@ def main():
         with st.spinner("Analyzing vulnerability types..."):
             types_analysis = ''
             if run_LLM:
-                types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist())
+                types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe)
         st.markdown(types_analysis)
 
         # Remediation Priority Matrix
@@ -1409,7 +1377,7 @@ def main():
             with st.spinner("Analyzing remediation priorities..."):
                 remediation_analysis = ''
                 if run_LLM:
-                    remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns)
+                    remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns, _pipe = pipe)
             st.markdown(remediation_analysis)
         else:
             st.info("Not enough information available for remediation priority analysis.")

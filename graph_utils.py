@@ -22,7 +22,6 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 # porte da escludere per le screenshots
 ports = ['22', '23', '25', '53', '5900']
 
-
 def setup_driver():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
@@ -46,7 +45,6 @@ def setup_driver():
     
     return driver
 
-
 def load_data_geo(file):
     if file is not None:
         data = json.loads(file)
@@ -69,7 +67,7 @@ def resolve_hostname(hostname):
         return ip_address
     except socket.gaierror:
         return None
-    
+
 def geolocate_ip(ip, token):
     try:
         response = requests.get(f"https://ipinfo.io/{ip}/json?token={token}")
@@ -86,7 +84,6 @@ def geolocate_ip(ip, token):
         print(f"Error geolocating IP {ip}: {e}")
         return None, None, None, None
 
-# Create the plotly map function
 def create_plotly_map(risk_by_ip):
     latitudes = []
     longitudes = []
@@ -163,7 +160,7 @@ def check_url(driver, url):
             return http_url
         except WebDriverException:
             return None
-    
+
 def handle_popups(driver):
     # Implementa qui la logica per gestire i popup comuni
     # Esempio:
