@@ -1527,7 +1527,6 @@ def main():
     profiler.print_stats(sort='cumulative')
 
 if __name__ == "__main__":
-
     # login
     name, authentication_status, username = authenticator.login(key='Login', location='main')
 
