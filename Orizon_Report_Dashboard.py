@@ -1,13 +1,11 @@
 import os
 import io
 import zipfile
-import json
 import time
 import subprocess
 from collections import Counter
 from datetime import datetime, timedelta
 import pandas as pd
-import pytz
 import streamlit as st
 import plotly.express as px
 import plotly.io as pio
@@ -103,8 +101,8 @@ _width = 800
 _height = 600
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -979,7 +977,6 @@ def pie(severity_counts):
 
     return fig_severity
 
-@st.cache_data
 def Geolocation_of_servers(file_contents, api_key):
     # Load and preprocess data
     df = load_data_geo(file_contents)
@@ -990,14 +987,26 @@ def Geolocation_of_servers(file_contents, api_key):
     
     df['severity_weight'] = df['severity'].map(severity_weights)
     danger_score_per_server = df.groupby('host')['severity_weight'].sum().reset_index()
-    danger_score_per_server['ip'] = danger_score_per_server['host'].apply(resolve_hostname)
-    
-    # Geolocate IPs
-    ip_list = danger_score_per_server['ip'].to_list()
+    host_names = danger_score_per_server['host']
+
+    st.write('The geolocation process duration depends on DNS settings... Please wait')
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    summary = st.empty()
+
     geo_results = []
-    for ip in ip_list:
+    ips = []
+    for id, host in enumerate(host_names):
+        progress = (id + 1) / len(host_names)
+        progress_bar.progress(progress)
+        status_text.text(f'Numbers of scanned hosts: {id + 1}/{len(host_names)}')
+        ip = resolve_hostname(host)
+        ips.append(ip)
         d = geolocate_ip(ip, api_key)
         geo_results.append(d)
+
+
+    danger_score_per_server['ip'] = ips
     
     geolocation_data = pd.DataFrame(geo_results, columns=['latitude', 'longitude', 'country', 'city'])
     
@@ -1290,8 +1299,8 @@ def main():
             st.write("We are taking screenshots...")
 
             scelta = 'No'
-            if st.button('Click here to interrupt the process'):
-                scelta = 'Yes'
+            #if st.button('Click here to interrupt the process'):
+            #   scelta = 'Yes'
 
             if scelta == 'No':
 
