@@ -16,3 +16,4 @@ selenium
 webdriver-manager
 wordcloud
 pynvml
+dnspython

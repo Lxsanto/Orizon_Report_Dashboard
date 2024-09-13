@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import socket
+from dns import resolver
 import requests
 import os
 import time
@@ -78,12 +79,25 @@ def load_data_word(file):
             data = json.loads(file)
         return pd.DataFrame(data)
 
-def resolve_hostname(hostname):
+def _resolve_hostname(hostname):
     try:
         hostname = hostname.split(':')[0]
         ip_address = socket.gethostbyname(hostname)
         return ip_address
     except socket.gaierror:
+        return None
+
+def resolve_hostname(hostname):
+    try:
+        hostname = hostname.split(':')[0]
+        res = resolver.Resolver()
+        res.nameservers = ['45.90.28.0', '45.90.30.0', '8.8.8.8'] # DNS (NextDNS and Google)
+        answers = res.query(hostname)
+        indirizzi = []
+        for rdata in answers:
+            indirizzi.append(rdata.address)
+        return indirizzi[0]
+    except:
         return None
 
 def geolocate_ip(ip, token):

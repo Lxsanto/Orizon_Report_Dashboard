@@ -16,6 +16,7 @@ from io import BytesIO
 from wordcloud import WordCloud
 import torch
 import cProfile
+import pstats
 
 # Docx per la gestione di documenti Word
 from docx import Document
@@ -1022,10 +1023,6 @@ def Geolocation_of_servers(file_contents, api_key):
     return geo_map, geo_map_1, risk_by_ip
 
 def main():
-    # profiler
-    profiler = cProfile.Profile()
-    profiler.enable()
-    
     st.sidebar.title("Orizon Security Dashboard")
 
     if st.sidebar.button("Restart App"):
@@ -1144,8 +1141,14 @@ def main():
         with col1:
 
             file_contents = uploaded_file.read()
-            geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key='f2cfc8c5c8c358')
 
+            with cProfile.Profile() as pr:
+                geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key='f2cfc8c5c8c358')
+            with open("profiling_results_geo.txt", "w") as f:
+                stats = pstats.Stats(pr, stream=f)
+                stats.sort_stats('cumulative')
+                stats.print_stats()
+            
             # Create and display the Plotly maps
             st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})
             st.plotly_chart(geo_map_1, use_container_width=True, config={'displayModeBar': False})
@@ -1522,9 +1525,6 @@ def main():
 
     else:
         st.info("Please upload a JSON file in the sidebar to begin the analysis.")
-    
-    profiler.disable()
-    profiler.print_stats(sort='cumulative')
 
 if __name__ == "__main__":
     # login
