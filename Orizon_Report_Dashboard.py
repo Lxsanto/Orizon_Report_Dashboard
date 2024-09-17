@@ -15,6 +15,7 @@ from wordcloud import WordCloud
 import torch
 import cProfile
 import pstats
+from matplotlib.colors import LinearSegmentedColormap
 
 # Docx per la gestione di documenti Word
 from docx import Document
@@ -29,6 +30,7 @@ from yaml.loader import SafeLoader
 from restart_utils import clear_pycache, restart_script
 from GPU_utils import print_gpu_utilization, print_summary
 from graph_utils import *  # all Michele utils
+from prompts_utils import *
 
 # Tentativo di importazione condizionale con gestione degli errori
 try:
@@ -102,13 +104,14 @@ _height = 600
 
 # Configurazione dell'ambiente CUDA
 are_you_on_CUDA = True
-run_LLM = True
+run_LLM = False
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 # Selezione del modello LLM
-model_id = "Qwen/Qwen2-1.5B-Instruct"
-auth_token = "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"
+#model_id = "Qwen/Qwen2-1.5B-Instruct"
+model_id = "microsoft/Phi-3.5-mini-instruct"
+auth_token = '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'
 
 # Pulizia della cache di Streamlit
 clear = False
@@ -274,16 +277,20 @@ def load_LLM(model_id = model_id, auth_token = auth_token):
     
     try:
         model_kwargs = {
-                "torch_dtype": torch.bfloat16
+        'attn_implementation': "flash_attention_2"
+        #"torch_dtype": torch.bfloat16
         }
         _tokenizer = AutoTokenizer.from_pretrained(model_id, 
                                                    use_fast= True)
         chat_pipeline = pipeline("text-generation", 
+                                 torch_dtype='auto',
                              model=model_id,
                              token=auth_token,
                              tokenizer=_tokenizer,
+                             #device='cuda:0',
                              device_map="auto",
-                             model_kwargs=model_kwargs)
+                             #model_kwargs=model_kwargs
+                             )
         
         print(f'Pipeline loaded on {chat_pipeline.device}')
 
@@ -324,486 +331,6 @@ def calculate_risk_score(vulnerabilities, severity_column):
     risk_score = min(risk_score, 100)
     
     return int(risk_score)
-
-
-@st.cache_data
-def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=256):
-
-    try:
-        messages = [{'role': 'system', 'content': 'You are a Cybersecurity expert, i need your help'},
-            {'role': 'user', 'content': prompt}]
-        response = _pipeline(messages, max_new_tokens=1000)[0]['generated_text']
-        response_text = response[-1]['content'] 
-        if are_you_on_CUDA:
-            print_gpu_utilization()
-
-        return response_text
-    
-    except Exception as e:
-        st.error(f"Error generating analysis: {str(e)}")
-        return "Analysis generation failed. Please try again."
-    
-### Prompt eng ### 
-
-@st.cache_data
-def analyze_overview(total, risk_score, critical, high, medium, low, _pipe):
-    prompt = f"""Provide a detailed analysis of the following security overview:
-
-- Total vulnerabilities: {total}
-- Risk score: {risk_score}/100
-- Critical vulnerabilities: {critical}
-- High vulnerabilities: {high}
-- Medium vulnerabilities: {medium}
-- Low vulnerabilities: {low}
-
-Your analysis should cover:
-
-1. Executive Summary (2-3 sentences):
-   - Brief overview of the security posture and overall risk level.
-
-2. Key Findings (4-5 bullet points):
-   - Highlight significant results, trends in vulnerability distribution, and any comparisons to industry standards.
-
-3. Risk Assessment:
-   - Interpret the risk score, detail vulnerability severity, and assess potential business impact.
-
-4. Critical and High Vulnerabilities:
-   - Analyze critical/high vulnerabilities, potential exploitation consequences, and remediation urgency.
-
-5. Medium and Low Vulnerabilities:
-   - Evaluate these vulnerabilities' impact and suggest a prioritization strategy.
-
-6. Areas of Concern (3-4 points):
-   - Identify key weak points, root causes, and any systemic issues.
-
-7. Recommendations (5-6 points):
-   - Provide actionable advice with short-term and long-term strategies and suggested timelines.
-
-8. Next Steps (3-4 points):
-   - Outline immediate actions, key stakeholders to involve, and metrics to track improvement.
-"""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def analyze_severity_distribution(severity_counts, _pipe):
-    prompt = f"""Provide an analysis of the following vulnerability severity distribution:
-
-{severity_counts.to_dict()}
-
-Your analysis should cover:
-
-1. Distribution Overview:
-   - Summary of severity distribution
-   - Most prevalent severity level
-
-2. Detailed Breakdown:
-   - Percentage of each severity level
-   - High (critical + high) vs. low (medium + low) severity ratio
-   - Industry comparison (if applicable)
-
-3. Critical/High Severity:
-   - Impact of critical and high vulnerabilities
-   - Urgency of remediation
-
-4. Medium/Low Severity:
-   - Cumulative risk of medium and low vulnerabilities
-   - Importance of addressing alongside high-priority items
-
-5. Trend Analysis:
-   - Patterns in severity distribution
-   - Comparison to past data or industry trends
-
-6. Risk Implications:
-   - Overall risk from current distribution
-   - Potential compliance/security impact
-
-7. Remediation Strategy:
-   - Approach to address vulnerabilities across all severities
-   - Prioritization framework
-
-8. Recommendations:
-   - Advice to improve severity distribution
-   - Strategies to reduce high/critical vulnerabilities
-   - Ongoing management suggestions
-
-9. KPIs:
-   - Metrics for tracking severity distribution improvements
-   - Targets and reassessment frequency
-
-Provide actionable insights suitable for both technical and management audiences."""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def analyze_timeline(recent_vulnerabilities, recent_critical_high, _pipe):
-    prompt = f"""Provide an analysis of the following vulnerability discovery trend:
-
-- New vulnerabilities in the last 30 days: {len(recent_vulnerabilities)}
-- Critical/High severity: {recent_critical_high}
-
-Your analysis should cover:
-
-1. Trend Summary:
-   - Overview of the discovery rate and critical/high proportion in the last 30 days.
-
-2. Discovery Rate Analysis:
-   - Average new vulnerabilities per day, with comparisons to previous periods and identification of anomalies.
-
-3. Severity Breakdown:
-   - Analysis of the {recent_critical_high} critical/high vulnerabilities and their percentage of total discoveries.
-
-4. Impact Assessment:
-   - How this trend affects security posture, potential consequences, and comparison to industry benchmarks.
-
-5. Root Cause Analysis:
-   - Factors behind the discovery trend, including recent changes in IT or security practices.
-
-6. Resource Implications:
-   - Organization’s capacity to address the discovery rate and impact on security resources.
-
-7. Projections:
-   - Estimated trends for the next 30-60 days with best-case and worst-case scenarios.
-
-8. Risk Mitigation Strategies:
-   - Approaches to manage new vulnerabilities and prioritize critical/high severity issues.
-
-9. Recommendations:
-   - Actions to improve discovery and remediation processes, enhance security posture, and balance proactive/reactive measures.
-
-10. Continuous Monitoring:
-    - Key metrics for ongoing analysis, frequency of assessments, and escalation thresholds.
-
-Ensure the analysis is data-driven, actionable, and considers both tactical and strategic improvements."""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe):
-    prompt = f"""Provide an in-depth analysis of the system's top vulnerabilities:
-
-- Most common vulnerability: '{most_common_type}' (Frequency: {common_types.iloc[0]})
-- Affected hosts: {hosts_affected}
-- Most vulnerable host: {most_affected_host}
-
-Your analysis should cover:
-
-1. Top Vulnerabilities Overview:
-   - Summary of prevalent types and potential impact.
-
-2. Most Common Vulnerability:
-   - Description of '{most_common_type}', causes, attack vectors, and potential consequences.
-   - Industry context: commonality in similar systems.
-
-3. Spread Assessment:
-   - Analysis of affected hosts ({hosts_affected}), percentage of network affected, and risk of lateral movement.
-
-4. Most Vulnerable Host:
-   - Examination of why {most_affected_host} is most affected, associated risks, and immediate mitigation recommendations.
-
-5. Patterns and Trends:
-   - Identification of common themes, correlations, and systemic issues.
-
-6. Risk Assessment:
-   - Evaluation of overall risk, potential business impact, and compliance implications.
-
-7. Mitigation Strategies:
-   - Prioritized remediation actions, short-term fixes, long-term measures, and system hardening recommendations.
-
-8. Resource Allocation:
-   - Effort estimation, prioritization, and tools/processes for vulnerability management.
-
-9. Monitoring and Follow-up:
-   - Key metrics, reassessment timeframes, and ongoing management suggestions.
-
-10. Learning Opportunities:
-    - Insights, staff training recommendations, and improvements to detection and analysis processes.
-
-Ensure the analysis is thorough, actionable, and considers both immediate and long-term security enhancements."""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def generate_network_analysis(top_central, density, communities, _pipe):
-    prompt = f"""Analyze the following network topology:
-
-- Central nodes: {len(top_central)}
-- Network density: {density:.4f}
-- Identified communities: {len(communities)}
-
-Provide an analysis including:
-
-1. Topology Overview:
-   - Summary of network structure and complexity.
-
-2. Central Nodes:
-   - Role and security implications of {len(top_central)} central nodes.
-   - Protection and monitoring recommendations.
-
-3. Network Density:
-   - Interpretation of density {density:.4f} and its impact on threat propagation and resilience.
-   - Comparison to ideal security and performance ranges.
-
-4. Community Structure:
-   - Significance of {len(communities)} communities.
-   - Security implications and inter-community measures.
-
-5. Topological Vulnerabilities:
-   - Identification of weak points, potential attack vectors, and lateral movement risk.
-
-6. Resilience and Redundancy:
-   - Assessment of network resilience, redundancy, and recommendations for improvement.
-
-7. Segmentation:
-   - Evaluation of current segmentation and optimization suggestions.
-   - Potential for zero trust architecture implementation.
-
-8. Traffic Flow:
-   - Impact of topology on traffic patterns, bottlenecks, and monitoring recommendations.
-
-9. Scalability:
-   - Network's scalability and security challenges with growth.
-   - Scalable security architecture recommendations.
-
-10. Improvement Recommendations:
-    - Prioritized actions to enhance security and redesign problematic areas.
-
-11. Monitoring and Maintenance:
-    - Key metrics, reassessment frequency, and automated tools for continuous analysis.
-
-12. Compliance:
-    - Evaluation against industry standards, compliance issues, and alignment recommendations.
-
-Ensure actionable insights and consider both immediate and long-term improvements to network security."""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def analyze_cvss_distribution(avg_cvss, high_cvss_count, total_vulns, _pipe):
-    prompt = f"""Analyze the following CVSS score distribution:
-
-- Average CVSS score: {avg_cvss:.2f}
-- High-risk vulnerabilities (CVSS > 7.0): {high_cvss_count}
-- Total vulnerabilities: {total_vulns}
-
-Your analysis should include:
-
-1. Overview:
-   - Summary of the CVSS score distribution and initial severity assessment.
-
-2. Average Score:
-   - Interpretation of {avg_cvss:.2f} average score, industry comparison, and security implications.
-
-3. High-Risk Vulnerabilities:
-   - Analysis of {high_cvss_count} high-risk vulnerabilities, their percentage, and urgency.
-
-4. Score Breakdown:
-   - Distribution across ranges, pattern identification, and analysis of extremes.
-
-5. Temporal/Environmental Factors:
-   - Impact of these metrics on base CVSS scores and risk assessment recommendations.
-
-6. Security Posture Impact:
-   - Organizational risk assessment, consequences of the current distribution, and industry comparison.
-
-7. Remediation Prioritization:
-   - Strategies for addressing vulnerabilities based on CVSS scores and continuous management.
-
-8. Resource Allocation:
-   - Allocation of security resources and effort estimation by severity levels.
-
-9. Recommendations:
-   - Actions to improve score distribution, reduce high-risk vulnerabilities, and enhance scoring processes.
-
-10. Compliance and Reporting:
-    - Implications for regulatory compliance and reporting to stakeholders.
-
-11. Trend Analysis:
-    - Historical trends (if available) and predictions for future distributions.
-
-12. Key Performance Indicators:
-    - Metrics for tracking improvements, suggested targets, and reassessment frequency.
-
-Ensure the analysis is thorough, actionable, and considers both tactical and strategic improvements based on CVSS scores."""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def analyze_vulnerability_age(avg_age, old_vulnerabilities_count, total_vulns, _pipe):
-    prompt = f"""Analyze the following vulnerability age distribution:
-
-- Average age: {avg_age:.1f} days
-- Vulnerabilities older than 90 days: {old_vulnerabilities_count}
-- Total vulnerabilities: {total_vulns}
-
-Your analysis should include:
-
-1. Overview:
-   - Summary of the age distribution and initial assessment of management efficiency.
-
-2. Average Age:
-   - Interpretation of {avg_age:.1f} days, industry comparison, and security implications.
-
-3. Persistent Vulnerabilities:
-   - Analysis of {old_vulnerabilities_count} vulnerabilities older than 90 days, their percentage, and persistence reasons.
-
-4. Age Breakdown:
-   - Distribution across age ranges, pattern identification, and analysis of extremes.
-
-5. Risk Accumulation:
-   - Assessment of cumulative risk due to vulnerability age and potential consequences.
-
-6. Remediation Velocity:
-   - Analysis of remediation speed, severity level comparison, and process bottlenecks.
-
-7. Security Posture Impact:
-   - Evaluation of risk exposure, compliance implications, and threat potential due to persistence.
-
-8. Remediation Strategy:
-   - Approach for addressing vulnerabilities by age and severity, and reducing average age.
-
-9. Resource Allocation:
-   - Resource suggestions based on age distribution and effort estimation by age groups.
-
-10. Recommendations:
-    - Actions to improve lifecycle management, prevent aging, and enhance remediation processes.
-
-11. Continuous Improvement:
-    - Ongoing management strategies, prevention of new vulnerabilities, and team collaboration.
-
-12. Key Performance Indicators:
-    - Metrics for tracking age management, suggested benchmarks, and reassessment frequency.
-
-13. Tools and Automation:
-    - Tool recommendations, automation suggestions, and CI/CD integration (if applicable).
-
-Ensure the analysis is thorough, actionable, and considers both tactical and strategic improvements to vulnerability lifecycle management."""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def analyze_vulnerability_types(most_common_type, frequency, top_10_types, _pipe):
-    prompt = f"""Analyze the following vulnerability type distribution:
-
-- Most common type: '{most_common_type}' (Frequency: {frequency})
-- Top 10 types: {', '.join(top_10_types)}
-
-Your analysis should include:
-
-1. Overview:
-   - Summary of type distribution and initial security challenge assessment.
-
-2. Most Common Type:
-   - Description of '{most_common_type}', causes, attack vectors, impact, and industry prevalence.
-
-3. Top 10 Types:
-   - Brief description of each, distribution analysis, and pattern identification.
-
-4. Root Cause Analysis:
-   - Exploration of systemic issues and links to specific technologies or practices.
-
-5. Risk Assessment:
-   - Evaluation of overall risk from the type distribution and interaction effects.
-
-6. Industry Comparison:
-   - Comparison to industry benchmarks and identification of unique patterns.
-
-7. Remediation Strategies:
-   - Approaches for addressing top types, prioritization framework, and prevention tools.
-
-8. Security Posture:
-   - Suggestions for improving security controls and mitigating multiple types.
-
-9. Training and Awareness:
-   - Proposals for staff training and developer education based on prevalent types.
-
-10. Trend Analysis:
-    - Analysis of type evolution over time and predictions for future landscapes.
-
-11. Recommendations:
-    - Actions to address critical types, reduce common vulnerabilities, and improve detection.
-
-12. Continuous Monitoring:
-    - Metrics for ongoing analysis, assessment frequency, and escalation thresholds.
-
-13. Tool and Process Evaluation:
-    - Assessment of current tools and recommendations for improvements.
-
-Ensure the analysis is comprehensive, actionable, and considers both immediate responses and long-term improvements."""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def analyze_remediation_priority(high_priority_count, total_vulns, _pipe):
-    prompt = f"""Analyze the current remediation priority situation:
-
-- High-priority vulnerabilities: {high_priority_count}
-- Total vulnerabilities: {total_vulns}
-
-Your analysis should include:
-
-1. Overview:
-   - Summary of remediation situation and urgency assessment.
-
-2. High-Priority Vulnerabilities:
-   - Examination of {high_priority_count} high-priority issues, their percentage, impact, and overall risk.
-
-3. Remediation Challenges:
-   - Identification of obstacles, resource requirements, and business impact considerations.
-
-4. Prioritization Strategy:
-   - Framework for prioritization, criteria beyond severity, and balancing high and low-priority fixes.
-
-5. Risk-Based Approach:
-   - Recommendations for a risk-based strategy, risk quantification, and stakeholder involvement.
-
-6. Remediation Timeline:
-   - Proposed timeline, full remediation estimation, and phased approach suggestions.
-
-7. Resource Allocation:
-   - Recommendations for resource allocation, training, and potential need for external assistance.
-
-8. Continuous Monitoring:
-   - Strategies for monitoring progress, reassessment of priorities, and adjusting strategies.
-
-9. Recommendations:
-    - Actionable steps for high-priority issues, process improvement, and lifecycle enhancement.
-
-10. Metrics and KPIs:
-    - Key indicators, targets, and metrics to track remediation effectiveness.
-
-11. Communication Plan:
-    - Reporting strategies, maintaining transparency, and educating the organization.
-
-12. Long-term Measures:
-    - Recommendations for reducing new vulnerabilities, improving secure practices, and enhancing security posture.
-
-13. Compliance Considerations:
-    - Analysis of alignment with compliance requirements and satisfying regulatory obligations.
-
-14. Incident Response Integration:
-    - Suggestions for integrating remediation with incident response and rapid threat response.
-
-Ensure the analysis is thorough, actionable, and balances urgent remediation with sustainable, long-term management."""
-    return generate_orizon_analysis(prompt, _pipe)
-
-@st.cache_data
-def analyze_vulnerability_trend(current_avg, trend, historical_data, _pipe):
-    prompt = f"""Analyze the following vulnerability trend:
-
-- 7-day moving average of new vulnerabilities: {current_avg:.2f}
-- Observed trend: {trend}
-- Historical data: {historical_data}
-
-Your analysis should include:
-
-1. Overview:
-   - Summary of the current trend and initial significance assessment.
-
-2. 7-Day Moving Average:
-   - Interpretation of {current_avg:.2f} new vulnerabilities, comparison with previous periods, and anomaly identification.
-
-3. Trend Assessment:
-   - In-depth analysis of the {trend} trend, quantification, and identification of patterns or seasonality.
-
-4. Historical Context:
-   - Comparison with historical data, identification of long-term patterns, and analysis of influencing factors.
-
-Ensure the analysis is data-driven, actionable, and considers both short-term responses and long-term adjustments based on observed trends."""
-    
-    return generate_orizon_analysis(prompt, _pipe)
 
 @st.cache_data
 def create_severity_impact_bubble(vulnerabilities, severity_column, cvss_column, host_column):
@@ -1038,6 +565,17 @@ def main():
         subprocess.run(['python', 'run_streamlit_port8501.py'])
         print('Dashboard is now restarted!')
     
+    language = st.selectbox('select language here',
+                            ('English', 'Italian', 'Spanish'))
+    st.write('You selected:', language)
+    
+    if language == 'Italian':
+        language = 'it'
+    if language == 'English':
+        language = 'en'
+    if language == 'Spanish':
+        language = 'es'
+    
     uploaded_file = st.sidebar.file_uploader("Upload Vulnerability JSON", type="json", key="vuln_upload")
     
     if uploaded_file:
@@ -1122,7 +660,7 @@ def main():
             overview_analysis = ''
             with st.spinner("Generating overview analysis..."):
                 if run_LLM:
-                    overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe)
+                    overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language)
             st.markdown(overview_analysis)
 
         # Severity Distribution
@@ -1139,7 +677,7 @@ def main():
             severity_analysis = ''
             with st.spinner("Generating severity analysis..."):
                 if run_LLM:
-                    severity_analysis = analyze_severity_distribution(severity_counts, _pipe= pipe)
+                    severity_analysis = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language)
             st.markdown(severity_analysis)
 
 
@@ -1181,6 +719,12 @@ def main():
 
             # Show the pagination information
             st.write(f"Showing {start_idx+1} to {min(end_idx, len(risk_by_ip))} of {len(risk_by_ip)} entries")
+        
+        #with col2:
+            #with st.spinner("Generating analysis..."):
+                #if run_LLM:
+                    #geo_analysis = analyze_geolocation(ip = risk_by_ip['ip'], _pipe = pipe, language=language)
+                    #st.markdown(overview_analysis)
 
         # Top 10 Vulnerabilities
         st.header("Top 10 Critical Vulnerabilities", anchor="top-10-critical-vulnerabilities")
@@ -1223,7 +767,7 @@ def main():
         with st.spinner("Analyzing top vulnerabilities..."):
             top_vuln_analysis = ''
             if run_LLM:
-                top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe)
+                top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe, language=language)
         st.markdown(top_vuln_analysis)
 
         # Network Topology View
@@ -1261,10 +805,10 @@ def main():
         top_central = sorted(centrality, key=centrality.get, reverse=True)[:5]
         density = nx.density(G)
         communities = list(nx.community.greedy_modularity_communities(G))
-        with st.spinner("Analyzing network topology..."):
-            if run_LLM:
-                network_analysis = generate_network_analysis(top_central, density, communities, _pipe=pipe)
-                st.markdown(network_analysis)
+        #with st.spinner("Analyzing network topology..."):
+        #    if run_LLM:
+        #        network_analysis = generate_network_analysis(top_central, density, communities, _pipe=pipe, language=language)
+        #        st.markdown(network_analysis)
 
         # Additional Cybersecurity Insights
         st.header("Additional Cybersecurity Insights", anchor="additional-cybersecurity-insights")
@@ -1290,7 +834,7 @@ def main():
             with st.spinner("Analyzing CVSS distribution..."):
                 cvss_analysis = ''
                 if run_LLM:
-                    cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns, _pipe = pipe)
+                    cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns, _pipe = pipe, language=language)
             st.markdown(cvss_analysis)
 
         if created_at_column:
@@ -1322,20 +866,25 @@ def main():
                 driver = setup_driver()
                 max_width, max_height = 1920, 1080
 
-                # Iterate over each unique host and take a screenshot
-                for index, host in enumerate(unique_hosts):
-                    
-                    progress = (index + 1) / len(unique_hosts)
-                    progress_bar.progress(progress)
-                    status_text.text(f'Numbers of scanned sites: {index + 1}/{len(unique_hosts)}')
+                with cProfile.Profile() as pr:
+                    # Iterate over each unique host and take a screenshot
+                    for index, host in enumerate(unique_hosts[:10]):
+                        
+                        progress = (index + 1) / len(unique_hosts)
+                        progress_bar.progress(progress)
+                        status_text.text(f'Numbers of scanned sites: {index + 1}/{len(unique_hosts)}')
 
-                    host, image, error_type = take_screenshot(driver, host, max_width, max_height)
-                    if host and image:
-                        screenshots.append((host, image))
-                    else:
-                        errors.append((host, error_type))
-                    
-                    summary.text(f"Validated Screenshots: {len(screenshots)}, Errors: {len(errors)}")
+                        host, image, error_type = take_screenshot(driver, host, max_width, max_height)
+                        if host and image:
+                            screenshots.append((host, image))
+                        else:
+                            errors.append((host, error_type))
+                        
+                        summary.text(f"Validated Screenshots: {len(screenshots)}, Errors: {len(errors)}")
+                with open("profiling_results_screen.txt", "w") as f:
+                    stats = pstats.Stats(pr, stream=f)
+                    stats.sort_stats('cumulative')
+                    stats.print_stats()
                 
                 # Mostra riepilogo degli errori
                 if errors:
@@ -1399,32 +948,29 @@ def main():
         with st.spinner("Analyzing vulnerability types..."):
             types_analysis = ''
             if run_LLM:
-                types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe)
+                types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language)
         st.markdown(types_analysis)
 
-        # Remediation Priority Matrix
-        st.header("Remediation Priority Matrix")
-        if all(col in filtered_vulnerabilities.columns for col in [severity_column, 'cvss_score', 'exploit_available']):
-            fig_remediation = create_severity_impact_bubble(filtered_vulnerabilities, severity_column, 'cvss_score', host_column)
-            if fig_remediation:
-                st.plotly_chart(fig_remediation, use_container_width=True, config={'displayModeBar': False})
+        # # Remediation Priority Matrix
+        # st.header("Remediation Priority Matrix")
+        # if all(col in filtered_vulnerabilities.columns for col in [severity_column, 'cvss_score', 'exploit_available']):
+        #     fig_remediation = create_severity_impact_bubble(filtered_vulnerabilities, severity_column, 'cvss_score', host_column)
+        #     if fig_remediation:
+        #         st.plotly_chart(fig_remediation, use_container_width=True, config={'displayModeBar': False})
             
-            high_priority = filtered_vulnerabilities[(filtered_vulnerabilities['cvss_score'] > 7) & (filtered_vulnerabilities['exploit_available'] == True)]
-            with st.spinner("Analyzing remediation priorities..."):
-                remediation_analysis = ''
-                if run_LLM:
-                    remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns, _pipe = pipe)
-            st.markdown(remediation_analysis)
-        else:
-            st.info("Not enough information available for remediation priority analysis.")
+        #     high_priority = filtered_vulnerabilities[(filtered_vulnerabilities['cvss_score'] > 7) & (filtered_vulnerabilities['exploit_available'] == True)]
+        #     with st.spinner("Analyzing remediation priorities..."):
+        #         remediation_analysis = ''
+        #         if run_LLM:
+        #             remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns, _pipe = pipe, language=language)
+        #     st.markdown(remediation_analysis)
+        # else:
+        #     st.info("Not enough information available for remediation priority analysis.")
 
         st.header('WorldCloud analysis')
         df = load_data_word(file_contents)
         all_tags = df['template_name']
         tag_counts = Counter(all_tags)
-
-        # Creazione di una colormap personalizzata
-        from matplotlib.colors import LinearSegmentedColormap
 
         colors = [kelly_green, dodger_blue, burnt_red, mariana_blue]
         n_bins = len(colors)
@@ -1459,8 +1005,8 @@ def main():
                     }
                     if 'cvss_score' in filtered_vulnerabilities.columns:
                         analyses['cvss'] = cvss_analysis
-                    if 'remediation_analysis' in locals():
-                        analyses['remediation'] = remediation_analysis
+                    #if 'remediation_analysis' in locals():
+                    #   analyses['remediation'] = remediation_analysis
                     
                     figures = {
                         'risk_score': fig_risk_score,
@@ -1470,8 +1016,8 @@ def main():
                     }
                     if 'cvss_score' in filtered_vulnerabilities.columns:
                         figures['cvss'] = fig_cvss
-                    if 'fig_remediation' in locals():
-                        figures['remediation'] = fig_remediation
+                    #if 'fig_remediation' in locals():
+                    #   figures['remediation'] = fig_remediation
                     
                     if export_format == "Word":
                         word_buffer = generate_word_report(filtered_vulnerabilities, analyses, figures)

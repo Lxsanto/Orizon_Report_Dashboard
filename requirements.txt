@@ -17,3 +17,5 @@ webdriver-manager
 wordcloud
 pynvml
 dnspython
+stopit
+line_profiler

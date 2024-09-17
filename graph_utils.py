@@ -1,16 +1,16 @@
 import pandas as pd
-import signal
 import json
 import socket
 from dns import resolver
 import requests
-import os
 import time
 import plotly.graph_objects as go
 from PIL import Image
 import io
 import numpy as np
 import streamlit as st
+import stopit
+from line_profiler import profile
 
 # Selenium per l'automazione del browser
 from selenium import webdriver
@@ -329,87 +329,65 @@ def timeout_handler(signum, frame):
     raise TimeoutException
 
 @st.cache_data
+@profile
 def take_screenshot(_driver, host, max_width, max_height, timeout = 10):
-
+    
     image, error_type = None, None
 
-    url = check_url(_driver, host)
-    
-    # controlla se url valido
-    if not url:
-        return host, image, "URL non valido"
-    
-    # Controlla se la porta è nella lista delle porte da escludere
-    if ':' in host:
-        port = host.split(':')[-1]
-        if port in ports:
-            return host, image, f'porta non supportata per servizi web: {port}'
-        
-    # Set del timeout globale usando il signal
-    #signal.signal(signal.SIGALRM, timeout_handler)
-    #signal.alarm(timeout)
+    with stopit.ThreadingTimeout(timeout) as context_manager:
 
-    try:
-        # Naviga alla pagina
-        _driver.get(url)
+        url = check_url(_driver, host)
+        
+        # controlla se url valido
+        if not url:
+            return host, image, "URL non valido"
+        
+        # Controlla se la porta è nella lista delle porte da escludere
+        if ':' in host:
+            port = host.split(':')[-1]
+            if port in ports:
+                return host, image, f'porta non supportata per servizi web: {port}'
 
-        # Aspetta che il body sia presente
-        WebDriverWait(_driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-        
-        # Aspetta che la pagina sia "pronta"
-        WebDriverWait(_driver, 5).until(
-            lambda d: d.execute_script('return document.readyState') == 'complete'
-        )
-        
-        # Scorri la pagina per assicurarsi che tutto sia caricato
-        _driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(0.2)  # Breve pausa dopo lo scroll
-        _driver.execute_script("window.scrollTo(0, 0);")
-        
-        # Gestisci eventuali popup
-        handle_popups(_driver)
-        
-        # Imposta la dimensione della finestra
-        _driver.set_window_size(1280, 720)
-        
-        # Aspetta ancora un momento prima di catturare lo screenshot
-        time.sleep(0.2)
-        
-        # Cattura screenshot come byte stream
-        screenshot_as_bytes = _driver.get_screenshot_as_png()
-        image = Image.open(io.BytesIO(screenshot_as_bytes))
+        try:
+            # Naviga alla pagina
+            _driver.get(url)
 
-        """# Verifica che l'immagine non sia completamente bianca
-        if is_image_blank(image):
-            print(f"Screenshot bianco rilevato per {host}")
-            error_type = "Pagina bianca"
-
-            # Debug: Salva lo screenshot bianco
-            debug_dir = "debug_screenshots"
-            os.makedirs(debug_dir, exist_ok=True)
-            debug_filename = os.path.join(debug_dir, f"blank_{host.replace('://', '_')}_{int(time.time())}.png")
-            image.save(debug_filename)
+            # Aspetta che il body sia presente
+            WebDriverWait(_driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             
-            # Debug: Ottieni informazioni aggiuntive sulla pagina
-            page_title = _driver.title
-            page_url = _driver.current_url
+            # Aspetta che la pagina sia "pronta"
+            WebDriverWait(_driver, 5).until(
+                lambda d: d.execute_script('return document.readyState') == 'complete'
+            )
             
-            print(f"Debug info per {host}:")
-            print(f"  - URL finale: {page_url}")
-            print(f"  - Titolo della pagina: {page_title}")
-            print(f"  - Screenshot bianco salvato come: {debug_filename}")"""
-        
-        # Ridimensiona l'immagine mantenendo l'aspect ratio
-        image.thumbnail((max_width, max_height))
-        
-        return host, image, error_type
-        
-    # manage exceptions
-    except TimeoutException:
-        error_type = f"Timeout {timeout} seconds superato"
-    except Exception as e:
-        error_type = str(e)
-    #finally:
-        #signal.alarm(0)
+            # Scorri la pagina per assicurarsi che tutto sia caricato
+            _driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(0.2)  # Breve pausa dopo lo scroll
+            _driver.execute_script("window.scrollTo(0, 0);")
+            
+            # Gestisci eventuali popup
+            handle_popups(_driver)
+            
+            # Imposta la dimensione della finestra
+            _driver.set_window_size(1280, 720)
+            
+            # Aspetta ancora un momento prima di catturare lo screenshot
+            time.sleep(0.2)
+            
+            # Cattura screenshot come byte stream
+            screenshot_as_bytes = _driver.get_screenshot_as_png()
+            image = Image.open(io.BytesIO(screenshot_as_bytes))
+            
+            # Ridimensiona l'immagine mantenendo l'aspect ratio
+            image.thumbnail((max_width, max_height))
+            
+            return host, image, error_type
+            
+        except Exception as e:
+            error_type = str(e)
+    
+    # Did code timeout?
+    if context_manager.state == context_manager.TIMED_OUT:
+        print(f"Screenshot for {host} hit timeout!")
     
     return host, image, error_type
