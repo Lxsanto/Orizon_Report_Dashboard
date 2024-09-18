@@ -391,3 +391,100 @@ def analyze_vulnerability_types(most_common_type, frequency, top_10_types, _pipe
     Responda a mi pregunta con un tono preciso, use un lenguaje técnico y formal adecuado para un informe PDF profesional."""
 
     return generate_orizon_analysis(prompt, _pipe)
+
+@st.cache_data
+def analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe, language = 'en'):
+    if language == 'en':
+        prompt = f"""Analyze the geolocation data for our hosts and provide a comprehensive report. Focus on two main aspects: general distribution and top 5 vulnerable hosts.
+
+                    General Distribution Analysis
+                    Data provided:
+                    - Countries with hosts: {countries}
+                    - Cities with hosts: {cities}
+
+                    Your analysis should include:
+                    a) A concise summary of our hosts' global distribution
+                    b) An organized list of countries and cities where our hosts are located
+
+                    Top 5 Vulnerable Hosts Analysis
+                    Data provided:
+                    - Hosts with highest vulnerability scores: {hosts_top5}
+                    - IP addresses with highest vulnerability scores: {ip_top5}
+                    - Countries with highest vulnerability scores: {countries_top5}
+                    - Cities with highest vulnerability scores: {cities_top5}
+
+                    Your analysis should include:
+                    a) A detailed summary of the geolocation of our most vulnerable hosts
+                    b) Any notable patterns or correlations between location and vulnerability
+
+                    Presentation Guidelines
+                    - Use a precise and professional tone
+                    - Employ technical and formal language suitable for a professional PDF report
+                    - Organize information logically, using headings and subheadings where appropriate
+                    - Include any relevant statistics or percentages to support your analysis
+
+                    Please provide a comprehensive analysis based on the data and guidelines provided above."""
+  
+    if language == 'it':
+        prompt = f"""Analizza i dati di geolocalizzazione dei nostri host e fornisci un report completo. Concentrati su due aspetti principali: distribuzione generale e i 5 host più vulnerabili.
+
+                    Analisi della Distribuzione Generale
+                    Dati forniti:
+                    - Paesi con host: {countries}
+                    - Città con host: {cities}
+
+                    La tua analisi dovrebbe includere:
+                    a) Un riassunto conciso della distribuzione globale dei nostri host
+                    b) Un elenco organizzato di paesi e città in cui si trovano i nostri host
+
+                    Analisi dei 5 Host Più Vulnerabili
+                    Dati forniti:
+                    - Host con i punteggi di vulnerabilità più alti: {hosts_top5}
+                    - Indirizzi IP con i punteggi di vulnerabilità più alti: {ip_top5}
+                    - Paesi con i punteggi di vulnerabilità più alti: {countries_top5}
+                    - Città con i punteggi di vulnerabilità più alti: {cities_top5}
+
+                    La tua analisi dovrebbe includere:
+                    a) Un riassunto dettagliato della geolocalizzazione dei nostri host più vulnerabili
+                    b) Qualsiasi schema o correlazione significativa tra la posizione e la vulnerabilità
+
+                    Linee Guida per la Presentazione
+                    - Utilizza un tono preciso e professionale
+                    - Impiega un linguaggio tecnico e formale adatto a un report professionale in formato PDF
+                    - Organizza le informazioni in modo logico, utilizzando intestazioni e sottosezioni dove appropriato
+                    - Includi eventuali statistiche o percentuali rilevanti a supporto della tua analisi
+
+                    Si prega di fornire un'analisi completa basata sui dati e le linee guida sopra indicate."""
+
+    if language == 'es':
+        prompt = f"""Analiza los datos de geolocalización de nuestros hosts y proporciona un informe completo. Enfócate en dos aspectos principales: distribución general y los 5 hosts más vulnerables.
+
+                    Análisis de Distribución General
+                    Datos proporcionados:
+                    - Países con hosts: {countries}
+                    - Ciudades con hosts: {cities}
+
+                    Tu análisis debe incluir:
+                    a) Un resumen conciso de la distribución global de nuestros hosts
+                    b) Una lista organizada de países y ciudades donde se encuentran nuestros hosts
+
+                    Análisis de los 5 Hosts Más Vulnerables
+                    Datos proporcionados:
+                    - Hosts con las puntuaciones de vulnerabilidad más altas: {hosts_top5}
+                    - Direcciones IP con las puntuaciones de vulnerabilidad más altas: {ip_top5}
+                    - Países con las puntuaciones de vulnerabilidad más altas: {countries_top5}
+                    - Ciudades con las puntuaciones de vulnerabilidad más altas: {cities_top5}
+
+                    Tu análisis debe incluir:
+                    a) Un resumen detallado de la geolocalización de nuestros hosts más vulnerables
+                    b) Cualquier patrón o correlación notable entre la ubicación y la vulnerabilidad
+
+                    Directrices de Presentación
+                    - Utiliza un tono preciso y profesional
+                    - Emplea un lenguaje técnico y formal adecuado para un informe profesional en PDF
+                    - Organiza la información de manera lógica, usando encabezados y subtítulos cuando sea necesario
+                    - Incluye cualquier estadística o porcentaje relevante para respaldar tu análisis
+
+                    Por favor, proporciona un análisis completo basado en los datos y directrices proporcionados anteriormente."""
+
+    return generate_orizon_analysis(prompt, _pipe)

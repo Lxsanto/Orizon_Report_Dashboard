@@ -10,16 +10,11 @@ import streamlit as st
 import plotly.express as px
 import plotly.io as pio
 import networkx as nx
-from io import BytesIO
 from wordcloud import WordCloud
 import torch
 import cProfile
 import pstats
 from matplotlib.colors import LinearSegmentedColormap
-
-# Docx per la gestione di documenti Word
-from docx import Document
-from docx.shared import Inches
 
 # Streamlit Authenticator per la gestione dell'autenticazione
 from streamlit_authenticator import Authenticate
@@ -31,6 +26,7 @@ from restart_utils import clear_pycache, restart_script
 from GPU_utils import print_gpu_utilization, print_summary
 from graph_utils import *  # all Michele utils
 from prompts_utils import *
+from docx_utils import * 
 
 # Tentativo di importazione condizionale con gestione degli errori
 try:
@@ -353,71 +349,6 @@ def create_severity_impact_bubble(vulnerabilities, severity_column, cvss_column,
     else:
         return None
 
-# Function to generate Word report
-def generate_word_report(vulnerabilities, analyses, figures):
-    doc = Document()
-    doc.add_heading('Orizon Security Dashboard Report', 0)
-
-    doc.add_paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    doc.add_page_break()
-
-    # Table of Contents
-    doc.add_heading('Table of Contents', level=1)
-    for section in analyses.keys():
-        doc.add_paragraph(section.capitalize(), style='List Bullet')
-    doc.add_page_break()
-
-    for section, content in analyses.items():
-        doc.add_heading(section.capitalize(), level=1)
-        doc.add_paragraph(content)
-        
-        if section in figures:
-            img_buffer = BytesIO()
-            figures[section].write_image(img_buffer, format="png", width=800, height=400, scale=2)
-            doc.add_picture(img_buffer, width=Inches(7.5))
-
-    # Add summary tables
-    doc.add_heading('Vulnerability Summary', level=1)
-    
-    # Severity Distribution Table
-    severity_counts = vulnerabilities['severity'].value_counts()
-    table = doc.add_table(rows=1, cols=3)
-    table.style = 'Table Grid'
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Severity'
-    hdr_cells[1].text = 'Count'
-    hdr_cells[2].text = 'Percentage'
-    for severity, count in severity_counts.items():
-        percentage = (count / len(vulnerabilities)) * 100
-        row_cells = table.add_row().cells
-        row_cells[0].text = severity
-        row_cells[1].text = str(count)
-        row_cells[2].text = f"{percentage:.2f}%"
-
-    doc.add_paragraph()
-
-    # Top 10 Vulnerabilities Table
-    doc.add_heading('Top 10 Vulnerabilities', level=2)
-    top_10 = vulnerabilities.sort_values('severity', ascending=False).head(10)
-    table = doc.add_table(rows=1, cols=4)
-    table.style = 'Table Grid'
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Host'
-    hdr_cells[1].text = 'Severity'
-    hdr_cells[2].text = 'Vulnerability'
-    hdr_cells[3].text = 'Description'
-    for _, row in top_10.iterrows():
-        row_cells = table.add_row().cells
-        row_cells[0].text = row['host']
-        row_cells[1].text = row['severity']
-        row_cells[2].text = row['template_name']
-        row_cells[3].text = row['description'][:50] + '...'
-
-    buffer = BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
-
 @st.cache_data
 def process_and_filter_vulnerabilities(uploaded_file):
     vulnerabilities = load_data(uploaded_file)
@@ -577,7 +508,9 @@ def main():
         language = 'es'
     
     uploaded_file = st.sidebar.file_uploader("Upload Vulnerability JSON", type="json", key="vuln_upload")
-    file_contents = uploaded_file.read()
+
+    if uploaded_file:
+        file_contents = uploaded_file.read()
     
     if uploaded_file:
 
@@ -604,7 +537,6 @@ def main():
             <a href="#security-posture-overview">Overview</a>
             <a href="#vulnerability-severity-distribution">Severity</a>
             <a href="#top-10-critical-vulnerabilities">Top Vulnerabilities</a>
-            <a href="#network-topology-analysis">Network Analysis</a>
             <a href="#additional-cybersecurity-insights">Additional Insights</a>
         </div>
         """, unsafe_allow_html=True)
@@ -708,9 +640,10 @@ def main():
 
         start_idx = (current_page - 1) * severities_page
         end_idx = start_idx + severities_page
+        df_10vuln = sorted_vulnerabilities[selected_columns].iloc[start_idx:end_idx]
 
         # Display the selected page of the table
-        st.dataframe(sorted_vulnerabilities[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
+        st.dataframe(df_10vuln, height=400, use_container_width=True)
 
         # Show the pagination information
         st.write(f"Showing {start_idx+1} to {min(end_idx, len(sorted_vulnerabilities))} of {len(sorted_vulnerabilities)} entries")
@@ -727,46 +660,46 @@ def main():
         st.markdown(top_vuln_analysis)
 
         # Network Topology View
-        st.header("Network Topology Analysis", anchor="network-topology-analysis")
-        G = nx.Graph()
-        for _, row in filtered_vulnerabilities.iterrows():
-            G.add_edge(row[host_column], row['template_name'])
-        pos = nx.spring_layout(G)
-        edge_x, edge_y = [], []
-        for edge in G.edges():
-            x0, y0 = pos[edge[0]]
-            x1, y1 = pos[edge[1]]
-            edge_x.extend([x0, x1, None])
-            edge_y.extend([y0, y1, None])
-        edge_trace = go.Scatter(x=edge_x, y=edge_y, line=dict(width=0.5), hoverinfo='none', mode='lines')
-        node_x = [pos[node][0] for node in G.nodes()]
-        node_y = [pos[node][1] for node in G.nodes()]
-        node_trace = go.Scatter(x=node_x, y=node_y, mode='markers', hoverinfo='text',
-                                marker=dict(showscale=True, size=10, 
-                                            color=[], colorbar=dict(thickness=15, title='Node Connections'),
-                                            line_width=2))
-        node_adjacencies = []
-        node_text = []
-        for node, adjacencies in enumerate(G.adjacency()):
-            node_adjacencies.append(len(adjacencies[1]))
-            node_text.append(f'{adjacencies[0]} - # of connections: {len(adjacencies[1])}')
-        node_trace.marker.color = node_adjacencies
-        node_trace.text = node_text
-        fig_network = go.Figure(data=[edge_trace, node_trace],
-                        layout=go.Layout(showlegend=False, hovermode='closest',
-                                         title="Network Topology Visualization", width=_width, height=_height))
-        st.plotly_chart(fig_network, use_container_width=True, config={'displayModeBar': False})
-        st.subheader("Orizon Engine Analysis")
-        centrality = nx.degree_centrality(G)
-        top_central = sorted(centrality, key=centrality.get, reverse=True)[:5]
-        density = nx.density(G)
-        communities = list(nx.community.greedy_modularity_communities(G))
-        #with st.spinner("Analyzing network topology..."):
+        # st.header("Network Topology Analysis", anchor="network-topology-analysis")
+        # G = nx.Graph()
+        # for _, row in filtered_vulnerabilities.iterrows():
+        #     G.add_edge(row[host_column], row['template_name'])
+        # pos = nx.spring_layout(G)
+        # edge_x, edge_y = [], []
+        # for edge in G.edges():
+        #     x0, y0 = pos[edge[0]]
+        #     x1, y1 = pos[edge[1]]
+        #     edge_x.extend([x0, x1, None])
+        #     edge_y.extend([y0, y1, None])
+        # edge_trace = go.Scatter(x=edge_x, y=edge_y, line=dict(width=0.5), hoverinfo='none', mode='lines')
+        # node_x = [pos[node][0] for node in G.nodes()]
+        # node_y = [pos[node][1] for node in G.nodes()]
+        # node_trace = go.Scatter(x=node_x, y=node_y, mode='markers', hoverinfo='text',
+        #                         marker=dict(showscale=True, size=10, 
+        #                                     color=[], colorbar=dict(thickness=15, title='Node Connections'),
+        #                                     line_width=2))
+        # node_adjacencies = []
+        # node_text = []
+        # for node, adjacencies in enumerate(G.adjacency()):
+        #     node_adjacencies.append(len(adjacencies[1]))
+        #     node_text.append(f'{adjacencies[0]} - # of connections: {len(adjacencies[1])}')
+        # node_trace.marker.color = node_adjacencies
+        # node_trace.text = node_text
+        # fig_network = go.Figure(data=[edge_trace, node_trace],
+        #                 layout=go.Layout(showlegend=False, hovermode='closest',
+        #                                  title="Network Topology Visualization", width=_width, height=_height))
+        # st.plotly_chart(fig_network, use_container_width=True, config={'displayModeBar': False})
+        # st.subheader("Orizon Engine Analysis")
+        # centrality = nx.degree_centrality(G)
+        # top_central = sorted(centrality, key=centrality.get, reverse=True)[:5]
+        # density = nx.density(G)
+        # communities = list(nx.community.greedy_modularity_communities(G))
+        # with st.spinner("Analyzing network topology..."):
         #    if run_LLM:
         #        network_analysis = generate_network_analysis(top_central, density, communities, _pipe=pipe, language=language)
         #        st.markdown(network_analysis)
 
-        # Additional Cybersecurity Insights
+        #Additional Cybersecurity Insights
         st.header("Additional Cybersecurity Insights", anchor="additional-cybersecurity-insights")
         
         # CVSS Score Distribution (if available)
@@ -848,8 +781,9 @@ def main():
                             collocations=False, 
                             colormap=cm).generate_from_frequencies(tag_counts)
 
-        img = wordcloud_.to_image()
-        st.image(img, use_column_width=True)
+        cloud_img = wordcloud_.to_image()
+
+        st.image(cloud_img, use_column_width=True)
 
         # Interactive Vulnerability Explorer
         st.header("Interactive Vulnerability Explorer")
@@ -881,7 +815,8 @@ def main():
         
         start_idx = (current_page - 1) * items_per_page
         end_idx = start_idx + items_per_page
-        st.dataframe(filtered_data[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
+        df_interactive = filtered_data[selected_columns].iloc[start_idx:end_idx]
+        st.dataframe(df_interactive, height=400, use_container_width=True)
         
         st.write(f"Showing {start_idx+1} to {min(end_idx, len(filtered_data))} of {len(filtered_data)} entries")
 
@@ -915,18 +850,30 @@ def main():
 
             start_idx = (current_page - 1) * items_per_page
             end_idx = start_idx + items_per_page
+            df_risk = risk_by_ip[selected_columns].iloc[start_idx:end_idx]
 
             # Display the selected page of the table
-            st.dataframe(risk_by_ip[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
+            st.dataframe(df_risk, height=400, use_container_width=True)
 
             # Show the pagination information
             st.write(f"Showing {start_idx+1} to {min(end_idx, len(risk_by_ip))} of {len(risk_by_ip)} entries")
+
+            countries = dict(risk_by_ip['country'].value_counts())
+            cities = dict(risk_by_ip['city'].value_counts())
+
+            # top5 risk
+            risk_ = risk_by_ip.nlargest(5, 'normalized_risk_score')
+            ip_top5 = risk_['ip'].to_list()
+            countries_top5 = risk_['country'].to_list()
+            cities_top5 = risk_['city'].to_list()
+            hosts_top5 = risk_['associated_hosts'].to_list()
         
-        #with col2:
-            #with st.spinner("Generating analysis..."):
-                #if run_LLM:
-                    #geo_analysis = analyze_geolocation(ip = risk_by_ip['ip'], _pipe = pipe, language=language)
-                    #st.markdown(overview_analysis)
+        with col2:
+            with st.spinner("Generating analysis..."):
+                geo_analysis = ''
+                if run_LLM:
+                    geo_analysis = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language)
+                st.markdown(geo_analysis)
         
         if created_at_column:
             # Michele
@@ -1026,34 +973,42 @@ def main():
         st.header("Export Dashboard")
         col1, col2 = st.columns(2)
         with col1:
-            export_format = st.selectbox("Choose export format:", ["Word", "CSV", "JSON"], key="export_format")
+            export_format = st.selectbox("Choose export format:", ["Word", "CSV"], key="export_format")
         with col2:
             if st.button("Generate Report", key="generate_report"):
+
                 with st.spinner(f"Generating {export_format} report..."):
-                    analyses = {
-                        'overview': overview_analysis,
-                        'severity': severity_analysis,
-                        'top_vulnerabilities': top_vuln_analysis,
-                        'types': types_analysis
-                    }
+
+                    texts_LLM = {'Security Posture Overview': overview_analysis,
+                                 'Vulnerability Severity Distribution': severity_analysis,
+                                 'Top 10 Critical Vulnerabilities': top_vuln_analysis,
+                                 'Top 10 Vulnerability Types': types_analysis,
+                                 'Geolocation of company servers': geo_analysis
+                                 }
+
                     if 'cvss_score' in filtered_vulnerabilities.columns:
-                        analyses['cvss'] = cvss_analysis
+                        texts_LLM['cvss'] = cvss_analysis
                     #if 'remediation_analysis' in locals():
                     #   analyses['remediation'] = remediation_analysis
                     
-                    figures = {
-                        'risk_score': fig_risk_score,
-                        'severity': fig_severity,
-                        'network': fig_network,
-                        'types': fig_types
-                    }
+                    figures = {'Security Posture Overview': [fig_risk_score],
+                                 'Vulnerability Severity Distribution': [fig_severity],
+                                 'Top 10 Vulnerability Types': [fig_types, cloud_img],
+                                 'Geolocation of company servers': [geo_map, geo_map_1]
+                                 }
+                    
+                    dfs = {
+                                 'Top 10 Critical Vulnerabilities': df_10vuln,
+                                 'Vulnerability Explorer': df_interactive,
+                                 'Geolocation of company servers': df_risk
+                                 }
                     if 'cvss_score' in filtered_vulnerabilities.columns:
                         figures['cvss'] = fig_cvss
                     #if 'fig_remediation' in locals():
                     #   figures['remediation'] = fig_remediation
                     
                     if export_format == "Word":
-                        word_buffer = generate_word_report(filtered_vulnerabilities, analyses, figures)
+                        word_buffer = generate_word_report(dfs, texts_LLM, figures)
                         st.download_button(
                             label="Download Word Report",
                             data=word_buffer,
@@ -1067,14 +1022,6 @@ def main():
                             data=csv,
                             file_name="vulnerability_report.csv",
                             mime="text/csv",
-                        )
-                    elif export_format == "JSON":
-                        json_str = filtered_vulnerabilities.to_json(orient="records")
-                        st.download_button(
-                            label="Download JSON",
-                            data=json_str,
-                            file_name="vulnerability_report.json",
-                            mime="application/json",
                         )
 
     else:
