@@ -577,6 +577,7 @@ def main():
         language = 'es'
     
     uploaded_file = st.sidebar.file_uploader("Upload Vulnerability JSON", type="json", key="vuln_upload")
+    file_contents = uploaded_file.read()
     
     if uploaded_file:
 
@@ -680,51 +681,6 @@ def main():
                     severity_analysis = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language)
             st.markdown(severity_analysis)
 
-
-        # Geolocation of servers
-        st.header("Geolocation of company servers", anchor="Geolocation of company servers")
-        
-        col1, col2 = st.columns([2, 1])
-        with col1:
-
-            file_contents = uploaded_file.read()
-
-            with cProfile.Profile() as pr:
-                geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key='f2cfc8c5c8c358')
-            with open("profiling_results_geo.txt", "w") as f:
-                stats = pstats.Stats(pr, stream=f)
-                stats.sort_stats('cumulative')
-                stats.print_stats()
-            
-            # Create and display the Plotly maps
-            st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})
-            st.plotly_chart(geo_map_1, use_container_width=True, config={'displayModeBar': False})
-
-            # Display the data in the table
-            st.subheader("Risk Scores by IP")
-
-            # Update the selected columns to include the new 'associated_hosts' column
-            selected_columns = ['ip', 'associated_hosts', 'country', 'city', 'severity_weight', 'normalized_risk_score']
-
-            # Pagination
-            items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=20, step=10)
-            total_pages = len(risk_by_ip) // items_per_page + (1 if len(risk_by_ip) % items_per_page > 0 else 0)
-            current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
-
-            start_idx = (current_page - 1) * items_per_page
-            end_idx = start_idx + items_per_page
-
-            # Display the selected page of the table
-            st.dataframe(risk_by_ip[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
-
-            # Show the pagination information
-            st.write(f"Showing {start_idx+1} to {min(end_idx, len(risk_by_ip))} of {len(risk_by_ip)} entries")
-        
-        #with col2:
-            #with st.spinner("Generating analysis..."):
-                #if run_LLM:
-                    #geo_analysis = analyze_geolocation(ip = risk_by_ip['ip'], _pipe = pipe, language=language)
-                    #st.markdown(overview_analysis)
 
         # Top 10 Vulnerabilities
         st.header("Top 10 Critical Vulnerabilities", anchor="top-10-critical-vulnerabilities")
@@ -837,9 +793,144 @@ def main():
                     cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns, _pipe = pipe, language=language)
             st.markdown(cvss_analysis)
 
+        # Vulnerability Types Analysis
+        st.subheader("Top Vulnerability Types")
+        vuln_types = filtered_vulnerabilities['template_name'].value_counts().head(10)
+        fig_types = px.bar(
+            width=_width,
+            height=_height,
+            x=vuln_types.index, 
+            y=vuln_types.values, 
+            title="Top 10 Vulnerability Types",
+            labels={'x': 'Vulnerability Type', 'y': 'Count'}
+        )
+        st.plotly_chart(fig_types, use_container_width=True, config={'displayModeBar': False})
+        
+        types_analysis = ''
+        with st.spinner("Analyzing vulnerability types..."):
+            types_analysis = ''
+            if run_LLM:
+                types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language)
+        st.markdown(types_analysis)
+
+        # # Remediation Priority Matrix
+        # st.header("Remediation Priority Matrix")
+        # if all(col in filtered_vulnerabilities.columns for col in [severity_column, 'cvss_score', 'exploit_available']):
+        #     fig_remediation = create_severity_impact_bubble(filtered_vulnerabilities, severity_column, 'cvss_score', host_column)
+        #     if fig_remediation:
+        #         st.plotly_chart(fig_remediation, use_container_width=True, config={'displayModeBar': False})
+            
+        #     high_priority = filtered_vulnerabilities[(filtered_vulnerabilities['cvss_score'] > 7) & (filtered_vulnerabilities['exploit_available'] == True)]
+        #     with st.spinner("Analyzing remediation priorities..."):
+        #         remediation_analysis = ''
+        #         if run_LLM:
+        #             remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns, _pipe = pipe, language=language)
+        #     st.markdown(remediation_analysis)
+        # else:
+        #     st.info("Not enough information available for remediation priority analysis.")
+
+        st.header('WorldCloud analysis')
+        df = load_data_word(file_contents)
+        all_tags = df['template_name']
+        tag_counts = Counter(all_tags)
+
+        colors = [kelly_green, dodger_blue, burnt_red, mariana_blue]
+        n_bins = len(colors)
+        cmap_name = 'brand_colors'
+        cm = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+
+        # Creazione del WordCloud
+        wordcloud_ = WordCloud(width=_width, height=_height, 
+                            background_color='white', 
+                            max_font_size=300, 
+                            scale=3, 
+                            relative_scaling=0.5, 
+                            collocations=False, 
+                            colormap=cm).generate_from_frequencies(tag_counts)
+
+        img = wordcloud_.to_image()
+        st.image(img, use_column_width=True)
+
+        # Interactive Vulnerability Explorer
+        st.header("Interactive Vulnerability Explorer")
+        
+        # Add search functionality
+        search_term = st.text_input("Search vulnerabilities", "")
+        
+        # Select columns to display
+        selected_columns = st.multiselect(
+            "Select columns to display",
+            options=filtered_vulnerabilities.columns,
+            default=[host_column, severity_column, 'template_name', 'template_url', description_column],
+            key="column_selector"
+        )
+        
+        # Filter vulnerabilities based on search term
+        if search_term:
+            filtered_data = filtered_vulnerabilities[filtered_vulnerabilities.apply(lambda row: row.astype(str).str.contains(search_term, case=False).any(), axis=1)]
+        else:
+            filtered_data = filtered_vulnerabilities
+        
+        # Display filtered data
+        #st.dataframe(filtered_data[selected_columns], height=400, use_container_width=True)
+        
+        # Add pagination
+        items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=50, step=10)
+        total_pages = len(filtered_data) // items_per_page + (1 if len(filtered_data) % items_per_page > 0 else 0)
+        current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
+        
+        start_idx = (current_page - 1) * items_per_page
+        end_idx = start_idx + items_per_page
+        st.dataframe(filtered_data[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
+        
+        st.write(f"Showing {start_idx+1} to {min(end_idx, len(filtered_data))} of {len(filtered_data)} entries")
+
+        # Geolocation of servers
+        st.header("Geolocation of company servers", anchor="Geolocation of company servers")
+        
+        col1, col2 = st.columns([2, 1])
+        with col1:
+
+            with cProfile.Profile() as pr:
+                geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key='f2cfc8c5c8c358')
+            with open("profiling_results_geo.txt", "w") as f:
+                stats = pstats.Stats(pr, stream=f)
+                stats.sort_stats('cumulative')
+                stats.print_stats()
+            
+            # Create and display the Plotly maps
+            st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(geo_map_1, use_container_width=True, config={'displayModeBar': False})
+
+            # Display the data in the table
+            st.subheader("Risk Scores by IP")
+
+            # Update the selected columns to include the new 'associated_hosts' column
+            selected_columns = ['ip', 'associated_hosts', 'country', 'city', 'severity_weight', 'normalized_risk_score']
+
+            # Pagination
+            items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=20, step=10)
+            total_pages = len(risk_by_ip) // items_per_page + (1 if len(risk_by_ip) % items_per_page > 0 else 0)
+            current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
+
+            start_idx = (current_page - 1) * items_per_page
+            end_idx = start_idx + items_per_page
+
+            # Display the selected page of the table
+            st.dataframe(risk_by_ip[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
+
+            # Show the pagination information
+            st.write(f"Showing {start_idx+1} to {min(end_idx, len(risk_by_ip))} of {len(risk_by_ip)} entries")
+        
+        #with col2:
+            #with st.spinner("Generating analysis..."):
+                #if run_LLM:
+                    #geo_analysis = analyze_geolocation(ip = risk_by_ip['ip'], _pipe = pipe, language=language)
+                    #st.markdown(overview_analysis)
+        
         if created_at_column:
             # Michele
-            st.subheader("Screenshots")
+            st.header("Screenshots")
             st.write("We are taking screenshots...")
 
             scelta = 'No'
@@ -931,64 +1022,6 @@ def main():
                 #for host, image in screenshots:
                 #    st.image(image, caption=f'Screenshot of {host}', use_column_width=True)
 
-        # Vulnerability Types Analysis
-        st.subheader("Top Vulnerability Types")
-        vuln_types = filtered_vulnerabilities['template_name'].value_counts().head(10)
-        fig_types = px.bar(
-            width=_width,
-            height=_height,
-            x=vuln_types.index, 
-            y=vuln_types.values, 
-            title="Top 10 Vulnerability Types",
-            labels={'x': 'Vulnerability Type', 'y': 'Count'}
-        )
-        st.plotly_chart(fig_types, use_container_width=True, config={'displayModeBar': False})
-        
-        types_analysis = ''
-        with st.spinner("Analyzing vulnerability types..."):
-            types_analysis = ''
-            if run_LLM:
-                types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language)
-        st.markdown(types_analysis)
-
-        # # Remediation Priority Matrix
-        # st.header("Remediation Priority Matrix")
-        # if all(col in filtered_vulnerabilities.columns for col in [severity_column, 'cvss_score', 'exploit_available']):
-        #     fig_remediation = create_severity_impact_bubble(filtered_vulnerabilities, severity_column, 'cvss_score', host_column)
-        #     if fig_remediation:
-        #         st.plotly_chart(fig_remediation, use_container_width=True, config={'displayModeBar': False})
-            
-        #     high_priority = filtered_vulnerabilities[(filtered_vulnerabilities['cvss_score'] > 7) & (filtered_vulnerabilities['exploit_available'] == True)]
-        #     with st.spinner("Analyzing remediation priorities..."):
-        #         remediation_analysis = ''
-        #         if run_LLM:
-        #             remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns, _pipe = pipe, language=language)
-        #     st.markdown(remediation_analysis)
-        # else:
-        #     st.info("Not enough information available for remediation priority analysis.")
-
-        st.header('WorldCloud analysis')
-        df = load_data_word(file_contents)
-        all_tags = df['template_name']
-        tag_counts = Counter(all_tags)
-
-        colors = [kelly_green, dodger_blue, burnt_red, mariana_blue]
-        n_bins = len(colors)
-        cmap_name = 'brand_colors'
-        cm = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
-
-        # Creazione del WordCloud
-        wordcloud_ = WordCloud(width=_width, height=_height, 
-                            background_color='white', 
-                            max_font_size=300, 
-                            scale=3, 
-                            relative_scaling=0.5, 
-                            collocations=False, 
-                            colormap=cm).generate_from_frequencies(tag_counts)
-
-        img = wordcloud_.to_image()
-        st.image(img, use_column_width=True)
-
         # Export Options
         st.header("Export Dashboard")
         col1, col2 = st.columns(2)
@@ -1043,40 +1076,6 @@ def main():
                             file_name="vulnerability_report.json",
                             mime="application/json",
                         )
-
-        # Interactive Vulnerability Explorer
-        st.header("Interactive Vulnerability Explorer")
-        
-        # Add search functionality
-        search_term = st.text_input("Search vulnerabilities", "")
-        
-        # Select columns to display
-        selected_columns = st.multiselect(
-            "Select columns to display",
-            options=filtered_vulnerabilities.columns,
-            default=[host_column, severity_column, 'template_name', 'template_url', description_column],
-            key="column_selector"
-        )
-        
-        # Filter vulnerabilities based on search term
-        if search_term:
-            filtered_data = filtered_vulnerabilities[filtered_vulnerabilities.apply(lambda row: row.astype(str).str.contains(search_term, case=False).any(), axis=1)]
-        else:
-            filtered_data = filtered_vulnerabilities
-        
-        # Display filtered data
-        #st.dataframe(filtered_data[selected_columns], height=400, use_container_width=True)
-        
-        # Add pagination
-        items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=50, step=10)
-        total_pages = len(filtered_data) // items_per_page + (1 if len(filtered_data) % items_per_page > 0 else 0)
-        current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
-        
-        start_idx = (current_page - 1) * items_per_page
-        end_idx = start_idx + items_per_page
-        st.dataframe(filtered_data[selected_columns].iloc[start_idx:end_idx], height=400, use_container_width=True)
-        
-        st.write(f"Showing {start_idx+1} to {min(end_idx, len(filtered_data))} of {len(filtered_data)} entries")
 
     else:
         st.info("Please upload a JSON file in the sidebar to begin the analysis.")
