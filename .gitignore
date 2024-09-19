@@ -4,3 +4,5 @@ Orizon_Report_Dashboard_debug.py
 profiling_results.txt
 profiling_results_geo.txt
 debug.py
+__pycache__/
+

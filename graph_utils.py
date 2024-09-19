@@ -287,7 +287,7 @@ def create_country_bubble_plot(risk_by_ip):
 
     return fig
 
-
+# old
 def check_url(driver, url):
     # Rimuovi eventuali protocolli esistenti
     url = url.split('://')[-1]
@@ -324,70 +324,81 @@ def is_image_blank(image):
     extrema = image.convert("L").getextrema()
     return extrema == (255, 255) or (extrema[1] - extrema[0]) < 10
 
-# Handler per il timeout
-def timeout_handler(signum, frame):
-    raise TimeoutException
-
 @st.cache_data
 @profile
-def take_screenshot(_driver, host, max_width, max_height, timeout = 10):
-    
+def take_screenshot(_driver: webdriver, host, max_width, max_height, timeout=5):
+
+    _driver.set_page_load_timeout(timeout) # timeout load pagina
+    _driver.set_script_timeout(timeout) # timeout script in a current browsing context
+
     image, error_type = None, None
 
-    with stopit.ThreadingTimeout(timeout) as context_manager:
+    # Rimuovi eventuali protocolli esistenti dall'host
+    url = host.split('://')[-1]
 
-        url = check_url(_driver, host)
-        
-        # controlla se url valido
-        if not url:
-            return host, image, "URL non valido"
-        
-        # Controlla se la porta è nella lista delle porte da escludere
-        if ':' in host:
-            port = host.split(':')[-1]
-            if port in ports:
-                return host, image, f'porta non supportata per servizi web: {port}'
+    if ':' in url.split('/')[-1]:  # Se c'è una porta specificata
+        http_url = 'http://' + url
+        https_url = 'https://' + url
+    else:
+        http_url = 'http://' + url
+        https_url = 'https://' + url
 
+    # Controlla se la porta è nella lista delle porte da escludere
+    if ':' in host:
+        port = host.split(':')[-1]
+        if port in ports:
+            return host, image, f'porta non supportata per servizi web: {port}'
+
+    # Prova a caricare prima la versione HTTPS, poi HTTP in caso di fallimento
+    try:
+        _driver.get(https_url)
+        url = https_url
+    except TimeoutException:
+        print("Timeout")
+        return host, image, "Timeout raggiunto per HTTPS"
+    except WebDriverException:
         try:
-            # Naviga alla pagina
-            _driver.get(url)
-
-            # Aspetta che il body sia presente
-            WebDriverWait(_driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-            
-            # Aspetta che la pagina sia "pronta"
-            WebDriverWait(_driver, 5).until(
-                lambda d: d.execute_script('return document.readyState') == 'complete'
-            )
-            
-            # Scorri la pagina per assicurarsi che tutto sia caricato
-            _driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(0.2)  # Breve pausa dopo lo scroll
-            _driver.execute_script("window.scrollTo(0, 0);")
-            
-            # Gestisci eventuali popup
-            handle_popups(_driver)
-            
-            # Imposta la dimensione della finestra
-            _driver.set_window_size(1280, 720)
-            
-            # Aspetta ancora un momento prima di catturare lo screenshot
-            time.sleep(0.2)
-            
-            # Cattura screenshot come byte stream
-            screenshot_as_bytes = _driver.get_screenshot_as_png()
-            image = Image.open(io.BytesIO(screenshot_as_bytes))
-            
-            # Ridimensiona l'immagine mantenendo l'aspect ratio
-            image.thumbnail((max_width, max_height))
-            
-            return host, image, error_type
-            
-        except Exception as e:
-            error_type = str(e)
+            _driver.get(http_url)
+            url = http_url
+        except TimeoutException:
+            print("Timeout")
+            return host, image, "Timeout raggiunto per HTTP"
+        except WebDriverException:
+            return host, image, "URL non valido"
     
-    # Did code timeout?
-    if context_manager.state == context_manager.TIMED_OUT:
-        print(f"Screenshot for {host} hit timeout!")
+    try:
+        # Aspetta che il body sia presente
+        WebDriverWait(_driver, timeout).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        
+        # Aspetta che la pagina sia "pronta"
+        WebDriverWait(_driver, timeout).until(
+            lambda d: d.execute_script('return document.readyState') == 'complete'
+        )
+        
+        # Scorri la pagina per assicurarsi che tutto sia caricato
+        _driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(0.2)  # Breve pausa dopo lo scroll
+        _driver.execute_script("window.scrollTo(0, 0);")
+        
+        # Gestisci eventuali popup
+        handle_popups(_driver)
+        
+        # Imposta la dimensione della finestra
+        _driver.set_window_size(1280, 720)
+        
+        # Aspetta ancora un momento prima di catturare lo screenshot
+        time.sleep(0.2)
+        
+        # Cattura screenshot come byte stream
+        screenshot_as_bytes = _driver.get_screenshot_as_png()
+        image = Image.open(io.BytesIO(screenshot_as_bytes))
+        
+        # Ridimensiona l'immagine mantenendo l'aspect ratio
+        image.thumbnail((max_width, max_height))
+        
+        return host, image, error_type
+        
+    except Exception as e:
+        error_type = str(e)
     
     return host, image, error_type

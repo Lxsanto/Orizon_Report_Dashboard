@@ -99,8 +99,8 @@ _width = 800
 _height = 600
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -491,10 +491,6 @@ def Geolocation_of_servers(file_contents, api_key):
 
 def main():
     st.sidebar.title("Orizon Security Dashboard")
-
-    if st.sidebar.button("Restart App"):
-        subprocess.run(['python', 'run_streamlit_port8501.py'])
-        print('Dashboard is now restarted!')
     
     language = st.selectbox('select language here',
                             ('English', 'Italian', 'Spanish'))
@@ -589,11 +585,9 @@ def main():
             st.plotly_chart(fig_risk_score, use_container_width=True, config={'displayModeBar': False})
         
         with col2:
-            st.subheader("Orizon Engine Analysis")
             overview_analysis = ''
-            with st.spinner("Generating overview analysis..."):
-                if run_LLM:
-                    overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language)
+            if run_LLM:
+                overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language)
             st.markdown(overview_analysis)
 
         # Severity Distribution
@@ -606,11 +600,9 @@ def main():
             st.plotly_chart(fig_severity, use_container_width=True, config={'displayModeBar': False})
 
         with col2:
-            st.subheader("Orizon Engine Analysis")
             severity_analysis = ''
-            with st.spinner("Generating severity analysis..."):
-                if run_LLM:
-                    severity_analysis = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language)
+            if run_LLM:
+                severity_analysis = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language)
             st.markdown(severity_analysis)
 
 
@@ -647,16 +639,13 @@ def main():
 
         # Show the pagination information
         st.write(f"Showing {start_idx+1} to {min(end_idx, len(sorted_vulnerabilities))} of {len(sorted_vulnerabilities)} entries")
-        st.subheader("Orizon Engine Analysis")
         common_types = top_10['template_name'].value_counts()
         most_common_type = common_types.index[0]
         hosts_affected = top_10[host_column].nunique()
         most_affected_host = top_10[host_column].value_counts().index[0]
         top_vuln_analysis = ''
-        with st.spinner("Analyzing top vulnerabilities..."):
-            top_vuln_analysis = ''
-            if run_LLM:
-                top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe, language=language)
+        if run_LLM:
+            top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe, language=language)
         st.markdown(top_vuln_analysis)
 
         # Network Topology View
@@ -689,12 +678,10 @@ def main():
         #                 layout=go.Layout(showlegend=False, hovermode='closest',
         #                                  title="Network Topology Visualization", width=_width, height=_height))
         # st.plotly_chart(fig_network, use_container_width=True, config={'displayModeBar': False})
-        # st.subheader("Orizon Engine Analysis")
         # centrality = nx.degree_centrality(G)
         # top_central = sorted(centrality, key=centrality.get, reverse=True)[:5]
         # density = nx.density(G)
         # communities = list(nx.community.greedy_modularity_communities(G))
-        # with st.spinner("Analyzing network topology..."):
         #    if run_LLM:
         #        network_analysis = generate_network_analysis(top_central, density, communities, _pipe=pipe, language=language)
         #        st.markdown(network_analysis)
@@ -720,10 +707,8 @@ def main():
             avg_cvss = filtered_vulnerabilities['cvss_score'].mean()
             high_cvss = filtered_vulnerabilities[filtered_vulnerabilities['cvss_score'] > 7]
             cvss_analysis = ''
-            with st.spinner("Analyzing CVSS distribution..."):
-                cvss_analysis = ''
-                if run_LLM:
-                    cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns, _pipe = pipe, language=language)
+            if run_LLM:
+                cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns, _pipe = pipe, language=language)
             st.markdown(cvss_analysis)
 
         # Vulnerability Types Analysis
@@ -740,10 +725,8 @@ def main():
         st.plotly_chart(fig_types, use_container_width=True, config={'displayModeBar': False})
         
         types_analysis = ''
-        with st.spinner("Analyzing vulnerability types..."):
-            types_analysis = ''
-            if run_LLM:
-                types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language)
+        if run_LLM:
+            types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language)
         st.markdown(types_analysis)
 
         # # Remediation Priority Matrix
@@ -754,7 +737,6 @@ def main():
         #         st.plotly_chart(fig_remediation, use_container_width=True, config={'displayModeBar': False})
             
         #     high_priority = filtered_vulnerabilities[(filtered_vulnerabilities['cvss_score'] > 7) & (filtered_vulnerabilities['exploit_available'] == True)]
-        #     with st.spinner("Analyzing remediation priorities..."):
         #         remediation_analysis = ''
         #         if run_LLM:
         #             remediation_analysis = analyze_remediation_priority(len(high_priority), total_vulns, _pipe = pipe, language=language)
@@ -869,11 +851,10 @@ def main():
             hosts_top5 = risk_['associated_hosts'].to_list()
         
         with col2:
-            with st.spinner("Generating analysis..."):
-                geo_analysis = ''
-                if run_LLM:
-                    geo_analysis = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language)
-                st.markdown(geo_analysis)
+            geo_analysis = ''
+            if run_LLM:
+                geo_analysis = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language)
+            st.markdown(geo_analysis)
         
         if created_at_column:
             # Michele

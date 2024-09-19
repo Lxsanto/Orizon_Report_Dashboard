@@ -4,7 +4,7 @@ import streamlit as st
 def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=1000):
 
     try:
-        messages = [{'role': 'system', 'content': 'You are a Cybersecurity expert, i need your help to evaluate an attack surface.'},
+        messages = [{'role': 'system', 'content': 'You are a Cybersecurity expert, i need your help to evaluate an attack surface. Please format all your responses in Markdown and use a professional, concise, and technical style suitable for a professional report.'},
             {'role': 'user', 'content': prompt}]
         response = _pipeline(messages, max_new_tokens=max_new_tokens)[0]['generated_text']
         response_text = response[-1]['content']
