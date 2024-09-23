@@ -445,7 +445,6 @@ def is_image_blank(image):
     return extrema == (255, 255) or (extrema[1] - extrema[0]) < 10
 
 @st.cache_data
-@profile
 def take_screenshot(_driver: webdriver, url, max_width, max_height, timeout=10):
     host = url
 

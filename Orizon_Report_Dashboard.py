@@ -810,12 +810,7 @@ def main():
         col1, col2 = st.columns([2, 1])
         with col1:
 
-            with cProfile.Profile() as pr:
-                geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key='f2cfc8c5c8c358')
-            with open("profiling_results_geo.txt", "w") as f:
-                stats = pstats.Stats(pr, stream=f)
-                stats.sort_stats('cumulative')
-                stats.print_stats()
+            geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key='f2cfc8c5c8c358')
             
             # Create and display the Plotly maps
             st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})
@@ -905,25 +900,20 @@ def main():
                 driver = setup_driver()
                 max_width, max_height = 1920, 1080
 
-                with cProfile.Profile() as pr:
-                    # Iterate over each unique host and take a screenshot
-                    for index, host in enumerate(urls_screenshot):
-                        
-                        progress = (index + 1) / len(unique_hosts)
-                        progress_bar.progress(progress)
-                        status_text.text(f'Numbers of scanned sites: {index + 1}/{len(urls_screenshot)}')
+                # Iterate over each unique host and take a screenshot
+                for index, host in enumerate(urls_screenshot):
+                    
+                    progress = (index + 1) / len(unique_hosts)
+                    progress_bar.progress(progress)
+                    status_text.text(f'Numbers of scanned sites: {index + 1}/{len(urls_screenshot)}')
 
-                        host, image, error_type = take_screenshot(driver, host, max_width, max_height)
-                        if host and image:
-                            screenshots.append((host, image))
-                        else:
-                            errors.append((host, error_type))
-                        
-                        summary.text(f"Validated Screenshots: {len(screenshots)}, Errors: {len(errors)}")
-                with open("profiling_results_screen.txt", "w") as f:
-                    stats = pstats.Stats(pr, stream=f)
-                    stats.sort_stats('cumulative')
-                    stats.print_stats()
+                    host, image, error_type = take_screenshot(driver, host, max_width, max_height)
+                    if host and image:
+                        screenshots.append((host, image))
+                    else:
+                        errors.append((host, error_type))
+                    
+                    summary.text(f"Validated Screenshots: {len(screenshots)}, Errors: {len(errors)}")
                 
                 # Mostra riepilogo degli errori
                 if errors:
