@@ -2,7 +2,6 @@ import os
 import io
 import zipfile
 import time
-import subprocess
 from collections import Counter
 from datetime import datetime, timedelta
 import pandas as pd
@@ -99,8 +98,8 @@ _width = 800
 _height = 600
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = True
-run_LLM = True
+are_you_on_CUDA = False
+run_LLM = False
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -113,6 +112,9 @@ auth_token = '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'
 clear = False
 if clear:
     st.cache_resource.clear()
+
+ports = ['20', '21', '22', '23', '25', '53', '110', '135', '139', '143', '445', '3389']
+
 
 ### Streamlit CSS dashboard setups ###
 st.markdown("""
@@ -881,17 +883,35 @@ def main():
                 # Get unique hosts
                 unique_hosts = filtered_df['host'].unique()
 
+                urls_screenshot = []
+                urls_ports = []
+                for i in unique_hosts:
+                    # Rimuovi eventuali protocolli esistenti dall'host
+                    url = i.split('://')[-1]
+
+                    # Controlla se la porta è nella lista delle porte da escludere
+                    if ':' in url.split('/')[-1]:
+                        port = url.split(':')[-1]
+                        if port in ports:
+                            urls_ports.append(url)
+                        else:
+                            urls_screenshot.append(url)
+                    else:
+                        urls_screenshot.append(url)
+                print(f'screenshot: {urls_screenshot}')
+                print(f'ports: {urls_ports}')
+
                 # setup Selenium WebDriver
                 driver = setup_driver()
                 max_width, max_height = 1920, 1080
 
                 with cProfile.Profile() as pr:
                     # Iterate over each unique host and take a screenshot
-                    for index, host in enumerate(unique_hosts[:10]):
+                    for index, host in enumerate(urls_screenshot):
                         
                         progress = (index + 1) / len(unique_hosts)
                         progress_bar.progress(progress)
-                        status_text.text(f'Numbers of scanned sites: {index + 1}/{len(unique_hosts)}')
+                        status_text.text(f'Numbers of scanned sites: {index + 1}/{len(urls_screenshot)}')
 
                         host, image, error_type = take_screenshot(driver, host, max_width, max_height)
                         if host and image:
@@ -945,10 +965,23 @@ def main():
                         mime="application/zip"
                     )
 
-
-                # Display the screenshots using Streamlit's st.image
-                #for host, image in screenshots:
-                #    st.image(image, caption=f'Screenshot of {host}', use_column_width=True)
+                results_port = []
+                if urls_ports:
+                    st.header("Ports scanning")
+                    st.write("We are scanning ports...")
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    summary = st.empty()
+                    for index, url in enumerate(urls_ports):
+                        progress = (index + 1) / len(unique_hosts)
+                        progress_bar.progress(progress)
+                        status_text.text(f'Numbers of scanned ports: {index + 1}/{len(urls_ports)}')
+                        res, res1 = scan_ip_port(url)
+                        result = res + '\n\n' + res1
+                        results_port.append(result)
+                        st.subheader(url)
+                        st.code(result, 'bash')
+                print(results_port)
 
         # Export Options
         st.header("Export Dashboard")
