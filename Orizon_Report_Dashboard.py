@@ -98,8 +98,8 @@ _width = 800
 _height = 600
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -274,9 +274,7 @@ def load_LLM(model_id = model_id, auth_token = auth_token):
 
     
     try:
-        model_kwargs = {
-        'attn_implementation': "flash_attention_2"
-        #"torch_dtype": torch.bfloat16
+        model_kwargs = {'load_in_8bit':True
         }
         _tokenizer = AutoTokenizer.from_pretrained(model_id, 
                                                    use_fast= True)
@@ -285,7 +283,6 @@ def load_LLM(model_id = model_id, auth_token = auth_token):
                              model=model_id,
                              token=auth_token,
                              tokenizer=_tokenizer,
-                             #device='cuda:0',
                              device_map="auto",
                              #model_kwargs=model_kwargs
                              )
