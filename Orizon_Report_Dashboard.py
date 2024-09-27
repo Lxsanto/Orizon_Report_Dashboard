@@ -98,8 +98,8 @@ _width = 800
 _height = 600
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = True
-run_LLM = True
+are_you_on_CUDA = False
+run_LLM = False
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -855,43 +855,45 @@ def main():
             st.header("Screenshots")
             st.write("We are taking screenshots...")
 
-            scelta = 'No'
-            #if st.button('Click here to interrupt the process'):
-            #   scelta = 'Yes'
+            df = load_data_screen(file_contents)
 
-            if scelta == 'No':
+            # Filter the dataframe
+            filtered_df = df[~df['severity'].isin(['info'])]
+
+            # Get unique hosts
+            unique_hosts = filtered_df['host'].unique()
+
+            urls_screenshot = []
+            urls_ports = []
+            for i in unique_hosts:
+                # Rimuovi eventuali protocolli esistenti dall'host
+                url = i.split('://')[-1]
+
+                # Controlla se la porta è nella lista delle porte da escludere
+                if ':' in url.split('/')[-1]:
+                    port = url.split(':')[-1]
+                    if port in ports:
+                        urls_ports.append(url)
+                    else:
+                        urls_screenshot.append(url)
+                else:
+                    urls_screenshot.append(url)
+            
+            if 'sshots' not in st.session_state:
+                st.session_state.sshots = True
+            if 'sports' not in st.session_state:
+                st.session_state.sports = True
+
+            if st.button('Click here to interrupt the screenshot process'):
+                st.session_state.sshots = False
+
+            if st.session_state.sshots:
 
                 screenshots = []
                 errors = []
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 summary = st.empty()
-
-                df = load_data_screen(file_contents)
-
-                # Filter the dataframe
-                filtered_df = df[~df['severity'].isin(['info'])]
-
-                # Get unique hosts
-                unique_hosts = filtered_df['host'].unique()
-
-                urls_screenshot = []
-                urls_ports = []
-                for i in unique_hosts:
-                    # Rimuovi eventuali protocolli esistenti dall'host
-                    url = i.split('://')[-1]
-
-                    # Controlla se la porta è nella lista delle porte da escludere
-                    if ':' in url.split('/')[-1]:
-                        port = url.split(':')[-1]
-                        if port in ports:
-                            urls_ports.append(url)
-                        else:
-                            urls_screenshot.append(url)
-                    else:
-                        urls_screenshot.append(url)
-                print(f'screenshot: {urls_screenshot}')
-                print(f'ports: {urls_ports}')
 
                 # setup Selenium WebDriver
                 driver = setup_driver()
@@ -952,10 +954,16 @@ def main():
                         mime="application/zip"
                     )
 
+            st.header("Ports scanning")
+            st.write("We are scanning ports...")
+
+            if st.button('Click here to interrupt the ports scanning process'):
+                st.session_state.sports = False
+
+            if st.session_state.sports:
+
                 results_port = []
                 if urls_ports:
-                    st.header("Ports scanning")
-                    st.write("We are scanning ports...")
                     progress_bar = st.progress(0)
                     status_text = st.empty()
                     summary = st.empty()
@@ -968,7 +976,6 @@ def main():
                         results_port.append(result)
                         st.subheader(url)
                         st.code(result, 'bash')
-                print(results_port)
 
         # Export Options
         st.header("Export Dashboard")
