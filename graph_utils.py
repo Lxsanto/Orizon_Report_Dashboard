@@ -10,6 +10,8 @@ import io
 import numpy as np
 import streamlit as st
 import subprocess
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
 from line_profiler import profile
 
 # Selenium per l'automazione del browser
@@ -82,6 +84,40 @@ def _resolve_hostname(hostname):
         return ip_address
     except socket.gaierror:
         return None
+
+def save_figure(fig, index):
+    try:
+        if isinstance(fig, go.Figure):  # Caso Plotly
+            filename = f"{index}"
+            fig.write_image(filename)
+            print(f"Plotly figure salvata come {filename}")
+        
+        elif isinstance(fig, plt.Figure):  # Caso Matplotlib
+            filename = f"{index}"
+            fig.savefig(filename, dpi=300)
+            print(f"Matplotlib figure salvata come {filename}")
+        
+        elif isinstance(fig, WordCloud):  # Caso WordCloud
+            filename = f"{index}"
+            fig.to_file(filename)
+            print(f"WordCloud salvata come {filename}")
+        
+        elif isinstance(fig, bytes):  # Caso byte stream (PNG)
+            filename = f"{index}"
+            with open(filename, "wb") as f:
+                f.write(fig)
+            print(f"Immagine byte salvata come {filename}")
+        
+        elif isinstance(fig, Image.Image):  # Caso PIL.Image.Image
+            filename = f"{index}"
+            fig.save(filename)
+            print(f"Immagine PIL salvata come {filename}")
+        
+        else:  # Tipo non supportato
+            print(f"Tipo di figura non supportato per l'elemento in posizione {index}: {type(fig)}")
+    
+    except Exception as e:
+        print(f"Errore nel salvataggio della figura in posizione {index}: {e}")
 
 @st.cache_data
 def resolve_hostname(hostname):

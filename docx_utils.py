@@ -24,7 +24,7 @@ def add_html_to_docx(soup, doc: Document):
             doc.add_paragraph(element.text)
         elif element.name == 'ul':
             for li in element.find_all('li'):
-                doc.add_paragraph(f'• {li.text}', style='List Bullet')
+                doc.add_paragraph(f'• {li.text}')
 
 def add_dataframe_to_docx(doc: Document, df: pd.DataFrame):
     """

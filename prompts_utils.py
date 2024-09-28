@@ -1,7 +1,7 @@
 import streamlit as st
 
 @st.cache_data
-def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=1000):
+def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=100000):
 
     try:
         messages = [{'role': 'system', 'content': 'You are a Cybersecurity expert, i need your help to evaluate an attack surface. Please format all your responses in Markdown and use a professional, concise, and technical style suitable for a professional report.'},

@@ -976,6 +976,66 @@ def main():
                         results_port.append(result)
                         st.subheader(url)
                         st.code(result, 'bash')
+        
+        # Percorso della cartella principale
+        base_dir = "txts"
+
+        # Percorsi delle sottocartelle
+        dfs_dir = os.path.join(base_dir, "dfs")
+        pngs_dir = os.path.join(base_dir, "pngs")
+
+        # Verifica se la cartella principale 'txts' esiste, altrimenti la crea
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
+            print(f"Cartella '{base_dir}' creata.")
+        else:
+            print(f"Cartella '{base_dir}' già esistente.")
+
+        # Verifica se la sottocartella 'dfs' esiste, altrimenti la crea
+        if not os.path.exists(dfs_dir):
+            os.makedirs(dfs_dir)
+            print(f"Cartella '{dfs_dir}' creata.")
+        else:
+            print(f"Cartella '{dfs_dir}' già esistente.")
+
+        # Verifica se la sottocartella 'pngs' esiste, altrimenti la crea
+        if not os.path.exists(pngs_dir):
+            os.makedirs(pngs_dir)
+            print(f"Cartella '{pngs_dir}' creata.")
+        else:
+            print(f"Cartella '{pngs_dir}' già esistente.")
+
+        
+        texts_LLM = {'Security Posture Overview': overview_analysis,
+                'Vulnerability Severity Distribution': severity_analysis,
+                'Top 10 Critical Vulnerabilities': top_vuln_analysis,
+                'Top 10 Vulnerability Types': types_analysis,
+                'Geolocation of company servers': geo_analysis
+                }
+        
+        for i, content in enumerate(texts_LLM.values()):
+            with open(f"txts/{i}.txt", "w") as file:
+                # Scrivi la stringa nel file
+                file.write(content)
+
+        figures = {'Security Posture Overview': [fig_risk_score],
+                'Vulnerability Severity Distribution': [fig_severity],
+                'Top 10 Vulnerability Types': [fig_types, cloud_img],
+                'Geolocation of company servers': [geo_map, geo_map_1]
+                }
+        
+        for i, fig in enumerate(figures.values()):
+            for j, f in enumerate(fig, 1):
+                save_figure(f, f'txts/pngs/{i}_{j}.png')
+
+        dfs = {
+                'Top 10 Critical Vulnerabilities': df_10vuln,
+                'Vulnerability Explorer': df_interactive,
+                'Geolocation of company servers': df_risk
+                }
+
+        for i, content in enumerate(dfs.values()):
+            content.to_pickle(f"txts/dfs/{i}.pkl")
 
         # Export Options
         st.header("Export Dashboard")
@@ -987,29 +1047,11 @@ def main():
 
                 with st.spinner(f"Generating {export_format} report..."):
 
-                    texts_LLM = {'Security Posture Overview': overview_analysis,
-                                 'Vulnerability Severity Distribution': severity_analysis,
-                                 'Top 10 Critical Vulnerabilities': top_vuln_analysis,
-                                 'Top 10 Vulnerability Types': types_analysis,
-                                 'Geolocation of company servers': geo_analysis
-                                 }
-
                     if 'cvss_score' in filtered_vulnerabilities.columns:
                         texts_LLM['cvss'] = cvss_analysis
                     #if 'remediation_analysis' in locals():
                     #   analyses['remediation'] = remediation_analysis
-                    
-                    figures = {'Security Posture Overview': [fig_risk_score],
-                                 'Vulnerability Severity Distribution': [fig_severity],
-                                 'Top 10 Vulnerability Types': [fig_types, cloud_img],
-                                 'Geolocation of company servers': [geo_map, geo_map_1]
-                                 }
-                    
-                    dfs = {
-                                 'Top 10 Critical Vulnerabilities': df_10vuln,
-                                 'Vulnerability Explorer': df_interactive,
-                                 'Geolocation of company servers': df_risk
-                                 }
+
                     if 'cvss_score' in filtered_vulnerabilities.columns:
                         figures['cvss'] = fig_cvss
                     #if 'fig_remediation' in locals():
