@@ -14,6 +14,14 @@ import torch
 import cProfile
 import pstats
 from matplotlib.colors import LinearSegmentedColormap
+from dotenv import load_dotenv
+
+# Carica le variabili dal file .env
+load_dotenv()
+
+# Accedi alla variabile di ambiente
+hugging_token = os.getenv('huggin_face')
+ip_token = os.getenv('ip_info')
 
 # Streamlit Authenticator per la gestione dell'autenticazione
 from streamlit_authenticator import Authenticate
@@ -106,7 +114,6 @@ if are_you_on_CUDA:
 # Selezione del modello LLM
 #model_id = "Qwen/Qwen2-1.5B-Instruct"
 model_id = "microsoft/Phi-3.5-mini-instruct"
-auth_token = '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'
 
 # Pulizia della cache di Streamlit
 clear = False
@@ -264,7 +271,7 @@ st.markdown("""
 
 ### Utility functions ###
 @st.cache_resource
-def load_LLM(model_id = model_id, auth_token = auth_token):
+def load_LLM(model_id = model_id, auth_token = hugging_token):
 
     if not torch.cuda.is_available():
         print("CUDA GPU not available!")
@@ -807,7 +814,7 @@ def main():
         col1, col2 = st.columns([2, 1])
         with col1:
 
-            geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key='f2cfc8c5c8c358')
+            geo_map, geo_map_1, risk_by_ip = Geolocation_of_servers(file_contents, api_key=ip_token)
             
             # Create and display the Plotly maps
             st.plotly_chart(geo_map, use_container_width=True, config={'displayModeBar': False})

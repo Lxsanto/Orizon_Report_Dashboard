@@ -21,3 +21,4 @@ stopit
 line_profiler
 markdown2
 beautifulsoup4
+python-dotenv
