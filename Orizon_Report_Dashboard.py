@@ -6,14 +6,9 @@ from collections import Counter
 from datetime import datetime, timedelta
 import pandas as pd
 import streamlit as st
-import plotly.express as px
-import plotly.io as pio
-import networkx as nx
-from wordcloud import WordCloud
 import torch
 import cProfile
 import pstats
-from matplotlib.colors import LinearSegmentedColormap
 from dotenv import load_dotenv
 
 # Carica le variabili dal file .env
@@ -31,9 +26,10 @@ from yaml.loader import SafeLoader
 # my functions
 from restart_utils import clear_pycache, restart_script
 from GPU_utils import print_gpu_utilization, print_summary
-from graph_utils import *  # all Michele utils
+from generic_utils import *
 from prompts_utils import *
 from docx_utils import * 
+from graphic_utils import *
 
 # Tentativo di importazione condizionale con gestione degli errori
 try:
@@ -44,15 +40,6 @@ except ImportError:
     restart_script()
 
 logo = Image.open("logo1.png")
-
-# Definizione dei colori del branding kit
-kelly_green = "#4AC300"
-mariana_blue = "#002430"
-burnt_red = "#E5625E"
-dodger_blue = "#2191FB"
-dawn_mist = "#DBE2E9"
-simple_white = "#FFFFFF"
-sunglow = "#FFC857"
 
 # Configurazione di Streamlit
 st.set_page_config(page_title="Orizon Security", layout="wide", initial_sidebar_state="expanded")
@@ -76,34 +63,6 @@ authenticator = Authenticate(
     config['cookie']['expiry_days'],
     config['preauthorized']
 )
-
-# Configurazione di Plotly
-template = pio.templates['ggplot2']
-pio.templates.default = 'ggplot2'
-
-template.layout.font.family = "Gill Sans, sans-serif"
-template.layout.font.size = 12  # Ridotto da 300 a una dimensione più ragionevole
-template.layout.font.color = mariana_blue
-template.layout.title.font.size = 20
-template.layout.xaxis.title.font.size = 16
-template.layout.yaxis.title.font.size = 16
-template.layout.paper_bgcolor = simple_white
-template.layout.plot_bgcolor = dawn_mist  # Cambiato da rosso a un colore più neutro
-template.layout.xaxis.gridcolor = simple_white
-template.layout.xaxis.linecolor = mariana_blue
-template.layout.xaxis.tickcolor = mariana_blue
-template.layout.yaxis.gridcolor = simple_white
-template.layout.yaxis.linecolor = mariana_blue
-template.layout.yaxis.tickcolor = mariana_blue
-
-# Definizione della palette di colori personalizzata
-colors = [kelly_green, dodger_blue, burnt_red, mariana_blue]
-template.layout.colorway = colors
-
-pio.templates["Orizon_template"] = template
-pio.templates.default = "Orizon_template"
-_width = 800 
-_height = 600
 
 # Configurazione dell'ambiente CUDA
 are_you_on_CUDA = False
@@ -335,27 +294,6 @@ def calculate_risk_score(vulnerabilities, severity_column):
     return int(risk_score)
 
 @st.cache_data
-def create_severity_impact_bubble(vulnerabilities, severity_column, cvss_column, host_column):
-    if all(col in vulnerabilities.columns for col in [severity_column, cvss_column, host_column]):
-        vulnerability_counts = vulnerabilities.groupby([severity_column, host_column]).size().reset_index(name='count')
-        avg_cvss = vulnerabilities.groupby([severity_column, host_column])[cvss_column].mean().reset_index(name='avg_cvss')
-        bubble_data = pd.merge(vulnerability_counts, avg_cvss, on=[severity_column, host_column])
-        
-        fig = px.scatter(bubble_data, 
-                         width=_width,
-                         height=_height,
-                         x='count', 
-                         y='avg_cvss', 
-                         size='count', 
-                         color=severity_column,
-                         hover_name=host_column,
-                         labels={'count': 'Number of Vulnerabilities', 'avg_cvss': 'Average CVSS Score'},
-                         title="Severity, Impact, and Prevalence Correlation")
-        return fig
-    else:
-        return None
-
-@st.cache_data
 def process_and_filter_vulnerabilities(uploaded_file):
     vulnerabilities = load_data(uploaded_file)
 
@@ -372,74 +310,6 @@ def process_and_filter_vulnerabilities(uploaded_file):
     else:
         st.error("Failed to load data or the file is empty.")
         return None
-
-@st.cache_data
-def create_risk_score_gauge(risk_score):
-
-    # Determinazione del colore del gauge basato sul risk_score
-    if 20 < risk_score < 60:
-        gauge_color = sunglow
-    elif risk_score >= 60:
-        gauge_color = burnt_red
-    else:
-        gauge_color = kelly_green
-    
-    # Creazione della figura
-    fig = go.Figure(
-        go.Indicator(
-            mode="gauge+number",
-            value=risk_score,
-            domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Risk Score", 'font': {'size': 20}},
-            gauge={
-                'bar': {'color': gauge_color},
-                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': mariana_blue}
-            }
-        ),
-        layout=go.Layout(
-            width=_width,
-            height=_height,
-            font={'color': mariana_blue}
-        )
-    )
-    
-    return fig
-
-@st.cache_data
-def pie(severity_counts):
-
-    fig_severity = go.Figure(data=[go.Pie(
-        labels=severity_counts.index,
-        values=severity_counts.values,
-        textinfo='percent+label',
-        textposition='inside',
-        hole=0.3,
-        pull=[0.1] * len(severity_counts),  # This creates the exploded effect
-        marker=dict(colors=severity_counts.index),  # Use the same colors as before
-    )])
-
-    fig_severity.update_layout(
-        title_text="Vulnerability Severity Distribution",
-        title_x=0.5,  # Center the title
-        width=_width,
-        height=_height,
-        scene=dict(
-            xaxis_title='',
-            yaxis_title='',
-            zaxis_title='',
-            aspectmode='manual',
-            aspectratio=dict(x=1, y=1, z=0.5)  # This gives a 3D effect
-        ),
-        showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
-    )
-
-    fig_severity.update_traces(
-        textfont_size=12,
-        marker=dict(line=dict(color='#000000', width=2))  # Add a black outline to each slice
-    )
-
-    return fig_severity
 
 def Geolocation_of_servers(file_contents, api_key):
     # Load and preprocess data
@@ -694,40 +564,13 @@ def main():
 
         #Additional Cybersecurity Insights
         st.header("Additional Cybersecurity Insights", anchor="additional-cybersecurity-insights")
-        
-        # CVSS Score Distribution (if available)
-        if 'cvss_score' in filtered_vulnerabilities.columns:
-            st.subheader("CVSS Score Distribution")
-            fig_cvss = px.histogram(
-                filtered_vulnerabilities,
-                width=_width,
-                height=_height, 
-                x='cvss_score', 
-                nbins=20, 
-                title="Distribution of CVSS Scores",
-                labels={'cvss_score': 'CVSS Score', 'count': 'Number of Vulnerabilities'}
-            )
-            fig_cvss.update_layout(bargap=0.1)
-            st.plotly_chart(fig_cvss, use_container_width=True, config={'displayModeBar': False})
-            
-            avg_cvss = filtered_vulnerabilities['cvss_score'].mean()
-            high_cvss = filtered_vulnerabilities[filtered_vulnerabilities['cvss_score'] > 7]
-            cvss_analysis = ''
-            if run_LLM:
-                cvss_analysis = analyze_cvss_distribution(avg_cvss, len(high_cvss), total_vulns, _pipe = pipe, language=language)
-            st.markdown(cvss_analysis)
 
         # Vulnerability Types Analysis
         st.subheader("Top Vulnerability Types")
         vuln_types = filtered_vulnerabilities['template_name'].value_counts().head(10)
-        fig_types = px.bar(
-            width=_width,
-            height=_height,
-            x=vuln_types.index, 
-            y=vuln_types.values, 
-            title="Top 10 Vulnerability Types",
-            labels={'x': 'Vulnerability Type', 'y': 'Count'}
-        )
+        
+        fig_types = top10_vuln_hist(vuln_types)
+        
         st.plotly_chart(fig_types, use_container_width=True, config={'displayModeBar': False})
         
         types_analysis = ''
@@ -751,25 +594,12 @@ def main():
         #     st.info("Not enough information available for remediation priority analysis.")
 
         st.header('WorldCloud analysis')
+
         df = load_data_word(file_contents)
         all_tags = df['template_name']
         tag_counts = Counter(all_tags)
-
-        colors = [kelly_green, dodger_blue, burnt_red, mariana_blue]
-        n_bins = len(colors)
-        cmap_name = 'brand_colors'
-        cm = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
-
-        # Creazione del WordCloud
-        wordcloud_ = WordCloud(width=_width, height=_height, 
-                            background_color='white', 
-                            max_font_size=300, 
-                            scale=3, 
-                            relative_scaling=0.5, 
-                            collocations=False, 
-                            colormap=cm).generate_from_frequencies(tag_counts)
-
-        cloud_img = wordcloud_.to_image()
+        
+        cloud_img = worldcloud(tag_counts)
 
         st.image(cloud_img, use_column_width=True)
 
@@ -1053,16 +883,6 @@ def main():
             if st.button("Generate Report", key="generate_report"):
 
                 with st.spinner(f"Generating {export_format} report..."):
-
-                    if 'cvss_score' in filtered_vulnerabilities.columns:
-                        texts_LLM['cvss'] = cvss_analysis
-                    #if 'remediation_analysis' in locals():
-                    #   analyses['remediation'] = remediation_analysis
-
-                    if 'cvss_score' in filtered_vulnerabilities.columns:
-                        figures['cvss'] = fig_cvss
-                    #if 'fig_remediation' in locals():
-                    #   figures['remediation'] = fig_remediation
                     
                     if export_format == "Word":
                         word_buffer = generate_word_report(dfs, texts_LLM, figures)
