@@ -66,8 +66,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -890,7 +890,7 @@ def main():
             content.to_pickle(f"txts/dfs/{i}.pkl")
         
         def generate_files():
-            input_directory = 'trial_txts'  # select
+            input_directory = 'txts'  # select
             output_directory = 'latex_template'
 
             tex_files = generate_tex_zip(input_directory, output_directory)
