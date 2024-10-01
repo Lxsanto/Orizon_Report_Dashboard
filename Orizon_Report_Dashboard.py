@@ -66,8 +66,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = True
-run_LLM = True
+are_you_on_CUDA = False
+run_LLM = False
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -375,17 +375,23 @@ def main():
     
     if language == 'Italian':
         language = 'it'
+        vuln_defs = vuln_defs_ita
     if language == 'English':
         language = 'en'
+        vuln_defs = vuln_defs_eng
     if language == 'Spanish':
         language = 'es'
+        vuln_defs = vuln_defs_esp
     
     uploaded_file = st.sidebar.file_uploader("Upload Vulnerability JSON", type="json", key="vuln_upload")
+
+    name_client = st.text_input("Enter here the name of the Client", None)
+    st.write("The current Client name is", name_client)
 
     if uploaded_file:
         file_contents = uploaded_file.read()
     
-    if uploaded_file:
+    if uploaded_file and name_client:
 
         filtered_vulnerabilities = process_and_filter_vulnerabilities(uploaded_file)
 
@@ -413,6 +419,10 @@ def main():
             <a href="#additional-cybersecurity-insights">Additional Insights</a>
         </div>
         """, unsafe_allow_html=True)
+
+        # preambolo
+        st.header('Vulnerabilities definition')
+        st.markdown(vuln_defs)
 
         # Executive Summary
         st.header("Executive Summary", anchor="executive-summary")
@@ -857,7 +867,8 @@ def main():
             print(f"Cartella '{pngs_dir}' già esistente.")
 
         
-        texts_LLM = {'Security Posture Overview': overview_analysis,
+        texts_LLM = {'Vulnerabilites definition': vuln_defs,
+            'Security Posture Overview': overview_analysis,
                 'Vulnerability Severity Distribution': severity_analysis,
                 'Top 10 Critical Vulnerabilities': top_vuln_analysis,
                 'Top 10 Vulnerability Types': types_analysis,
