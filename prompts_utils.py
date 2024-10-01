@@ -487,4 +487,23 @@ def analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5,
 
                     Por favor, proporciona un análisis completo basado en los datos y directrices proporcionados anteriormente."""
 
+    return generate_orizon_analysis(prompt, _pipe, )
+
+@st.cache_data
+def analyze_bash_results(urls: list, bash_results: list, _pipe, language = 'en'):
+    if language == 'en':
+        prompt = f"""Analyze the results obtained from the commands executed in the bash terminal to verify vulnerabilities:
+                    host: {urls}
+                    bash terminal: {bash_results}"""
+  
+    if language == 'it':
+        prompt = f"""Analizza i risultati ottenuti a partire dai comandi eseguiti a terminale bash per verificare le vurnerabilità:
+                    host: {urls}
+                    bash terminal: {bash_results} """
+
+    if language == 'es':
+        prompt = f"""Analiza los resultados obtenidos de los comandos ejecutados en el terminal bash para verificar vulnerabilidades:
+                    host: {urls}
+                    terminal bash: {bash_results}"""
+
     return generate_orizon_analysis(prompt, _pipe)

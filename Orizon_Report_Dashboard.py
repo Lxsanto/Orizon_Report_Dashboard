@@ -688,6 +688,9 @@ def main():
                 geo_analysis = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language)
             st.markdown(geo_analysis)
         
+        if not os.path.exists('ports_scanning/bash'):
+            os.makedirs('ports_scanning/bash')
+        
         if created_at_column:
             # Michele
             st.header("Screenshots")
@@ -814,6 +817,17 @@ def main():
                         results_port.append(result)
                         st.subheader(url)
                         st.code(result, 'bash')
+                
+                for terminal, host in zip(results_port, urls_ports):
+                    with open(f'ports_scanning/bash/{host}.txt', 'w') as file:
+                        file.write(terminal)
+                
+                LLM_comment = ''
+                if run_LLM:
+                    LLM_comment = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language)
+                st.markdown(LLM_comment)
+                with open(f'ports_scanning/LLM_comment.txt', 'w') as file:
+                    file.write(LLM_comment)
         
         # Percorso della cartella principale
         base_dir = "txts"
