@@ -1,0 +1,3 @@
+[submodule "CWEs_folders/nuclei-templates"]
+	path = CWEs_folders/nuclei-templates
+	url = https://github.com/projectdiscovery/nuclei-templates.git

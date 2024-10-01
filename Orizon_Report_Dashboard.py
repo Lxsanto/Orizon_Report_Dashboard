@@ -29,7 +29,7 @@ from GPU_utils import print_gpu_utilization, print_summary
 from generic_utils import *
 from prompts_utils import *
 from docx_utils import * 
-from export_utils import *
+from export_utils_old import *
 from graphic_utils import *
 
 # Tentativo di importazione condizionale con gestione degli errori
