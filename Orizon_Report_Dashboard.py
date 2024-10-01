@@ -66,14 +66,14 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 # Selezione del modello LLM
-# model_id = "meta-llama/Llama-3.2-3B-Instruct"
-model_id = "microsoft/Phi-3.5-mini-instruct"
+model_id = "meta-llama/Llama-3.2-3B-Instruct"
+#model_id = "microsoft/Phi-3.5-mini-instruct"
 
 # Pulizia della cache di Streamlit
 clear = False
@@ -421,8 +421,7 @@ def main():
         """, unsafe_allow_html=True)
 
         # preambolo
-        st.header('Vulnerabilities definition')
-        st.markdown(vuln_defs)
+        st.write(vuln_defs)
 
         # Executive Summary
         st.header("Executive Summary", anchor="executive-summary")
@@ -908,6 +907,11 @@ def main():
                 pdf_file = generate_pdf(output_directory)
             
             return tex_files, pdf_file
+        
+        messages = [{'role': 'user', 'content': 'Write a conclusion based on the previous analysis'}]
+        response = pipe(messages, max_new_tokens=100000000)[0]['generated_text']
+        response_text = response[-1]['content']
+        print(response_text)
 
         # Export Options
         st.header("Export Dashboard")

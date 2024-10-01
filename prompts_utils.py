@@ -1,77 +1,62 @@
 import streamlit as st
 
-vuln_defs_eng = """ # Vulnerabilities Definition
-                        ## Critical Severity
-                        * Exploitation is straightforward and usually results in system-level compromise. It is advised to form a plan of action and patch immediately.
+vuln_defs_eng = '# Vulnerabilities Definition\n'\
+                '## Critical Severity\n'\
+                '* Exploitation is straightforward and usually results in system-level compromise. It is advised to form a plan of action and patch immediately.\n\n'\
+                '## High Severity\n'\
+                '* Exploitation is more difficult but could cause elevated privileges and potentially a loss of data or downtime. It is advised to form a plan of action and patch as soon as possible.\n\n'\
+                '## Medium Severity\n'\
+                '* Vulnerabilities exist but require extra steps such as social engineering. It is advised to form a plan of action and patch after high-priority issues have been resolved.\n\n'\
+                '## Low Severity\n'\
+                '* Vulnerabilities are non-exploitable but increase an organization\'s attack surface. It is advised to form a plan of action and patch during the next maintenance window.\n\n'\
+                '## Informational Severity\n'\
+                '* No known vulnerability exists. Additional information is provided regarding items noticed during testing, strong controls, and additional documentation.\n'
 
-                        ## High Severity
-                        * Exploitation is more difficult but could cause elevated privileges and potentially a loss of data or downtime. It is advised to form a plan of action and patch as soon as possible.
+vuln_defs_ita = '# Definizione Vulnerabilità\n'\
+                '## Gravità Critica\n'\
+                '* Lo sfruttamento è semplice e di solito comporta una compromissione a livello di sistema. Si consiglia di pianificare un\'azione correttiva e applicare una patch immediatamente.\n\n'\
+                '## Gravità Alta\n'\
+                '* Lo sfruttamento è più difficile, ma potrebbe causare l\'elevazione dei privilegi e potenzialmente la perdita di dati o interruzioni del servizio. Si consiglia di pianificare un\'azione correttiva e applicare una patch il prima possibile.\n\n'\
+                '## Gravità Media\n'\
+                '* Le vulnerabilità esistono, ma richiedono passaggi aggiuntivi, come l\'ingegneria sociale. Si consiglia di pianificare un\'azione correttiva e applicare una patch dopo che le problematiche ad alta priorità sono state risolte.\n\n'\
+                '## Gravità Bassa\n'\
+                '* Le vulnerabilità non sono sfruttabili, ma aumentano la superficie d\'attacco di un\'organizzazione. Si consiglia di pianificare un\'azione correttiva e applicare una patch durante la prossima finestra di manutenzione.\n\n'\
+                '## Gravità Informativa\n'\
+                '* Non esiste alcuna vulnerabilità nota. Vengono fornite informazioni aggiuntive riguardanti elementi osservati durante i test, controlli solidi e documentazione aggiuntiva.\n'
 
-                        ## Medium Severity
-                        * Vulnerabilities exist but require extra steps such as social engineering. It is advised to form a plan of action and patch after high-priority issues have been resolved.
-
-                        ## Low Severity
-                        * Vulnerabilities are non-exploitable but increase an organization's attack surface. It is advised to form a plan of action and patch during the next maintenance window.
-
-                        ## Informational Severity
-                        * No known vulnerability exists. Additional information is provided regarding items noticed during testing, strong controls, and additional documentation.
-                        """
-
-vuln_defs_ita = """ # Definizione Vulnerabilità
-                        ## Gravità Critica
-                        * Lo sfruttamento è semplice e di solito comporta una compromissione a livello di sistema. Si consiglia di pianificare un'azione correttiva e applicare una patch immediatamente.
-
-                        ## Gravità Alta
-                        * Lo sfruttamento è più difficile, ma potrebbe causare l'elevazione dei privilegi e potenzialmente la perdita di dati o interruzioni del servizio. Si consiglia di pianificare un'azione correttiva e applicare una patch il prima possibile.
-
-                        ## Gravità Media
-                        * Le vulnerabilità esistono, ma richiedono passaggi aggiuntivi, come l'ingegneria sociale. Si consiglia di pianificare un'azione correttiva e applicare una patch dopo che le problematiche ad alta priorità sono state risolte.
-
-                        ## Gravità Bassa
-                        * Le vulnerabilità non sono sfruttabili, ma aumentano la superficie d'attacco di un'organizzazione. Si consiglia di pianificare un'azione correttiva e applicare una patch durante la prossima finestra di manutenzione.
-
-                        ## Gravità Informativa
-                        * Non esiste alcuna vulnerabilità nota. Vengono fornite informazioni aggiuntive riguardanti elementi osservati durante i test, controlli solidi e documentazione aggiuntiva.
-                        """
-
-vuln_defs_esp = """ # Definición de vulnerabilidades
-                        ## Gravedad Crítica
-                        * La explotación es sencilla y generalmente resulta en una compromisión a nivel de sistema. Se aconseja planificar una acción correctiva y aplicar un parche inmediatamente.
-
-                        ## Gravedad Alta
-                        * La explotación es más difícil, pero podría causar una elevación de privilegios y potencialmente la pérdida de datos o interrupciones del servicio. Se aconseja planificar una acción correctiva y aplicar un parche lo antes posible.
-
-                        ## Gravedad Media
-                        * Existen vulnerabilidades, pero no son explotables o requieren pasos adicionales, como la ingeniería social. Se aconseja planificar una acción correctiva y aplicar un parche después de que se hayan resuelto los problemas de alta prioridad.
-
-                        ## Gravedad Baja
-                        * Las vulnerabilidades no son explotables, pero aumentan la superficie de ataque de una organización. Se aconseja planificar una acción correctiva y aplicar un parche durante la próxima ventana de mantenimiento.
-
-                        ## Gravedad Informativa
-                        * No existe ninguna vulnerabilidad conocida. Se proporciona información adicional sobre elementos observados durante las pruebas, controles sólidos y documentación adicional.
-                        """
+vuln_defs_esp = '# Definición de vulnerabilidades\n'\
+                '## Gravedad Crítica\n'\
+                '* La explotación es sencilla y generalmente resulta en una compromisión a nivel de sistema. Se aconseja planificar una acción correctiva y aplicar un parche inmediatamente.\n\n'\
+                '## Gravedad Alta\n'\
+                '* La explotación es más difícil, pero podría causar una elevación de privilegios y potencialmente la pérdida de datos o interrupciones del servicio. Se aconseja planificar una acción correctiva y aplicar un parche lo antes posible.\n\n'\
+                '## Gravedad Media\n'\
+                '* Existen vulnerabilidades, pero no son explotables o requieren pasos adicionales, como la ingeniería social. Se aconseja planificar una acción correctiva y aplicar un parche después de que se hayan resuelto los problemas de alta prioridad.\n\n'\
+                '## Gravedad Baja\n'\
+                '* Las vulnerabilidades no son explotables, pero aumentan la superficie de ataque de una organización. Se aconseja planificar una acción correctiva y aplicar un parche durante la próxima ventana de mantenimiento.\n\n'\
+                '## Gravedad Informativa\n'\
+                '* No existe ninguna vulnerabilidad conocida. Se proporciona información adicional sobre elementos observados durante las pruebas, controles sólidos y documentación adicional.\n'
 
 @st.cache_data
 def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=100000, name_client='', language = 'en', vuln_def = False):
 
     if language == 'en':
-        init_prompt = f'You are a Cybersecurity expert tasked with evaluating the attack surface for {name_client}. Your job is to generate a chapter of a professional report detailing the analysis of penetration test results. 
-                     Format your response in Markdown, but only use the following symbols: [&], [%], [$], [#], [_], [~], [^], [\], [{'{'}], [{'}'}]. 
-                     Ensure the tone is concise, technical, and professional. Use these symbols appropriately to structure your report and convey the analysis effectively.'
+        init_prompt = f'''You are a Cybersecurity expert tasked with evaluating the attack surface for {name_client}. Your job is to generate a chapter of a professional report detailing the analysis of penetration test results. 
+                     Format your response in Markdown, but only use the following symbols: &, %, $, #, _, ~, ^, \, {'{'}, {'}'}. Avoid tables in markdown use bullet list instead. Avoid use of **.
+                     Ensure the tone is concise, technical, and professional. Use these symbols appropriately to structure your report and convey the analysis effectively.'''
         if vuln_def:
             init_prompt += f'This is the definition of the vulnerabilities type: {vuln_defs_eng}'
 
     elif language == 'it':
-        init_prompt = f"Sei un esperto di Cybersecurity incaricato di valutare la superficie d'attacco per {name_client}. Il tuo compito è generare un capitolo di un report professionale che descriva l'analisi dei risultati del penetration test. 
-                     Formatta la tua risposta in Markdown, utilizzando solo i seguenti simboli: [&], [%], [$], [#], [_], [~], [^], [\\], [{'{'}], [{'}'}]. 
-                     Assicurati che il tono sia conciso, tecnico e professionale. Usa questi simboli in modo appropriato per strutturare il report e trasmettere efficacemente l'analisi."
+        init_prompt = f"""Sei un esperto di Cybersecurity incaricato di valutare la superficie d'attacco per {name_client}. Il tuo compito è generare un capitolo di un report professionale che descriva l'analisi dei risultati del penetration test. 
+                 Formatta la tua risposta in Markdown, utilizzando solo i seguenti simboli: &, %, $, #, _, ~, ^, \, { '{' }, { '}' }. Evita tabelle in Markdown, usa invece elenchi puntati. Evita l'uso di **. 
+                 Assicurati che il tono sia conciso, tecnico e professionale. Usa questi simboli in modo appropriato per strutturare il report e trasmettere efficacemente l'analisi."""
         if vuln_def:
             init_prompt += f'Questa è la definizione del tipo di vulnerabilità: {vuln_defs_ita}'
 
     elif language == 'es':
-        init_prompt = f'Eres un experto en ciberseguridad encargado de evaluar la superficie de ataque para {name_client}. Tu tarea es generar un capítulo de un informe profesional que describa el análisis de los resultados del test de penetración. 
-                     Formatea tu respuesta en Markdown, utilizando solo los siguientes símbolos: [&], [%], [$], [#], [_], [~], [^], [\\], [{'{'}], [{'}'}]. 
-                     Asegúrate de que el tono sea conciso, técnico y profesional. Usa estos símbolos de manera apropiada para estructurar el informe y transmitir eficazmente el análisis.'
+        init_prompt = f"""Eres un experto en ciberseguridad encargado de evaluar la superficie de ataque para {name_client}. Tu tarea es generar un capítulo de un informe profesional que describa el análisis de los resultados del test de penetración. 
+                        Formatea tu respuesta en Markdown, utilizando solo los siguientes símbolos: &, %, $, #, _, ~, ^, \, { '{' }, { '}' }. Evita tablas en Markdown, usa listas con viñetas en su lugar. Evita el uso de **.
+                        Asegúrate de que el tono sea conciso, técnico y profesional. Usa estos símbolos de manera apropiada para estructurar el informe y transmitir eficazmente el análisis."""
         if vuln_def:
             init_prompt += f'Esta es la definición del tipo de vulnerabilidad: {vuln_defs_esp}'
 
