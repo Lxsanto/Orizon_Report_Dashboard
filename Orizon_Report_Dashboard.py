@@ -29,7 +29,7 @@ from GPU_utils import print_gpu_utilization, print_summary
 from generic_utils import *
 from prompts_utils import *
 from docx_utils import * 
-from export_utils_old import *
+from export_utils import *
 from graphic_utils import *
 
 # Tentativo di importazione condizionale con gestione degli errori
@@ -72,7 +72,7 @@ if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 # Selezione del modello LLM
-#model_id = "Qwen/Qwen2-1.5B-Instruct"
+# model_id = "meta-llama/Llama-3.2-3B-Instruct"
 model_id = "microsoft/Phi-3.5-mini-instruct"
 
 # Pulizia della cache di Streamlit
@@ -694,7 +694,6 @@ def main():
         if created_at_column:
             # Michele
             st.header("Screenshots")
-            st.write("We are taking screenshots...")
 
             df = load_data_screen(file_contents)
 
@@ -740,20 +739,21 @@ def main():
                 driver = setup_driver()
                 max_width, max_height = 1920, 1080
 
-                # Iterate over each unique host and take a screenshot
-                for index, host in enumerate(urls_screenshot):
-                    
-                    progress = (index + 1) / len(unique_hosts)
-                    progress_bar.progress(progress)
-                    status_text.text(f'Numbers of scanned sites: {index + 1}/{len(urls_screenshot)}')
+                with st.spinner(text='Screenshots is in progress...'):
+                    # Iterate over each unique host and take a screenshot
+                    for index, host in enumerate(urls_screenshot):
+                        
+                        progress = (index + 1) / len(unique_hosts)
+                        progress_bar.progress(progress)
+                        status_text.text(f'Numbers of scanned sites: {index + 1}/{len(urls_screenshot)}')
 
-                    host, image, error_type = take_screenshot(driver, host, max_width, max_height)
-                    if host and image:
-                        screenshots.append((host, image))
-                    else:
-                        errors.append((host, error_type))
-                    
-                    summary.text(f"Validated Screenshots: {len(screenshots)}, Errors: {len(errors)}")
+                        host, image, error_type = take_screenshot(driver, host, max_width, max_height)
+                        if host and image:
+                            screenshots.append((host, image))
+                        else:
+                            errors.append((host, error_type))
+                        
+                        summary.text(f"Validated Screenshots: {len(screenshots)}, Errors: {len(errors)}")
                 
                 # Mostra riepilogo degli errori
                 if errors:
@@ -796,27 +796,26 @@ def main():
                     )
 
             st.header("Ports scanning")
-            st.write("We are scanning ports...")
 
             if st.button('Click here to interrupt the ports scanning process'):
                 st.session_state.sports = False
 
             if st.session_state.sports:
-
-                results_port = []
-                if urls_ports:
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
-                    summary = st.empty()
-                    for index, url in enumerate(urls_ports):
-                        progress = (index + 1) / len(unique_hosts)
-                        progress_bar.progress(progress)
-                        status_text.text(f'Numbers of scanned ports: {index + 1}/{len(urls_ports)}')
-                        res, res1 = scan_ip_port(url)
-                        result = res + '\n\n' + res1
-                        results_port.append(result)
-                        st.subheader(url)
-                        st.code(result, 'bash')
+                with st.spinner(text='Ports scanning is in progress...'):
+                    results_port = []
+                    if urls_ports:
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        summary = st.empty()
+                        for index, url in enumerate(urls_ports):
+                            progress = (index + 1) / len(unique_hosts)
+                            progress_bar.progress(progress)
+                            status_text.text(f'Numbers of scanned ports: {index + 1}/{len(urls_ports)}')
+                            res, res1 = scan_ip_port(url)
+                            result = res + '\n\n' + res1
+                            results_port.append(result)
+                            st.subheader(url)
+                            st.code(result, 'bash')
                 
                 for terminal, host in zip(results_port, urls_ports):
                     with open(f'ports_scanning/bash/{host}.txt', 'w') as file:
@@ -893,8 +892,9 @@ def main():
             input_directory = 'txts'  # select
             output_directory = 'latex_template'
 
-            tex_files = generate_tex_zip(input_directory, output_directory)
-            pdf_file = generate_pdf(output_directory)
+            with st.spinner(text='Generation is in progress...'):
+                tex_files = generate_tex_zip(input_directory, output_directory)
+                pdf_file = generate_pdf(output_directory)
             
             return tex_files, pdf_file
 
