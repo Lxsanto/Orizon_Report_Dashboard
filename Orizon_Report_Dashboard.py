@@ -299,7 +299,7 @@ def process_and_filter_vulnerabilities(uploaded_file):
 
     # replace unknow tih critical
     if 'severity' in vulnerabilities.columns:
-        vulnerabilities['severity'].replace('unknown', 'critical', inplace=True)
+        vulnerabilities['severity'] = vulnerabilities['severity'].replace('unknown', 'critical')
 
     if vulnerabilities is not None and not vulnerabilities.empty:
         st.sidebar.success("JSON file loaded successfully!")
@@ -487,8 +487,14 @@ def main():
         with col2:
             overview_analysis = ''
             if run_LLM:
-                overview_analysis = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language)
-            st.markdown(overview_analysis)
+                if 'overview' not in st.session_state:
+                    st.session_state['overview'] = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language)
+
+                if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='oiu'):
+                    analyze_overview.clear()
+                    st.session_state['overview'] = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language, clear_cache=True)
+            overview_analysis = st.session_state['overview']
+            st.write(overview_analysis)
 
         # Severity Distribution
         st.header("Vulnerability Severity Distribution", anchor="vulnerability-severity-distribution")
@@ -501,9 +507,16 @@ def main():
 
         with col2:
             severity_analysis = ''
+
             if run_LLM:
-                severity_analysis = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language)
-            st.markdown(severity_analysis)
+                if 'severity' not in st.session_state:
+                    st.session_state['severity'] = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language)
+
+                if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='uwgs'):
+                    analyze_severity_distribution.clear()
+                    st.session_state['severity'] = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language, clear_cache=True)
+            severity_analysis = st.session_state['severity']
+            st.write(severity_analysis)
 
 
         # Top 10 Vulnerabilities
@@ -543,10 +556,19 @@ def main():
         most_common_type = common_types.index[0]
         hosts_affected = top_10[host_column].nunique()
         most_affected_host = top_10[host_column].value_counts().index[0]
+
         top_vuln_analysis = ''
         if run_LLM:
-            top_vuln_analysis = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe, language=language)
-        st.markdown(top_vuln_analysis)
+            if 'top' not in st.session_state:
+                st.session_state['top'] = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe, language=language)
+
+            if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='ywshg'):
+                analyze_top_vulnerabilities.clear()
+                st.session_state['top'] = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe, language=language, clear_cache=True)
+        top_vuln_analysis = st.session_state['top']
+        st.write(top_vuln_analysis)
+
+
 
         # Network Topology View
         # st.header("Network Topology Analysis", anchor="network-topology-analysis")
@@ -599,8 +621,14 @@ def main():
         
         types_analysis = ''
         if run_LLM:
-            types_analysis = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language)
-        st.markdown(types_analysis)
+            if 'types' not in st.session_state:
+                st.session_state['types'] = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language)
+
+            if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='ushqtwkja'):
+                analyze_vulnerability_types.clear()
+                st.session_state['types'] = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language, clear_cache=True)
+        types_analysis = st.session_state['types']
+        st.write(types_analysis)
 
         # # Remediation Priority Matrix
         # st.header("Remediation Priority Matrix")
@@ -708,8 +736,14 @@ def main():
         with col2:
             geo_analysis = ''
             if run_LLM:
-                geo_analysis = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language)
-            st.markdown(geo_analysis)
+                if 'geo' not in st.session_state:
+                    st.session_state['geo'] = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language)
+
+                if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='yuqirh'):
+                    analyze_geolocation.clear()
+                    st.session_state['geo'] = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language, clear_cache=True)
+            geo_analysis = st.session_state['geo']
+            st.write(geo_analysis)
         
         if not os.path.exists('ports_scanning/bash'):
             os.makedirs('ports_scanning/bash')
@@ -749,7 +783,7 @@ def main():
             if 'sports' not in st.session_state:
                 st.session_state.sports = True
 
-            if st.button('Click here to interrupt the screenshot process'):
+            if st.button('Click here to interrupt the screenshot process', key='p0oqayh'):
                 st.session_state.sshots = False
 
             if st.session_state.sshots:
@@ -822,7 +856,7 @@ def main():
 
             st.header("Ports scanning")
 
-            if st.button('Click here to interrupt the ports scanning process'):
+            if st.button('Click here to interrupt the ports scanning process', key='qaheu7sjn'):
                 st.session_state.sports = False
 
             if st.session_state.sports:
@@ -841,10 +875,17 @@ def main():
                             results_port.append(result)
                             st.subheader(url)
                             st.code(result, 'bash')
-                    
+
                         if run_LLM:
-                            LLM_comment = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language)
-                        st.markdown(LLM_comment)
+                            if 'bash' not in st.session_state:
+                                st.session_state['bash'] = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language)
+
+                            if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='quahy6s'):
+                                analyze_bash_results.clear()
+                                st.session_state['bash'] = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language, clear_cache=True)
+                        LLM_comment = st.session_state['bash']
+                        st.write(LLM_comment)
+
                         with open(f'ports_scanning/LLM_comment.txt', 'w') as file:
                             file.write(LLM_comment)
                 

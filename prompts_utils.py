@@ -36,7 +36,6 @@ vuln_defs_esp = '# Definición de vulnerabilidades\n'\
                 '## Gravedad Informativa\n'\
                 '* No existe ninguna vulnerabilidad conocida. Se proporciona información adicional sobre elementos observados durante las pruebas, controles sólidos y documentación adicional.\n'
 
-@st.cache_data
 def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=100000, name_client='', language = 'en', vuln_def = False):
 
     if language == 'en':
@@ -75,7 +74,7 @@ def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=100000, name_clie
 
 
 @st.cache_data
-def analyze_overview(total, risk_score, critical, high, medium, low, _pipe, language='en', name_client=''):
+def analyze_overview(total, risk_score, critical, high, medium, low, _pipe, language='en', name_client='', clear_cache = False):
     """total: int (total number of vulnerabilities)
     risk_score: int (risk score from 0 to 100)
     critical: int (number of critical vulnerabilities)
@@ -146,7 +145,7 @@ def analyze_overview(total, risk_score, critical, high, medium, low, _pipe, lang
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language, vuln_def=True)
 
 @st.cache_data
-def analyze_severity_distribution(severity_counts, _pipe, language='en', name_client=''):
+def analyze_severity_distribution(severity_counts, _pipe, language='en', name_client='', clear_cache = False):
 
     if language == 'en':
         prompt = f"""Analyze the following vulnerability severity distribution for {name_client}:
@@ -193,7 +192,7 @@ def analyze_severity_distribution(severity_counts, _pipe, language='en', name_cl
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language, vuln_def=True)
 
 @st.cache_data
-def analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe, language='en', name_client=''):
+def analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe, language='en', name_client='', clear_cache = False):
     
     if language == 'en':
         prompt = f"""Analyze the top system vulnerabilities for {name_client}:
@@ -240,7 +239,7 @@ def analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, 
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language, vuln_def=True)
 
 @st.cache_data
-def generate_network_analysis(top_central, density, communities, _pipe, language='en', name_client=''):
+def generate_network_analysis(top_central, density, communities, _pipe, language='en', name_client='', clear_cache = False):
     if language == 'en':
         prompt = f"""Analyze the network topology for {name_client}:
 
@@ -289,7 +288,7 @@ def generate_network_analysis(top_central, density, communities, _pipe, language
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)
 
 @st.cache_data
-def analyze_cvss_distribution(avg_cvss, high_cvss_count, total_vulns, _pipe, language = 'en', name_client= ''):
+def analyze_cvss_distribution(avg_cvss, high_cvss_count, total_vulns, _pipe, language = 'en', name_client= '', clear_cache = False):
     if language == 'en':
         prompt = f"""Analyze the following CVSS score distribution:
 
@@ -352,7 +351,7 @@ def analyze_cvss_distribution(avg_cvss, high_cvss_count, total_vulns, _pipe, lan
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)
 
 @st.cache_data
-def analyze_vulnerability_types(most_common_type, frequency, top_10_types, _pipe, language='en', name_client=''):
+def analyze_vulnerability_types(most_common_type, frequency, top_10_types, _pipe, language='en', name_client='', clear_cache = False):
     if language == 'en':
         prompt = f"""Analyze the following vulnerability type distribution for {name_client}:
 
@@ -398,7 +397,7 @@ def analyze_vulnerability_types(most_common_type, frequency, top_10_types, _pipe
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)
 
 @st.cache_data
-def analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe, language='en', name_client=''):
+def analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe, language='en', name_client='', clear_cache = False):
     if language == 'en':
         prompt = f"""Analyze the geolocation data for {name_client}:
 
@@ -462,7 +461,7 @@ def analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5,
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)
 
 @st.cache_data
-def analyze_bash_results(urls: list, bash_results: list, _pipe, language = 'en', name_client = ''):
+def analyze_bash_results(urls: list, bash_results: list, _pipe, language = 'en', name_client = '', clear_cache = False):
     if language == 'en':
         prompt = f"""Analyze the results obtained from the commands executed in the bash terminal to verify vulnerabilities:
                     host: {urls}
