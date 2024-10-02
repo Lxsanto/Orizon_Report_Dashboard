@@ -239,9 +239,12 @@ def create_plotly_map(risk_by_ip):
         score = row['normalized_risk_score']
         
         texts.append(f"Location: {city}, {country}<br>Max Risk Score: {score:.2f}")
-        
-        # Calculate the size based on the normalized risk score
-        size = 5 + (score - min_score) / (max_score - min_score) * 25
+
+        if max_score == min_score:
+            size = 5 + (score - min_score) * 25
+        else:
+            # Calculate the size based on the normalized risk score
+            size = 5 + (score - min_score) / (max_score - min_score) * 25
 
         sizes.append(size)
     
@@ -277,7 +280,7 @@ def create_plotly_map(risk_by_ip):
 
     return fig
 
-def create_country_bubble_plot(risk_by_ip):
+def create_country_bubble_plot(risk_by_ip: pd.DataFrame):
     """
     Create a bubble plot showing country IP distribution by risk level.
 
@@ -310,10 +313,17 @@ def create_country_bubble_plot(risk_by_ip):
         'normalized_risk_score': 'mean'
     }).reset_index()
 
+    print(country_data)
+
+    country_data = country_data.dropna(axis=0)
+
     # Calculate bubble sizes
     max_size = 150  # Maximum bubble size
     min_size = 20   # Minimum bubble size
-    country_data['bubble_size'] = (country_data['ip'] - country_data['ip'].min()) / (country_data['ip'].max() - country_data['ip'].min()) * (max_size - min_size) + min_size
+    if country_data['ip'].max() == country_data['ip'].min():
+        country_data['bubble_size'] = max_size // 2
+    else:
+        country_data['bubble_size'] = (country_data['ip'] - country_data['ip'].min()) / (country_data['ip'].max() - country_data['ip'].min()) * (max_size - min_size) + min_size
 
     # Generate positions for bubbles
     def generate_positions(n, k=0.5):

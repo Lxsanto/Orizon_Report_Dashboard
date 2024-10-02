@@ -262,10 +262,9 @@ def load_LLM(model_id = model_id, auth_token = hugging_token):
         st.error(f"Error loading the model: {str(e)}")
 
 
-@st.cache_data
 def calculate_risk_score(vulnerabilities, severity_column):
     # Severity weights
-    severity_weights = {'critical': 80, 'high': 60, 'medium': 40, 'low': 10, 'info': 1}
+    severity_weights = {'critical': 1000, 'high': 600, 'medium': 400, 'low': 100, 'info': 1}
     
     # Count vulnerabilities by severity
     severity_counts = {severity: 0 for severity in severity_weights}
@@ -297,6 +296,10 @@ def calculate_risk_score(vulnerabilities, severity_column):
 @st.cache_data
 def process_and_filter_vulnerabilities(uploaded_file):
     vulnerabilities = load_data(uploaded_file)
+
+    # replace unknow tih critical
+    if 'severity' in vulnerabilities.columns:
+        vulnerabilities['severity'].replace('unknown', 'critical', inplace=True)
 
     if vulnerabilities is not None and not vulnerabilities.empty:
         st.sidebar.success("JSON file loaded successfully!")
@@ -367,6 +370,17 @@ def Geolocation_of_servers(file_contents, api_key):
     return geo_map, geo_map_1, risk_by_ip
 
 def main():
+
+    # Cartelle da eliminare
+    folders = ['ports_scanning', 'txts']
+
+    for folder in folders:
+        if os.path.exists(folder):
+            print(f"Cartella '{folder}' trovata, verrà eliminata.")
+            shutil.rmtree(folder)
+        else:
+            print(f"Cartella '{folder}' non trovata, passo oltre.")
+
     st.sidebar.title("Orizon Security Dashboard")
     
     language = st.selectbox('select language here',
@@ -514,7 +528,7 @@ def main():
         # Pagination
         severities_page = st.slider("Severities per page", min_value=10, max_value=100, value=20, step=10)
         total_pages = len(sorted_vulnerabilities) // severities_page + (1 if len(sorted_vulnerabilities) % severities_page > 0 else 0)
-        current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
+        current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, key=0)
 
         start_idx = (current_page - 1) * severities_page
         end_idx = start_idx + severities_page
@@ -639,7 +653,7 @@ def main():
         # Add pagination
         items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=50, step=10)
         total_pages = len(filtered_data) // items_per_page + (1 if len(filtered_data) % items_per_page > 0 else 0)
-        current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
+        current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, key=1)
         
         start_idx = (current_page - 1) * items_per_page
         end_idx = start_idx + items_per_page
@@ -669,7 +683,7 @@ def main():
             # Pagination
             items_per_page = st.slider("Items per page", min_value=10, max_value=100, value=20, step=10)
             total_pages = len(risk_by_ip) // items_per_page + (1 if len(risk_by_ip) % items_per_page > 0 else 0)
-            current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
+            current_page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, key=2)
 
             start_idx = (current_page - 1) * items_per_page
             end_idx = start_idx + items_per_page
@@ -699,6 +713,8 @@ def main():
         
         if not os.path.exists('ports_scanning/bash'):
             os.makedirs('ports_scanning/bash')
+        
+        LLM_comment = ''
         
         if created_at_column:
             # Michele
@@ -825,17 +841,16 @@ def main():
                             results_port.append(result)
                             st.subheader(url)
                             st.code(result, 'bash')
+                    
+                        if run_LLM:
+                            LLM_comment = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language)
+                        st.markdown(LLM_comment)
+                        with open(f'ports_scanning/LLM_comment.txt', 'w') as file:
+                            file.write(LLM_comment)
                 
                 for terminal, host in zip(results_port, urls_ports):
                     with open(f'ports_scanning/bash/{host}.txt', 'w') as file:
                         file.write(terminal)
-                
-                LLM_comment = ''
-                if run_LLM:
-                    LLM_comment = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language)
-                st.markdown(LLM_comment)
-                with open(f'ports_scanning/LLM_comment.txt', 'w') as file:
-                    file.write(LLM_comment)
         
         # Percorso della cartella principale
         base_dir = "txts"
@@ -908,10 +923,10 @@ def main():
             
             return tex_files, pdf_file
         
-        messages = [{'role': 'user', 'content': 'Write a conclusion based on the previous analysis'}]
-        response = pipe(messages, max_new_tokens=100000000)[0]['generated_text']
-        response_text = response[-1]['content']
-        print(response_text)
+        #messages = [{'role': 'user', 'content': 'Write a conclusion based on the previous analysis'}]
+        #response = pipe(messages, max_new_tokens=100000000)[0]['generated_text']
+        #response_text = response[-1]['content']
+        #print(response_text)
 
         # Export Options
         st.header("Export Dashboard")
