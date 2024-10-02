@@ -40,22 +40,22 @@ def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=100000, name_clie
 
     if language == 'en':
         init_prompt = f'''You are a Cybersecurity expert tasked with evaluating the attack surface for {name_client}. Your job is to generate a chapter of a professional report detailing the analysis of penetration test results. 
-                     Format your response in Markdown, but only use the following symbols: &, %, $, #, _, ~, ^, \, {'{'}, {'}'}. Avoid tables in markdown use bullet list instead. Avoid use of **.
-                     Ensure the tone is concise, technical, and professional. Use these symbols appropriately to structure your report and convey the analysis effectively.'''
+                     Format your response in Markdown.
+                     Ensure the tone is concise, technical, and professional. use only # for the title, and ## for subsections, use - for lists. Do not use tables'''
         if vuln_def:
             init_prompt += f'This is the definition of the vulnerabilities type: {vuln_defs_eng}'
 
     elif language == 'it':
-        init_prompt = f"""Sei un esperto di Cybersecurity incaricato di valutare la superficie d'attacco per {name_client}. Il tuo compito è generare un capitolo di un report professionale che descriva l'analisi dei risultati del penetration test. 
-                 Formatta la tua risposta in Markdown, utilizzando solo i seguenti simboli: &, %, $, #, _, ~, ^, \, { '{' }, { '}' }. Evita tabelle in Markdown, usa invece elenchi puntati. Evita l'uso di **. 
-                 Assicurati che il tono sia conciso, tecnico e professionale. Usa questi simboli in modo appropriato per strutturare il report e trasmettere efficacemente l'analisi."""
+        init_prompt = f'''Sei un esperto di Cybersecurity incaricato di valutare la superficie di attacco per {name_client}. Il tuo compito è generare un capitolo di un report professionale che dettagli l'analisi dei risultati dei test di penetrazione.
+                     Formatta la tua risposta in Markdown.
+                     Assicurati che il tono sia conciso, tecnico e professionale. Usa solo # per il titolo e ## per le sottosezioni, usa - per gli elenchi. non utilizzare le tabelle'''
         if vuln_def:
             init_prompt += f'Questa è la definizione del tipo di vulnerabilità: {vuln_defs_ita}'
 
     elif language == 'es':
-        init_prompt = f"""Eres un experto en ciberseguridad encargado de evaluar la superficie de ataque para {name_client}. Tu tarea es generar un capítulo de un informe profesional que describa el análisis de los resultados del test de penetración. 
-                        Formatea tu respuesta en Markdown, utilizando solo los siguientes símbolos: &, %, $, #, _, ~, ^, \, { '{' }, { '}' }. Evita tablas en Markdown, usa listas con viñetas en su lugar. Evita el uso de **.
-                        Asegúrate de que el tono sea conciso, técnico y profesional. Usa estos símbolos de manera apropiada para estructurar el informe y transmitir eficazmente el análisis."""
+        init_prompt = f'''Eres un experto en Ciberseguridad encargado de evaluar la superficie de ataque para {name_client}. Tu trabajo es generar un capítulo de un informe profesional que detalle el análisis de los resultados de las pruebas de penetración.
+                     Formatea tu respuesta en Markdown.
+                     Asegúrate de que el tono sea conciso, técnico y profesional. Utiliza solo # para el título y ## para las subsecciones, usa - para las listas. No utilice tablas.'''
         if vuln_def:
             init_prompt += f'Esta es la definición del tipo de vulnerabilidad: {vuln_defs_esp}'
 
