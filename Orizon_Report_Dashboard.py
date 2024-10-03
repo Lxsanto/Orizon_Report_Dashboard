@@ -66,8 +66,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = True
-run_LLM = True
+are_you_on_CUDA = False
+run_LLM = False
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -493,8 +493,8 @@ def main():
                 if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='oiu'):
                     analyze_overview.clear()
                     st.session_state['overview'] = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language, clear_cache=True)
-            overview_analysis = st.session_state['overview']
-            st.write(overview_analysis)
+                overview_analysis = st.session_state['overview']
+                st.write(overview_analysis)
 
         # Severity Distribution
         st.header("Vulnerability Severity Distribution", anchor="vulnerability-severity-distribution")
@@ -515,8 +515,8 @@ def main():
                 if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='uwgs'):
                     analyze_severity_distribution.clear()
                     st.session_state['severity'] = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language, clear_cache=True)
-            severity_analysis = st.session_state['severity']
-            st.write(severity_analysis)
+                severity_analysis = st.session_state['severity']
+                st.write(severity_analysis)
 
 
         # Top 10 Vulnerabilities
@@ -565,8 +565,8 @@ def main():
             if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='ywshg'):
                 analyze_top_vulnerabilities.clear()
                 st.session_state['top'] = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe, language=language, clear_cache=True)
-        top_vuln_analysis = st.session_state['top']
-        st.write(top_vuln_analysis)
+            top_vuln_analysis = st.session_state['top']
+            st.write(top_vuln_analysis)
 
 
 
@@ -627,8 +627,8 @@ def main():
             if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='ushqtwkja'):
                 analyze_vulnerability_types.clear()
                 st.session_state['types'] = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language, clear_cache=True)
-        types_analysis = st.session_state['types']
-        st.write(types_analysis)
+            types_analysis = st.session_state['types']
+            st.write(types_analysis)
 
         # # Remediation Priority Matrix
         # st.header("Remediation Priority Matrix")
@@ -742,8 +742,8 @@ def main():
                 if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='yuqirh'):
                     analyze_geolocation.clear()
                     st.session_state['geo'] = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language, clear_cache=True)
-            geo_analysis = st.session_state['geo']
-            st.write(geo_analysis)
+                geo_analysis = st.session_state['geo']
+                st.write(geo_analysis)
         
         if not os.path.exists('ports_scanning/bash'):
             os.makedirs('ports_scanning/bash')
@@ -883,8 +883,8 @@ def main():
                             if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='quahy6s'):
                                 analyze_bash_results.clear()
                                 st.session_state['bash'] = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language, clear_cache=True)
-                        LLM_comment = st.session_state['bash']
-                        st.write(LLM_comment)
+                            LLM_comment = st.session_state['bash']
+                            st.write(LLM_comment)
 
                         with open(f'ports_scanning/LLM_comment.txt', 'w') as file:
                             file.write(LLM_comment)
