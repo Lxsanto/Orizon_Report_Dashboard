@@ -27,17 +27,18 @@ def escape_latex(text):
             '$': r'\$',
             '#': r'\#',
             '_': r'\_',
+            '{': r'\{',
+            '}': r'\}',
             '~': r'\textasciitilde{}',
             '^': r'\textasciicircum{}',
-            '\\': r'\textbackslash{}',
-            '{': r'\{',
-            '}': r'\}'
+            '\\': r'\textbackslash{}'
         }.get(char, char)
 
-    pattern = r'(\\[a-zA-Z]+(?:\[.*?\])?{.*?}|\\[a-zA-Z]+)|([&%$#_~^\\{}])'
+    pattern = r'(\\\\[a-zA-Z]+(?:\[.*?\])?{.*?}|\\\\[a-zA-Z]+)|([&%$#_~^\\{}])'
     escaped_text = re.sub(pattern, replace, text)
-    escaped_text = re.sub(r'\b(\w+(?:\s+\w+){0,3})\b', lambda m: m.group(0).replace(' ', '~'), escaped_text)
     return escaped_text
+
+
 
 def load_xml(file_path):
     tree = ET.parse(file_path)
@@ -377,6 +378,33 @@ def md_to_latex(input_dir, output_file):
     breakatwhitespace=false
 }
 
+\usepackage{listings}
+\lstdefinestyle{bashstyle}{
+  language=bash,
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+  commentstyle=\color{green!40!black},
+  keywordstyle=\color{blue},
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  backgroundcolor=\color{white},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  captionpos=b,
+  breakatwhitespace=false,
+  breakautoindent=true,
+  escapeinside={\%*}{*)},
+  linewidth=\textwidth,
+  basewidth=0.5em,
+}
+\lstset{style=bashstyle}
+
 \newcommand{\customername}{Orizon}
 
 \title{Security Vulnerability Analysis Report}
@@ -390,41 +418,133 @@ def md_to_latex(input_dir, output_file):
 
 """
 
+    def process_markdown(md_content, is_chapter_start=False):
+        # Preserve existing LaTeX code
+        def preserve_latex(match):
+            return f"LATEXCODE{hash(match.group(0))}ENDLATEX"
+
+        latex_blocks = {}
+        md_content = re.sub(r'\\begin{.*?}.*?\\end{.*?}', preserve_latex, md_content, flags=re.DOTALL)
+
+        # Convert headers
+        if is_chapter_start:
+            md_content = re.sub(r'^#\s+(.+)$', r'\\chapter{\1}', md_content, flags=re.MULTILINE)
+        md_content = re.sub(r'^##\s+(.+)$', r'\\section{\1}', md_content, flags=re.MULTILINE)
+        md_content = re.sub(r'^###\s+(.+)$', r'\\subsection{\1}', md_content, flags=re.MULTILINE)
+
+        # Handle any remaining '#' at the start of a line (for chapter headings)
+        md_content = re.sub(r'^#\s+(.+)$', r'\\chapter{\1}', md_content, flags=re.MULTILINE)
+
+        # Convert bold and italic
+        md_content = re.sub(r'\*\*(.+?)\*\*', r'\\textbf{\1}', md_content)
+        md_content = re.sub(r'\*(.+?)\*', r'\\textit{\1}', md_content)
+
+        # Handle bullet point lists
+        def process_list(match):
+            content = match.group(1)
+            lines = content.split('\n')
+            result = ['\\begin{itemize}']
+            current_item = []
+            for line in lines:
+                stripped_line = line.strip()
+                if stripped_line.startswith('•') or stripped_line.startswith('*') or stripped_line.startswith('-'):
+                    if current_item:
+                        result.append('\\item ' + ' '.join(current_item))
+                        current_item = []
+                    current_item.append(stripped_line.lstrip('•*- '))
+                elif stripped_line.startswith('[') or (current_item and stripped_line.startswith("'")):
+                    if current_item:
+                        result.append('\\item ' + ' '.join(current_item))
+                        current_item = []
+                    result.append('\\item ' + stripped_line)
+                elif stripped_line:  # Only add non-empty lines
+                    if not current_item:
+                        result.append('\\item ' + stripped_line)
+                    else:
+                        current_item.append(stripped_line)
+            if current_item:
+                result.append('\\item ' + ' '.join(current_item))
+            result.append('\\end{itemize}')
+            return '\n'.join(result)
+
+        md_content = re.sub(r'((?:^\s*[•*-][^\n]+\n?)+)', process_list, md_content, flags=re.MULTILINE)
+
+        # Special handling for the host list
+        def process_host_list(match):
+            content = match.group(0)
+            hosts = re.findall(r'\[([^\]]+)\]', content)
+            result = ['\\begin{itemize}']
+            result.append('\\item Host:')
+            for host_group in hosts:
+                host_list = [h.strip().strip("'") for h in host_group.split(',')]
+                result.append('  \\begin{itemize}')
+                for host in host_list:
+                    result.append(f'    \\item {host}')
+                result.append('  \\end{itemize}')
+            # Process IP, Paesi, and Città
+            for item in ['IP:', 'Paesi:', 'Città:']:
+                if item in content:
+                    result.append(f'\\item {item}')
+                    values = re.findall(r"'([^']+)'", content.split(item)[1].split('*')[0])
+                    result.append('  \\begin{itemize}')
+                    for value in values:
+                        result.append(f'    \\item {value}')
+                    result.append('  \\end{itemize}')
+            result.append('\\end{itemize}')
+            return '\n'.join(result)
+
+        md_content = re.sub(r'\* Host: \* \[.*?\] \* IP:.*?Città:.*?]', process_host_list, md_content, flags=re.DOTALL)
+
+        # Escape special LaTeX characters in the remaining text
+        latex_content_escaped = escape_latex_preserving_commands(md_content)
+
+        # Restore preserved LaTeX code
+        for key, value in latex_blocks.items():
+            latex_content_escaped = latex_content_escaped.replace(f"LATEXCODE{key}ENDLATEX", value)
+
+        return latex_content_escaped
+    
+
+
+    def escape_latex_preserving_commands(text):
+        """Escape LaTeX special characters while preserving existing LaTeX commands."""
+        def replace(match):
+            if match.group(1):  # This is a LaTeX command
+                return match.group(0)
+            return escape_latex_text(match.group(0))
+        
+        pattern = r'(\\[a-zA-Z]+(?:\[.*?\])?{.*?}|\\[a-zA-Z]+)|(.)'
+        return re.sub(pattern, replace, text, flags=re.DOTALL)
+
+    def escape_latex_text(text):
+        """Escape special LaTeX characters in regular text."""
+        special_chars = {
+            '&': r'\&',
+            '%': r'\%',
+            '$': r'\$',
+            '#': r'\#',
+            '_': r'\_',
+            '{': r'\{',
+            '}': r'\}',
+            '~': r'\textasciitilde{}',
+            '^': r'\textasciicircum{}',
+            '\\': r'\textbackslash{}'
+        }
+        return ''.join(special_chars.get(c, c) for c in text)
+
+
+
+    
+
+    first_chapter_image_added = False
+
     for index, md_file in enumerate(md_files):
         file_path = os.path.join(input_dir, md_file)
         
         with open(file_path, 'r', encoding='utf-8') as file:
             md_content = file.read()
         
-        # Set a default chapter title
-        chapter_title = f"Chapter {index + 1}"
-        
-        # Convert main title first, accounting for leading space
-        chapter_match = re.search(r'^\s*# (.+)$', md_content, flags=re.MULTILINE)
-        if chapter_match:
-            chapter_title = chapter_match.group(1)
-            latex_chapter = f"\\chapter{{{chapter_title}}}\n\n"
-            md_content = md_content[chapter_match.end():].strip()
-        else:
-            latex_chapter = f"\\chapter{{{chapter_title}}}\n\n"
-        
-        # Convert other headers, accounting for possible leading spaces
-        md_content = re.sub(r'^\s*## (.+)$', r'\\paragraph{\1}', md_content, flags=re.MULTILINE)
-        md_content = re.sub(r'^\s*### (.+)$', r'\\paragraph{\1}', md_content, flags=re.MULTILINE)
-        
-        # Handle the specific format shown in the image
-        md_content = re.sub(r'^\s*(\d+\.\d+)\s+{(.+)}$', r'\\section{\1 \2}', md_content, flags=re.MULTILINE)
-        
-        # Now escape special LaTeX characters
-        latex_content_escaped = escape_latex(md_content)
-        
-        # Convert bold and italic
-        latex_content_escaped = re.sub(r'\*\*(.+?)\*\*', r'\\textbf{\1}', latex_content_escaped)
-        latex_content_escaped = re.sub(r'\*(.+?)\*', r'\\textit{\1}', latex_content_escaped)
-        
-        # Convert lists
-        latex_content_escaped = re.sub(r'^\s*- (.+)$', r'\\begin{itemize}\n\\item \1\n\\end{itemize}', latex_content_escaped, flags=re.MULTILINE)
-        latex_content_escaped = re.sub(r'^\s*\d+\. (.+)$', r'\\begin{itemize}\n\\item \1\n\\end{itemize}', latex_content_escaped, flags=re.MULTILINE)
+        processed_content = process_markdown(md_content, is_chapter_start=True)
         
         # Add images if they exist
         chapter_number = os.path.splitext(md_file)[0]
@@ -433,17 +553,69 @@ def md_to_latex(input_dir, output_file):
         
         image_latex = ""
         if image_files:
-            image_latex += "\n\\begin{figure}[htbp]\n\\centering\n"
+            image_latex = "\n\\begin{figure}[htbp]\n\\centering\n"
             for img_file in image_files:
                 image_latex += f"\\includegraphics[width=0.8\\textwidth]{{pngs/{img_file}}}\n"
                 image_latex += "\\vspace{1cm}\n"
-            image_latex += f"\\caption{{Images related to {chapter_title}}}\n\\end{{figure}}\n"
+            image_latex += f"\\caption{{Images related to Chapter {index + 1}}}\n\\end{{figure}}\n"
+
+        # Special handling for Chapter 1
+        if index == 0 and image_files:
+            # Extract the chapter title
+            chapter_title_match = re.search(r'\\chapter{(.+?)}', processed_content)
+            if chapter_title_match:
+                chapter_title = chapter_title_match.group(0)
+                rest_of_content = processed_content[chapter_title_match.end():].strip()
+                
+                # Add the first image right after the chapter title
+                first_image = image_files[0]
+                first_image_latex = f"\n\\begin{{figure}}[htbp]\n\\centering\n"
+                first_image_latex += f"\\includegraphics[width=0.8\\textwidth]{{pngs/{first_image}}}\n"
+                first_image_latex += f"\\caption{{First image of Chapter {index + 1}}}\n\\end{{figure}}\n"
+                
+                latex_content += f"{chapter_title}\n\n{first_image_latex}\n{rest_of_content}\n\n"
+                
+                # Remove the first image from the image_files list
+                image_files = image_files[1:]
+                first_chapter_image_added = True
+            else:
+                latex_content += processed_content + "\n\n"
+        else:
+            latex_content += processed_content + "\n\n"
         
-        # Position images based on chapter number
-        if index == 0:  # First chapter
-            latex_content += latex_chapter + image_latex + latex_content_escaped + "\n\n"
-        else:  # Other chapters
-            latex_content += latex_chapter + latex_content_escaped + image_latex + "\n\n"
+        # Add remaining images for Chapter 1 or all images for other chapters
+        if image_files:
+            if index == 0 and first_chapter_image_added:
+                # For Chapter 1, add remaining images at the end of the chapter
+                latex_content += image_latex
+            elif index != 0:
+                # For other chapters, add images as before
+                latex_content += image_latex
+
+
+    # Process LLM_comment.txt
+    llm_comment_path = os.path.join(input_dir, 'ports_scanning', 'LLM_comment.txt')
+    with open(llm_comment_path, 'r', encoding='utf-8') as file:
+        llm_comment = file.read()
+
+    latex_content += process_markdown(llm_comment) + "\n\n"
+
+    # Process bash code snippets
+    bash_folder = os.path.join(input_dir, 'ports_scanning', 'bash')
+    bash_files = [f for f in os.listdir(bash_folder) if f.endswith('.txt')]
+
+    for bash_file in bash_files:
+        file_path = os.path.join(bash_folder, bash_file)
+        with open(file_path, 'r', encoding='utf-8') as file:
+            bash_content = file.read()
+
+        # Use the filename (without extension) as the subsection title
+        subsection_title = os.path.splitext(bash_file)[0]
+        
+        latex_content += f"\\subsection*{{{escape_latex(subsection_title)}}}\n\n"
+        latex_content += "\\begin{lstlisting}[language=bash,breaklines=true,postbreak=\\mbox{\\textcolor{red}{$\\hookrightarrow$}\\space}]\n"
+        latex_content += bash_content
+        latex_content += "\\end{lstlisting}\n\n"
 
     # Add Top 10 Vulnerabilities section
     latex_content += r"\chapter{Top 10 Vulnerabilities}" + "\n\n"
@@ -451,6 +623,10 @@ def md_to_latex(input_dir, output_file):
     # Load and process the DataFrame
     dfs_dir = os.path.join(input_dir, 'dfs')
     top_10_vulnerabilities = load_and_process_dataframe(dfs_dir)
+
+    # XML and YAML file paths
+    xml_file = "/Users/michelezanotti/Projects/Orizon/local_folder/cwec_v4.15.xml"
+    yaml_path = '/Users/michelezanotti/Desktop/prova/nuclei-templates'
 
     for i, (_, vulnerability) in enumerate(top_10_vulnerabilities.iterrows(), 1):
         template_id = vulnerability['template_id']
