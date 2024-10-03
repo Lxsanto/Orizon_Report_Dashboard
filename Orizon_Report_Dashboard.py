@@ -1006,24 +1006,26 @@ def main():
 
 if __name__ == "__main__":
     # login
-    name, authentication_status, username = authenticator.login(key='Login', location='main')
+    # name, authentication_status, username = authenticator.login(key='Login', location='main')
 
-    if authentication_status == False:
-        st.error('Username/password is incorrect')
-    elif authentication_status == None:
-        st.warning('Please enter your username and password')
-    elif authentication_status:
-        # true login
-        authenticator.logout('Logout', 'main')
-        st.write(f'Welcome *{name}*')
-        start = time.time()
-        main()
-        end = time.time()
+    # if authentication_status == False:
+    #     st.error('Username/password is incorrect')
+    # elif authentication_status == None:
+    #     st.warning('Please enter your username and password')
+    # elif authentication_status:
+    #     # true login
+    #     authenticator.logout('Logout', 'main')
+    #     st.write(f'Welcome *{name}*')
+    #     start = time.time()
+    #     main()
+    #     end = time.time()
 
-        # Calcolo del tempo impiegato
-        elapsed_time = end - start
+    #     # Calcolo del tempo impiegato
+    #     elapsed_time = end - start
 
-        minutes = int(elapsed_time // 60)
-        seconds = int(elapsed_time % 60)
+    #     minutes = int(elapsed_time // 60)
+    #     seconds = int(elapsed_time % 60)
 
-        print(f"Running time: {minutes:.2f}:{seconds:.2f}")
+    #     print(f"Running time: {minutes:.2f}:{seconds:.2f}")
+
+    main()
