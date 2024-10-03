@@ -1,0 +1,55 @@
+\babel@toc {english}{}\relax 
+\contentsline {section}{\numberline {0.1}Critical Severity}{2}{section.0.1}%
+\contentsline {section}{\numberline {0.2}High Severity}{2}{section.0.2}%
+\contentsline {section}{\numberline {0.3}Medium Severity}{2}{section.0.3}%
+\contentsline {section}{\numberline {0.4}Low Severity}{2}{section.0.4}%
+\contentsline {section}{\numberline {0.5}Informational Severity}{2}{section.0.5}%
+\contentsline {chapter}{\numberline {1}Security Posture Analysis}{3}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Executive Summary}{3}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Security Posture Overview}{3}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Total Number of Vulnerabilities}{3}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Breakdown of Vulnerability Types}{3}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}Critical Vulnerabilities}{3}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}High Vulnerabilities}{3}{subsection.1.4.2}%
+\contentsline {subsection}{\numberline {1.4.3}Medium Vulnerabilities}{3}{subsection.1.4.3}%
+\contentsline {subsection}{\numberline {1.4.4}Low Vulnerabilities}{4}{subsection.1.4.4}%
+\contentsline {section}{\numberline {1.5}Recommendations}{4}{section.1.5}%
+\contentsline {chapter}{\numberline {2}Vulnerability Severity Distribution Analysis}{5}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Severity Distribution Summary}{5}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Most Common Severity Level}{5}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Percentage of Each Severity Level}{5}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Impact of Critical and High Vulnerabilities}{5}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Urgency of Remediation}{5}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Cumulative Risk from Medium and Low Vulnerabilities}{5}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Overall Risk and Compliance/Security Impact}{5}{section.2.7}%
+\contentsline {chapter}{\numberline {3}Analysis of Top System Vulnerabilities}{7}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Summary of Prevalent Types and Impact}{7}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Analysis of 'Apache HTTP Server Test Page'}{7}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Affected Hosts, Network Impact, and Lateral Movement Risk}{7}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Why www.euroscatola.it is Most Affected and Associated Risks}{7}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Common Themes and Systemic Issues}{8}{section.3.5}%
+\contentsline {chapter}{\numberline {4}Vulnerability Type Distribution Analysis}{10}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Summary of Type Distribution and Initial Security Challenge Assessment}{10}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Detailed Analysis of 'HTTP Missing Security Headers'}{10}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Causes}{10}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Attack Vectors}{10}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}Impact}{10}{subsection.4.2.3}%
+\contentsline {section}{\numberline {4.3}Brief Description of Each Type, Distribution Analysis, and Identification of Patterns}{10}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}HTTP Missing Security Headers}{10}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}CAA Record}{10}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}HTTP TRACE method enabled}{10}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}Apache HTTP Server Test Page}{10}{subsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.3.5}WAF Detection}{11}{subsection.4.3.5}%
+\contentsline {subsection}{\numberline {4.3.6}Allowed Options Method}{11}{subsection.4.3.6}%
+\contentsline {subsection}{\numberline {4.3.7}Email Extractor}{11}{subsection.4.3.7}%
+\contentsline {subsection}{\numberline {4.3.8}Wappalyzer Technology Detection}{11}{subsection.4.3.8}%
+\contentsline {subsection}{\numberline {4.3.9}Apache Tomcat - Open Redirect}{11}{subsection.4.3.9}%
+\contentsline {subsection}{\numberline {4.3.10}Open Redirect - Detection}{11}{subsection.4.3.10}%
+\contentsline {section}{\numberline {4.4}Evaluation of Overall Risk from the Type Distribution and Interaction Effects}{11}{section.4.4}%
+\contentsline {chapter}{\numberline {5}Analysis of Geolocation Data for}{12}{chapter.5}%
+\contentsline {section}{\numberline {5.1}General Distribution}{12}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Top 5 Vulnerable Hosts}{12}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Geolocation of Top 5 Vulnerable Hosts}{12}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Patterns or Correlations between Location and Vulnerability}{13}{section.5.4}%
+\contentsline {chapter}{\numberline {6}Top 10 Vulnerabilities}{14}{chapter.6}%
+\contentsfinish 

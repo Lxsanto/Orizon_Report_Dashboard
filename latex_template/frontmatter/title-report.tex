@@ -1,0 +1,65 @@
+\begin{titlepage}
+
+\begin{center}
+
+%% Print the title
+{\makeatletter
+\largetitlestyle\fontsize{45}{45}\selectfont\@title
+\makeatother}
+
+%% Print the subtitle
+{\makeatletter
+\ifdefvoid{\@subtitle}{}{\bigskip\titlestyle\fontsize{20}{20}\selectfont\@subtitle}
+\makeatother}
+
+\bigskip
+\bigskip
+
+by
+
+\bigskip
+\bigskip
+
+%% Print the name of the author
+{\makeatletter
+\largetitlestyle\fontsize{25}{25}\selectfont\@author
+\makeatother}
+
+\bigskip
+\bigskip
+
+%% Print table with names; easily add columns if necessary or remove the table completely
+\setlength\extrarowheight{2pt}
+\begin{tabular}{l}
+    Author Name \\\midrule
+    First Surname \\
+\end{tabular}
+
+\vfill
+
+%% Print some more information at the bottom
+\begin{tabular}{ll}
+    Author: & I. Surname \\
+    Project Duration: & Month, Year - Month, Year \\
+\end{tabular}
+
+\bigskip
+\bigskip
+
+%% Add a source and description for the cover and optional attribution for the template
+\begin{tabular}{p{15mm}p{10cm}}
+    Cover: & Main image of planet with connections and data leaking out \\
+    % Feel free to remove the following attribution, it is not required - still appreciated :-)
+    Style: & Orizon RECON Report Style by Dragos Chioran
+\end{tabular}
+
+\end{center}
+
+%% Insert the Orizon logo at the bottom of the page
+\begin{tikzpicture}[remember picture, overlay]
+    \node[above=10mm] at (current page.south) {%
+        \includegraphics{figures/orizon-logo-white-simplified-black.pdf}
+    };
+\end{tikzpicture}
+
+\end{titlepage}

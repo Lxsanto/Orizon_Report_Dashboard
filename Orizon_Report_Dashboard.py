@@ -66,8 +66,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -745,8 +745,8 @@ def main():
                 geo_analysis = st.session_state['geo']
                 st.write(geo_analysis)
         
-        if not os.path.exists('ports_scanning/bash'):
-            os.makedirs('ports_scanning/bash')
+        if not os.path.exists('txts/ports_scanning/bash'):
+            os.makedirs('txts/ports_scanning/bash')
         
         LLM_comment = ''
         
@@ -885,13 +885,13 @@ def main():
                                 st.session_state['bash'] = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language, clear_cache=True)
                             LLM_comment = st.session_state['bash']
                             st.write(LLM_comment)
-
-                        with open(f'ports_scanning/LLM_comment.txt', 'w') as file:
-                            file.write(LLM_comment)
                 
                 for terminal, host in zip(results_port, urls_ports):
-                    with open(f'ports_scanning/bash/{host}.txt', 'w') as file:
+                    with open(f'txts/ports_scanning/bash/{host}.txt', 'w') as file:
                         file.write(terminal)
+                
+                with open(f'txts/ports_scanning/LLM_comment.txt', 'w') as file:
+                    file.write(LLM_comment)
         
         # Percorso della cartella principale
         base_dir = "txts"

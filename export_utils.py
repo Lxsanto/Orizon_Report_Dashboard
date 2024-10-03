@@ -53,10 +53,6 @@ def load_and_process_dataframe(dfs_dir):
     top_10 = df_sorted.head(10)
     return top_10
 
-def format_code_snippet(code):
-    """Format code snippets using LaTeX verbatim environment."""
-    return f"\\begin{{verbatim}}\n{code}\n\\end{{verbatim}}\n"
-
 def safe_get(element, attr):
     return element.get(attr) if element is not None else None
 
@@ -346,21 +342,6 @@ def md_to_latex(input_dir, output_file):
 
     # LaTeX preamble
     latex_content = r"""
-\documentclass[12pt,a4paper]{report}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage{hyperref}
-\usepackage{geometry}
-\usepackage{listings}
-\usepackage{xcolor}
-\usepackage{changepage}
-
-\geometry{margin=2.5cm}
 
 \lstset{
     breaklines=true,
@@ -378,7 +359,6 @@ def md_to_latex(input_dir, output_file):
     breakatwhitespace=false
 }
 
-\usepackage{listings}
 \lstdefinestyle{bashstyle}{
   language=bash,
   basicstyle=\ttfamily\footnotesize,
@@ -405,17 +385,8 @@ def md_to_latex(input_dir, output_file):
 }
 \lstset{style=bashstyle}
 
-\newcommand{\customername}{Orizon}
-
-\title{Security Vulnerability Analysis Report}
-\author{Security Analysis Team \\ \large Customer: \customername}
-
-\begin{document}
-
-\maketitle
 
 \tableofcontents
-
 """
 
     def process_markdown(md_content, is_chapter_start=False):
@@ -553,25 +524,26 @@ def md_to_latex(input_dir, output_file):
         
         image_latex = ""
         if image_files:
-            image_latex = "\n\\begin{figure}[htbp]\n\\centering\n"
+            image_latex = f"\n\\begin{{center}}\n"
             for img_file in image_files:
-                image_latex += f"\\includegraphics[width=0.8\\textwidth]{{pngs/{img_file}}}\n"
-                image_latex += "\\vspace{1cm}\n"
-            image_latex += f"\\caption{{Images related to Chapter {index + 1}}}\n\\end{{figure}}\n"
+                image_latex += f"\\includegraphics[width=\\linewidth]{{pngs/{img_file}}}\n"
+                image_latex += f"\\vspace{{1cm}}"
+            image_latex += f"\\caption{{Images related to Chapter {index + 1}}}\n\\end{{center}}\n"
 
         # Special handling for Chapter 1
         if index == 0 and image_files:
             # Extract the chapter title
             chapter_title_match = re.search(r'\\chapter{(.+?)}', processed_content)
             if chapter_title_match:
-                chapter_title = chapter_title_match.group(0)
+                chapter_title = chapter_title_match.group(1)
                 rest_of_content = processed_content[chapter_title_match.end():].strip()
                 
                 # Add the first image right after the chapter title
                 first_image = image_files[0]
-                first_image_latex = f"\n\\begin{{figure}}[htbp]\n\\centering\n"
-                first_image_latex += f"\\includegraphics[width=0.8\\textwidth]{{pngs/{first_image}}}\n"
-                first_image_latex += f"\\caption{{First image of Chapter {index + 1}}}\n\\end{{figure}}\n"
+                first_image_latex = f"\n\\begin{{center}}\n"
+                first_image_latex += f"\\includegraphics[width=\\linewidth]{{pngs/{first_image}}}\n"
+                first_image_latex += f"\\vspace{{1cm}}"
+                first_image_latex += f"\\caption{{First image of Chapter {index + 1}}}\n\\end{{center}}\n"
                 
                 latex_content += f"{chapter_title}\n\n{first_image_latex}\n{rest_of_content}\n\n"
                 
@@ -624,10 +596,6 @@ def md_to_latex(input_dir, output_file):
     dfs_dir = os.path.join(input_dir, 'dfs')
     top_10_vulnerabilities = load_and_process_dataframe(dfs_dir)
 
-    # XML and YAML file paths
-    xml_file = "/Users/michelezanotti/Projects/Orizon/local_folder/cwec_v4.15.xml"
-    yaml_path = '/Users/michelezanotti/Desktop/prova/nuclei-templates'
-
     for i, (_, vulnerability) in enumerate(top_10_vulnerabilities.iterrows(), 1):
         template_id = vulnerability['template_id']
         hostname = vulnerability['host']  # Assuming 'host' is the column name for hostname
@@ -638,8 +606,6 @@ def md_to_latex(input_dir, output_file):
         # Add the vulnerability info to the LaTeX content
         latex_content += vulnerability_info + "\n\n"
 
-    # Close the document
-    latex_content += r"\end{document}"
 
     # Write the LaTeX content to the output file
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -647,7 +613,7 @@ def md_to_latex(input_dir, output_file):
 
 def generate_tex_zip(input_directory, output_directory):
 
-    output_file = f'{output_directory}/security_report.tex'
+    output_file = f'{output_directory}/mainmatter/security_report-v2.0.tex'
 
     # creating tex file
     md_to_latex(input_directory, output_file)
@@ -695,13 +661,12 @@ def read_tex_file(input_path):
         return None
 
 def generate_pdf(input_directory):
-    pdf_path = os.path.join(f'{input_directory}/security_report.pdf')
-
+    pdf_path = os.path.join(f'{input_directory}/orizon-recon-report-main.pdf')
     try:
         # Esegui pdflatex due volte
         for _ in range(2):
             result = subprocess.run(
-                ['pdflatex', '-interaction=nonstopmode', 'security_report.tex'],
+                ['xelatex', '-interaction=nonstopmode', 'orizon-recon-report-main.tex'],
                 check=True,
                 cwd=input_directory,
                 stdout=subprocess.PIPE,  # Cattura l'output standard
