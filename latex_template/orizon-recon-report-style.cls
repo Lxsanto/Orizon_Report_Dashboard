@@ -135,14 +135,14 @@
     {}
 \titlespacing*{\section}{0pt}{\baselineskip}{0.5\baselineskip}
 
-
-%% Format the subsections titles and spacing with color change (#4ac300)
+%% Format the subsections titles and spacing
 \titleformat{\subsection}
     {\large\titlestyle\bfseries\color[HTML]{4ac300}} % Add color for subsections
     {} % No numbering
     {5pt}
     {}
 \titlespacing*{\subsection}{0pt}{\baselineskip}{0.25\baselineskip}
+
 
 %% Format the subsubsections titles and spacing (with color change if needed)
 \titleformat{\subsubsection}
@@ -256,14 +256,29 @@
     \end{tikzpicture}
     \newpage
 }
+%% ----------------------------------------------------------------------
+%%    Setting up screenshots
+%% ----------------------------------------------------------------------
+
+\usepackage{tcolorbox} % Load tcolorbox for enhanced styling
+
+% Define the styling for the screenshots using tcolorbox
+\tcbset{
+    colframe=gray!50,   % Frame color
+    colback=white,      % Background color inside the box
+    boxrule=0.1mm,      % Border thickness
+    arc=2mm,            % Rounded corners
+    width=\linewidth,   % Box width matching the linewidth
+    center              % Center the box
+}
+
+
 
 %% ----------------------------------------------------------------------
 %%    Setting up listings
 %% ----------------------------------------------------------------------
 
 \RequirePackage{listings}
-
-
 
 \lstset{
     breaklines=true,

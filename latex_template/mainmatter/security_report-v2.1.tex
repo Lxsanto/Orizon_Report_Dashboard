@@ -2,8 +2,8 @@
 
 
 \begin{center}
-\includegraphics[width=\linewidth]{pngs/0_1.png}
-\vspace{1cm}\caption{First image of Chapter 1}
+\tcbox{\includegraphics[width=\linewidth]{pngs/0_1.png}}
+\vspace{0cm}\captionof{figure}{First image of Chapter 1}
 \end{center}
 
 \section{Definizione Vulnerabilità}
@@ -30,33 +30,31 @@
 
 \section{Panoramica della Postura di Sicurezza e Livello di Rischio Complessivo}
 
-La panoramica di sicurezza presentata evidenzia un livello di rischio complessivo di 55/100, con un totale di 174 vulnerabilità. Il punteggio di rischio è considerato medio-alto, poiché il numero di vulnerabilità non è eccessivo, ma la loro combinazione potrebbe rappresentare un rischio significativo se non gestite adeguatamente.
+La panoramica di sicurezza fornita evidenzia una postura di sicurezza che può essere considerata sufficiente, ma con aree di miglioramento significative. Il punteggio di rischio complessivo di 55/100 indica che l'organizzazione è a rischio, ma con una superficie d'attacco relativamente limitata. Tuttavia, il numero totale di vulnerabilità (817) suggerisce che ci sono aree critiche che richiedono attenzione e correzione immediata.
 
 \section{Considerazioni sul Numero Totale di Vulnerabilità}
 
-Il numero totale di vulnerabilità di 174 è relativamente alto, il che potrebbe indicare che l'organizzazione non ha implementato un approccio di gestione della sicurezza efficace. Tuttavia, è importante notare che il punteggio di rischio è di 55/100, il che suggerisce che la maggior parte delle vulnerabilità non sono critiche o alte. Comunque, è essenziale prendere in considerazione il fatto che ogni vulnerabilità potrebbe essere sfruttata da un attaccante determinato.
+Il numero totale di vulnerabilità (817) è significativo e indica che l'organizzazione ha una superficie d'attacco relativamente ampia. Ciò richiede un'attenta revisione e correzione delle vulnerabilità critiche, alte e medie. È fondamentale identificare e correggere le vulnerabilità critiche (1) e le vulnerabilità alte (0) per minimizzare il rischio di attacco.
 
 \section{Discussione sulla Suddivisione dei Tipi di Vulnerabilità}
 
-La suddivisione dei tipi di vulnerabilità è la seguente:
+\subsection{Vulnerabilità Critiche (1)}
 
-\subsection{Vulnerabilità Critiche (0)}
-
-La mancanza di vulnerabilità critiche è un risultato positivo, poiché le vulnerabilità critiche rappresentano il livello più alto di rischio e la loro assenza garantisce che l'organizzazione non sia esposta a un rischio di compromissione a livello di sistema.
+La presenza di una sola vulnerabilità critica (1) è preoccupante e richiede attenzione immediata. Questa vulnerabilità può essere sfruttata per ottenere elevati privilegi di accesso al sistema o causare danni significativi. È fondamentale identificare la causa della vulnerabilità e correggerla il prima possibile.
 
 \subsection{Vulnerabilità Alte (0)}
 
-Anche la mancanza di vulnerabilità alte è un risultato positivo, poiché le vulnerabilità alte rappresentano un rischio significativo di compromissione a livello di sistema e elevazione dei privilegi.
+La mancanza di vulnerabilità alte (0) è positiva, ma non significa che l'organizzazione sia immune a future vulnerabilità. È importante mantenere una postura di sicurezza proattiva e continuare a monitorare e migliorare la postura di sicurezza.
 
 \subsection{Vulnerabilità Medie (4)}
 
-La presenza di 4 vulnerabilità medie è preoccupante, poiché queste vulnerabilità richiedono passaggi aggiuntivi, come l'ingegneria sociale, per essere sfruttate. È essenziale che l'organizzazione implementi un piano di corretta per queste vulnerabilità e applichi le patch di rilascio di sicurezza.
+Le vulnerabilità medie (4) sono un problema significativo, ma possono essere gestite con un piano di correzione adeguato. È fondamentale identificare le cause delle vulnerabilità e implementare misure di sicurezza per mitigarle.
 
-\subsection{Vulnerabilità Basse (0)}
+\subsection{Vulnerabilità Basse (35)}
 
-La mancanza di vulnerabilità basse è un risultato positivo, poiché le vulnerabilità basse non sono sfruttabili e aumentano solo la superficie d'attacco dell'organizzazione.
+Le vulnerabilità basse (35) possono essere considerate di minore priorità, ma non sono da sottovalutare. È importante identificare e correggere queste vulnerabilità per ridurre la superficie d'attacco e migliorare la postura di sicurezza.
 
-In sintesi, la panoramica di sicurezza presentata evidenzia un livello di rischio complessivo di 55/100, con un numero totale di vulnerabilità di 174. La presenza di 4 vulnerabilità medie è preoccupante e richiede un'attenzione immediata. È essenziale che l'organizzazione implementi un piano di corretta per queste vulnerabilità e applichi le patch di rilascio di sicurezza per ridurre il rischio di compromissione a livello di sistema.
+In sintesi, la panoramica di sicurezza fornita evidenzia una postura di sicurezza che può essere migliorata con un'attenta revisione e correzione delle vulnerabilità critiche, alte e medie. È fondamentale mantenere una postura di sicurezza proattiva e continuare a monitorare e migliorare la postura di sicurezza per ridurre il rischio di attacco.
 
 \chapter{Analisi della Distribuzione delle Gravità delle Vulnerabilità}
 
@@ -64,100 +62,92 @@ In sintesi, la panoramica di sicurezza presentata evidenzia un livello di rischi
 
 La distribuzione delle gravità delle vulnerabilità è la seguente:
 \begin{itemize}
-\item \textbf{Gravità Informativa}: 170
-\item \textbf{Gravità Media}: 4
+\item \textbf{Critical}: 1
+\item \textbf{High}: 35
+\item \textbf{Medium}: 4
+\item \textbf{Low}: 777
 \end{itemize}
 \section{Livello di Gravità più Comune}
 
-Il livello di gravità più comune è la \textbf{Gravità Media}, con 4 vulnerabilità.
+Il livello di gravità più comune è \textbf{Low}, con 777 vulnerabilità.
 
 \section{Percentuale di Ciascun Livello di Gravità}
 \begin{itemize}
-\item \textbf{Gravità Informativa}: 100\% (170/170)
-\item \textbf{Gravità Media}: 2,35\% (4/170)
+\item \textbf{Critical}: 0,13\% (1/777)
+\item \textbf{High}: 4,48\% (35/777)
+\item \textbf{Medium}: 0,51\% (4/777)
+\item \textbf{Low}: 100\% (777/777)
 \end{itemize}
 \section{Impatto delle Vulnerabilità Critiche e Alte}
 
-Le vulnerabilità critiche e alte potrebbero causare compromissioni a livello di sistema e elevare i privilegi. È fondamentale pianificare un'azione correttiva e applicare una patch il prima possibile.
+Le vulnerabilità critiche e alte rappresentano un impatto significativo sulla sicurezza dell'organizzazione. Le vulnerabilità critiche possono essere sfruttate facilmente e possono causare una compromissione a livello di sistema. Le vulnerabilità alte possono richiedere passaggi aggiuntivi per essere sfruttate, ma possono comunque causare problemi significativi.
 
 \section{Urgenza della Risoluzione}
 
-Le vulnerabilità critiche e alte richiedono una risoluzione immediata. È raccomandato pianificare un'azione correttiva e applicare una patch entro le 30 giorni lavorativi.
+La risoluzione delle vulnerabilità critiche è urgente, poiché possono essere sfruttate facilmente. Le vulnerabilità alte richiedono anche una risoluzione urgente, poiché possono causare problemi significativi.
 
-\section{Rischio Cumulativo delle Vulnerabilità Medie e Bassa}
+\section{Rischio Cumulativo delle Vulnerabilità Medie e Basse}
 
-Le vulnerabilità medie e basse rappresentano un rischio cumulativo di 2,35\% (4/170). Nonostante la loro bassa gravità, queste vulnerabilità aumentano la superficie d'attacco di un'organizzazione.
+Le vulnerabilità medie e basse rappresentano un rischio cumulativo significativo. Le vulnerabilità medie possono richiedere passaggi aggiuntivi per essere sfruttate, ma possono comunque causare problemi. Le vulnerabilità basse non sono sfruttabili, ma possono comunque aumentare la superficie d'attacco di un'organizzazione.
 
 \section{Rischio Complessivo e Impatto su Conformità/Sicurezza}
 
-Il rischio complessivo delle vulnerabilità è basso, con un impatto di 2,35\% sulle conformità e sulla sicurezza. Tuttavia, è fondamentale monitorare e gestire queste vulnerabilità per prevenire potenziali compromissioni.
+Il rischio complessivo è alto a causa della presenza di vulnerabilità critiche, alte e medie. L'impatto su conformità/sicurezza è significativo a causa della possibilità di compromissione della sicurezza dell'organizzazione. È importante pianificare un'azione correttiva e applicare una patch per ridurre il rischio e garantire la conformità alle norme di sicurezza.
 
 
 \begin{center}
-\includegraphics[width=\linewidth]{pngs/1_1.png}
-\vspace{1cm}\caption{Images related to Chapter 2}
+\tcbox{\includegraphics[width=\linewidth]{pngs/1_1.png}}
+\vspace{0cm}\captionof{figure}{Images related to Chapter 2}
 \end{center}
-\chapter{Analisi delle Vulnerabilità del Sistema}
+\chapter{Analisi delle vulnerabilità del sistema}
 
-\section{Riepilogo dei Tipi Prevalenti e dell'Impatto}
+\section{Riepilogo dei tipi prevalenti e dell'impatto}
 
-Durante gli esami di penetrazione, sono state identificate diverse vulnerabilità che potrebbero compromettere la sicurezza del sistema. Le principali vulnerabilità identificate sono:
+Durante l'analisi delle vulnerabilità del sistema, sono state identificate le seguenti categorie di vulnerabilità:
 \begin{itemize}
-\item Apache HTTP Server Test Page (Frequenza: 3)
-\item Host colpiti: 6
-\item Host più vulnerabile: www.euroscatola.it
+\item \textbf{Vulnerabilità più comune:} 'OpenSSH Terrapin Attack - Detection' (Frequenza: 4)
+\item \textbf{Impatto:} La maggior parte delle vulnerabilità identificate richiede passaggi aggiuntivi, come l'ingegneria sociale, per essere sfruttate.
+\item \textbf{Altre vulnerabilità:} Le vulnerabilità restanti sono state identificate come vulnerabilità di configurazione, vulnerabilità di codice e vulnerabilità di hardware.
 \end{itemize}
-\section{Analisi di 'Apache HTTP Server Test Page'}
+\section{Analisi di 'OpenSSH Terrapin Attack - Detection'}
 
-L'Apache HTTP Server Test Page è una pagina predefinita che viene visualizzata quando si accede al server HTTP senza una directory specifica. Questa pagina contiene informazioni sull'ambiente del server e può essere utilizzata dagli attaccanti per raccogliere informazioni sensibili.
-
-\subsection{Cause:}
+L'"OpenSSH Terrapin Attack - Detection" è una vulnerabilità che permette agli attaccanti di esplorare la configurazione di SSH su un sistema. Questa vulnerabilità è considerata una delle più comuni e può essere sfruttata da attaccanti esperti.
 \begin{itemize}
-\item La pagina predefinita è stata configurata in modo da essere accessibile a tutti gli utenti.
-\item La pagina contiene informazioni sull'ambiente del server, come l'indirizzo IP, il nome del server e la versione del software utilizzato.
+\item \textbf{Causa:} La vulnerabilità è causata da un problema di configurazione di SSH che consente agli attaccanti di esplorare la configurazione del sistema.
+\item \textbf{Vettori di attacco:} Gli attaccanti che utilizzano questa vulnerabilità sono generalmente esperti di network e di cybersecurity.
+\item \textbf{Conseguenze:} Se non trattata, questa vulnerabilità può consentire agli attaccanti di accedere al sistema e di eseguire attività malevole.
 \end{itemize}
-\subsection{Vettori di Attacco:}
+\section{Host colpiti e impatto sulla rete}
+
+I seguenti host sono stati colpiti:
 \begin{itemize}
-\item Gli attaccanti possono utilizzare strumenti come `curl` o `wget` per accedere alla pagina predefinita e raccogliere informazioni.
-\item Gli attaccanti possono anche utilizzare strumenti di furtagio per nascondere le loro attività e rendere più difficile la tracciabilità.
+\item \textbf{Host colpiti:} 8
+\item \textbf{Impatto sulla rete:} La maggior parte delle vulnerabilità identificate ha avuto un impatto limitato sulla rete, ma alcune vulnerabilità più severe hanno potuto consentire agli attaccanti di accedere al sistema e di eseguire attività malevole.
+\item \textbf{Rischio di movimento laterale:} Il rischio di movimento laterale è stato ridotto grazie alle misure di sicurezza implementate, ma è sempre presente.
 \end{itemize}
-\subsection{Conseguenze:}
+\section{Support-data.syneto.eu: il più colpito}
+
+Il support-data.syneto.eu è stato il più colpito dalle vulnerabilità identificate. Ciò potrebbe essere dovuto a diversi fattori, tra cui:
 \begin{itemize}
-\item L'accesso alla pagina predefinita può consentire agli attaccanti di raccogliere informazioni sensibili sulla rete e sui sistemi utilizzati.
-\item Gli attaccanti possono utilizzare queste informazioni per eseguire attacchi di phishing, social engineering o altri tipi di attacchi.
+\item \textbf{Configurazione di rete:} La configurazione di rete del support-data.syneto.eu potrebbe essere stata meno sicura rispetto ad altri host.
+\item \textbf{Codice di sicurezza:} Il codice di sicurezza del support-data.syneto.eu potrebbe non essere stato adeguato per proteggere la configurazione di SSH.
+\item \textbf{Misure di sicurezza:} Le misure di sicurezza implementate sul support-data.syneto.eu potrebbero non essere state sufficienti per proteggere la configurazione di SSH.
 \end{itemize}
-\section{Host Colpiti e Impatto sulla Rete}
+\section{Temi comuni e problemi sistemici}
 
-I seguenti host sono stati colpiti durante gli esami di penetrazione:
+I seguenti temi comuni e problemi sistemici sono stati identificati:
 \begin{itemize}
-\item www.euroscatola.it
-\item www.euroscatola.it
-\item www.euroscatola.it
-\item www.euroscatola.it
-\item www.euroscatola.it
-\item www.euroscatola.it
+\item \textbf{Configurazione di rete:} La configurazione di rete dei sistemi potrebbe non essere stata adeguata per proteggere la configurazione di SSH.
+\item \textbf{Codice di sicurezza:} Il codice di sicurezza dei sistemi potrebbe non essere stato adeguato per proteggere la configurazione di SSH.
+\item \textbf{Misure di sicurezza:} Le misure di sicurezza implementate sui sistemi potrebbero non essere state sufficienti per proteggere la configurazione di SSH.
 \end{itemize}
-I host colpiti sono stati identificati come i più vulnerabili, con un impatto significativo sulla sicurezza della rete. Gli attaccanti possono utilizzare queste vulnerabilità per accedere al sistema e eseguire attacchi di various tipi.
-
-\section{Perché www.euroscatola.it è il più colpito?}
-
-Il motivo per cui www.euroscatola.it è stato identificato come il più colpito è che la sua configurazione di rete e il suo software utilizzato presentano una serie di vulnerabilità che possono essere sfruttate dagli attaccanti.
-
-\subsection{Temi Comuni e Problemi Sistemici}
-
-I temi comuni identificati durante gli esami di penetrazione sono:
-\begin{itemize}
-\item La configurazione di rete non è stata adeguata, consentendo agli attaccanti di accedere al sistema con facilità.
-\item Il software utilizzato è stato aggiornato con una versione non corretta, rendendo il sistema più vulnerabile agli attacchi.
-\item Le credenziali di accesso non sono state protette adeguatamente, consentendo agli attaccanti di accedere al sistema con facilità.
-\end{itemize}
-In sintesi, gli esami di penetrazione hanno rivelato una serie di vulnerabilità che potrebbero compromettere la sicurezza del sistema. È importante che vengano implementate misure di sicurezza aggiuntive per proteggere la rete e i sistemi utilizzati.
+È importante notare che questi problemi potrebbero essere risolti implementando misure di sicurezza aggiuntive, come l'aggiornamento del codice di sicurezza e la configurazione di rete più sicura.
 
 
 \begin{center}
-\includegraphics[width=\linewidth]{pngs/2_1.png}
-\vspace{1cm}\includegraphics[width=\linewidth]{pngs/2_2.png}
-\vspace{1cm}\caption{Images related to Chapter 3}
+\tcbox{\includegraphics[width=\linewidth]{pngs/2_1.png}}
+\vspace{0cm}\tcbox{\includegraphics[width=\linewidth]{pngs/2_2.png}}
+\vspace{0cm}\captionof{figure}{Images related to Chapter 3}
 \end{center}
 \chapter{Analisi della Superficie di Attacco per}
 
@@ -165,181 +155,356 @@ In sintesi, gli esami di penetrazione hanno rivelato una serie di vulnerabilità
 
 La distribuzione dei tipi di vulnerabilità per il sito web è la seguente:
 \begin{itemize}
-\item \textbf{Tipo più comune:} 'HTTP Missing Security Headers' (Frequenza: 88)
-\item \textbf{I 10 tipi principali:}
-\item HTTP Missing Security Headers
-\item CAA Record
-\item HTTP TRACE method enabled
-\item Apache HTTP Server Test Page
-\item WAF Detection
-\item Allowed Options Method
-\item Email Extractor
-\item Wappalyzer Technology Detection
-\item Apache Tomcat - Open Redirect
-\item Open Redirect - Detection
+\item Tipo più comune: 'HTTP Missing Security Headers' (Frequenza: 327)
+\item I 10 tipi principali: HTTP Missing Security Headers, TLS Version - Detect, CAA Record, Wappalyzer Technology Detection, WAF Detection, Detect SSL Certificate Issuer, SSL DNS Names, Cookies without Secure attribute - Detect, Deprecated TLS Detection, Weak Cipher Suites Detection
 \end{itemize}
 \section{Analisi Iniziale delle Sfide di Sicurezza}
 
-La distribuzione dei tipi di vulnerabilità indica che il sito web è vulnerabile a diversi tipi di attacchi, tra cui attacchi di tipo HTTP, CAA Record e Open Redirect. Ciò suggerisce che il sito web non ha implementato adeguatamente le misure di sicurezza per proteggere i dati e le applicazioni.
+La distribuzione dei tipi di vulnerabilità evidenzia una serie di sfide di sicurezza che potrebbero essere esposte al sito web. In particolare, la presenza di 'HTTP Missing Security Headers' è particolarmente preoccupante, poiché può consentire agli attaccanti di manipolare le risposte del server e di rubare dati sensibili.
 
 \section{Analisi Dettagliata di 'HTTP Missing Security Headers'}
+
+\subsection{Cause}
 \begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di HTTP Missing Security Headers possono essere causate da una mancata configurazione delle header HTTP, che possono essere utilizzate dagli attaccanti per eseguire attacchi di tipo Cross-Site Scripting (XSS) o Cross-Site Request Forgery (CSRF).
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di HTTP Missing Security Headers.
-\item \textbf{Impatto:} Le vulnerabilità di HTTP Missing Security Headers possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF, che possono portare a una violazione della sicurezza dei dati e delle applicazioni.
+\item La mancanza di header di sicurezza HTTP può essere causata da una mancanza di configurazione del server o da una carenza di conoscenza sulle buone pratiche di sicurezza.
+\item L'uso di un framework di sviluppo web senza configurazione di sicurezza adeguata può anche contribuire alla mancanza di header di sicurezza.
 \end{itemize}
-\section{Analisi Dettagliata dei 10 Tipi Principali}
+\subsection{Vettori d'Attacco}
+\begin{itemize}
+\item Gli attaccanti possono utilizzare strumenti di testing per identificare la presenza di header di sicurezza mancanti.
+\item Gli attaccanti possono anche utilizzare strumenti di phishing per convincere gli utenti a eseguire azioni che compromettono la sicurezza del sito web.
+\end{itemize}
+\subsection{Impatto}
+\begin{itemize}
+\item La mancanza di header di sicurezza può consentire agli attaccanti di:
+\item Rubare dati sensibili, come le credenziali di accesso.
+\item Manipolare le risposte del server per eseguire azioni maliziose.
+\item Aumentare la probabilità di attacchi di phishing.
+\end{itemize}
+\section{Breve Descrizione dei Tipi di Vulnerabilità}
 
 \subsection{HTTP Missing Security Headers}
 \begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di HTTP Missing Security Headers possono essere causate da una mancata configurazione delle header HTTP.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di HTTP Missing Security Headers.
-\item \textbf{Impatto:} Le vulnerabilità di HTTP Missing Security Headers possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF.
+\item La mancanza di header di sicurezza HTTP può compromettere la sicurezza del sito web.
+\item I header di sicurezza sono essenziali per proteggere il sito web da attacchi di phishing e di manipolazione delle risposte del server.
+\end{itemize}
+\subsection{TLS Version - Detect}
+\begin{itemize}
+\item La versione TLS utilizzata dal sito web può essere vulnerabile alle attacchi di man-in-the-middle.
+\item La mancanza di configurazione di TLS adeguata può compromettere la sicurezza del sito web.
 \end{itemize}
 \subsection{CAA Record}
 \begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di CAA Record possono essere causate da una mancata configurazione del record CAA.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di CAA Record.
-\item \textbf{Impatto:} Le vulnerabilità di CAA Record possono consentire agli attaccanti di eseguire attacchi di tipo DNS spoofing.
-\end{itemize}
-\subsection{HTTP TRACE method enabled}
-\begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di HTTP TRACE method enabled possono essere causate da una mancata configurazione del metodo HTTP TRACE.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di HTTP TRACE method enabled.
-\item \textbf{Impatto:} Le vulnerabilità di HTTP TRACE method enabled possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF.
-\end{itemize}
-\subsection{Apache HTTP Server Test Page}
-\begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di Apache HTTP Server Test Page possono essere causate da una mancata configurazione del test page Apache HTTP Server.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di Apache HTTP Server Test Page.
-\item \textbf{Impatto:} Le vulnerabilità di Apache HTTP Server Test Page possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF.
-\end{itemize}
-\subsection{WAF Detection}
-\begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di WAF Detection possono essere causate da una mancata configurazione del sistema di detezione WAF.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di WAF Detection.
-\item \textbf{Impatto:} Le vulnerabilità di WAF Detection possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF.
-\end{itemize}
-\subsection{Allowed Options Method}
-\begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di Allowed Options Method possono essere causate da una mancata configurazione del metodo HTTP OPTIONS.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di Allowed Options Method.
-\item \textbf{Impatto:} Le vulnerabilità di Allowed Options Method possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF.
-\end{itemize}
-\subsection{Email Extractor}
-\begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di Email Extractor possono essere causate da una mancata configurazione dell'estrazione degli indirizzi email.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di Email Extractor.
-\item \textbf{Impatto:} Le vulnerabilità di Email Extractor possono consentire agli attaccanti di eseguire attacchi di tipo phishing.
+\item Il record CAA (Certificate Authority Authorization) è utilizzato per autorizzare l'autenticazione di certificati SSL/TLS.
+\item La mancanza di configurazione di CAA può compromettere la sicurezza del sito web.
 \end{itemize}
 \subsection{Wappalyzer Technology Detection}
 \begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di Wappalyzer Technology Detection possono essere causate da una mancata configurazione del sistema di detezione Wappalyzer.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di Wappalyzer Technology Detection.
-\item \textbf{Impatto:} Le vulnerabilità di Wappalyzer Technology Detection possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF.
+\item Il Wappalyzer è un strumento di testing che identifica le tecnologie utilizzate dal sito web.
+\item La mancanza di configurazione di Wappalyzer può compromettere la sicurezza del sito web.
 \end{itemize}
-\subsection{Apache Tomcat - Open Redirect}
+\subsection{WAF Detection}
 \begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di Apache Tomcat - Open Redirect possono essere causate da una mancata configurazione del redirect Apache Tomcat.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di Apache Tomcat - Open Redirect.
-\item \textbf{Impatto:} Le vulnerabilità di Apache Tomcat - Open Redirect possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF.
+\item La detezione di WAF (Web Application Firewall) è utilizzata per proteggere il sito web da attacchi di tipo di applicazione.
+\item La mancanza di configurazione di WAF può compromettere la sicurezza del sito web.
 \end{itemize}
-\subsection{Open Redirect - Detection}
+\subsection{Detect SSL Certificate Issuer}
 \begin{itemize}
-\item \textbf{Cause:} Le vulnerabilità di Open Redirect - Detection possono essere causate da una mancata configurazione del sistema di detezione Open Redirect.
-\item \textbf{Vettori d'attacco:} Gli attaccanti possono utilizzare strumenti di esplorazione web per identificare e esplorare le vulnerabilità di Open Redirect - Detection.
-\item \textbf{Impatto:} Le vulnerabilità di Open Redirect - Detection possono consentire agli attaccanti di eseguire attacchi di tipo XSS o CSRF.
+\item La detezione dell'issuer del certificato SSL/TLS è utilizzata per proteggere il sito web da attacchi di man-in-the-middle.
+\item La mancanza di configurazione di detezione dell'issuer può compromettere la sicurezza del sito web.
+\end{itemize}
+\subsection{SSL DNS Names}
+\begin{itemize}
+\item Le informazioni DNS utilizzate per il sito web possono essere compromesse se non vengono configurate correttamente.
+\item La mancanza di configurazione di SSL DNS Names può compromettere la sicurezza del sito web.
+\end{itemize}
+\subsection{Cookies without Secure attribute - Detect}
+\begin{itemize}
+\item I cookie senza l'attributo Secure possono essere accessibili anche in modalità non sicure.
+\item La mancanza di configurazione di Secure attribute può compromettere la sicurezza del sito web.
+\end{itemize}
+\subsection{Deprecated TLS Detection}
+\begin{itemize}
+\item La versione TLS utilizzata dal sito web può essere deprecata e compromessa.
+\item La mancanza di configurazione di TLS adeguata può compromettere la sicurezza del sito web.
+\end{itemize}
+\subsection{Weak Cipher Suites Detection}
+\begin{itemize}
+\item Le chiavi simmetriche utilizzate per il sito web possono essere deboli e compromesse.
+\item La mancanza di configurazione di chiavi simmetriche deboli può compromettere la sicurezza del sito web.
+\end{itemize}
+\section{Analisi della Distribuzione e Identificazione di Schemi}
+
+La distribuzione dei tipi di vulnerabilità evidenzia una serie di schemi comuni:
+\begin{itemize}
+\item La presenza di 'HTTP Missing Security Headers' è associata alla mancanza di configurazione di sicurezza del server o della applicazione.
+\item La presenza di TLS Version - Detect è associata alla mancanza di configurazione di TLS adeguata.
+\item La presenza di CAA Record è associata alla mancanza di configurazione di CAA.
+\item La presenza di Wappalyzer Technology Detection è associata alla mancanza di configurazione di Wappalyzer.
 \end{itemize}
 \section{Valutazione del Rischio Complessivo}
 
-La distribuzione dei tipi di vulnerabilità per il sito web indica che il sito web è vulnerabile a diversi tipi di attacchi, tra cui attacchi di tipo HTTP, CAA Record e Open Redirect. Ciò suggerisce che il sito web non ha implementato adeguatamente le misure di sicurezza per proteggere i dati e le applicazioni.
-
-La valutazione del rischio complessivo per il sito web è la seguente:
+La valutazione del rischio complessivo derivante dalla distribuzione dei tipi e dagli effetti di interazione è la seguente:
 \begin{itemize}
-\item Rischio di attacchi di tipo HTTP: Alta
-\item Rischio di attacchi di tipo CAA Record: Alta
-\item Rischio di attacchi di tipo Open Redirect: Alta
+\item La presenza di 'HTTP Missing Security Headers' aumenta il rischio di attacchi di phishing e di manipolazione delle risposte del server.
+\item La presenza di TLS Version - Detect aumenta il rischio di attacchi di man-in-the-middle.
+\item La presenza di CAA Record aumenta il rischio di compromissione della sicurezza del sito web.
+\item La presenza di Wappalyzer Technology Detection aumenta il rischio di compromissione della sicurezza del sito web.
+\item La presenza di WAF Detection aumenta il rischio di compromissione della sicurezza del sito web.
+\item La presenza di Detect SSL Certificate Issuer aumenta il rischio di compromissione della sicurezza del sito web.
+\item La presenza di SSL DNS Names aumenta il rischio di compromissione della sicurezza del sito web.
+\item La presenza di Cookies without Secure attribute - Detect aumenta il rischio di compromissione della sicurezza del sito web.
+\item La presenza di Deprecated TLS Detection aumenta il rischio di compromissione della sicurezza del sito web.
+\item La presenza di Weak Cipher Suites Detection aumenta il rischio di compromissione della sicurezza del sito web.
 \end{itemize}
-In sintesi, il sito web è vulnerabile a diversi tipi di attacchi e non ha implementato adeguatamente le misure di sicurezza per proteggere i dati e le applicazioni. È importante eseguire una valutazione più approfondita delle vulnerabilità e implementare misure di sicurezza per proteggere il sito web.
+In sintesi, la distribuzione dei tipi di vulnerabilità evidenzia una serie di sfide di sicurezza che potrebbero essere esposte al sito web. È fondamentale identificare e risolvere queste vulnerabilità per garantire la sicurezza del sito web.
 
 
 \begin{center}
-\includegraphics[width=\linewidth]{pngs/3_1.png}
-\vspace{1cm}\includegraphics[width=\linewidth]{pngs/3_2.png}
-\vspace{1cm}\caption{Images related to Chapter 4}
+\tcbox{\includegraphics[width=\linewidth]{pngs/3_1.png}}
+\vspace{0cm}\tcbox{\includegraphics[width=\linewidth]{pngs/3_2.png}}
+\vspace{0cm}\captionof{figure}{Images related to Chapter 4}
 \end{center}
+\chapter{Analisi della Superficie di Attacco per Syneto}
+
+\section{Introduzione}
+
+L'analisi della superficie di attacco è un passaggio fondamentale nella valutazione della vulnerabilità di un sistema informatico. In questo capitolo, esamineremo i dati di geolocalizzazione relativi a Syneto, analizzando la distribuzione degli host, la geolocalizzazione dei 5 host più vulnerabili e cercando schemi o correlazioni tra posizione e vulnerabilità.
+
+\section{Distribuzione Generale degli Host}
+
+La distribuzione generale degli host è la seguente:
+\begin{itemize}
+\item \textbf{Paesi:}
+\item \textbf{US}: 11
+\item \textbf{IT}: 6
+\item \textbf{RO}: 5
+\item \textbf{DE}: 2
+\item \textbf{NL}: 2
+\item \textbf{IE}: 1
+\item \textbf{Città:}
+\item \textbf{Milan}: 6
+\item \textbf{Timişoara}: 5
+\item \textbf{San Francisco}: 4
+\item \textbf{Ashburn}: 3
+\item \textbf{Cambridge}: 2
+\item \textbf{Frankfurt am Main}: 2
+\item \textbf{Groningen}: 2
+\item \textbf{Redmond}: 1
+\item \textbf{Kansas City}: 1
+\item \textbf{Dublin}: 1
+\end{itemize}
+\section{5 Host più Vulnerabili}
+
+I 5 host più vulnerabili sono stati identificati come segue:
+\begin{itemize}
+\item \textbf{Host:}
+\item \textbf{blog.syneto.eu:443}, \textbf{blog.syneto.eu:80}, \textbf{blog.syneto.eu:8080}, \textbf{blog.syneto.eu:8443}, \textbf{datatalks.syneto.eu}, \textbf{datatalks.syneto.eu:8080}, \textbf{datatalks.syneto.eu:8443}, \textbf{email.syneto.eu:80}, \textbf{kb.syneto.eu}, \textbf{kb.syneto.eu:443}, \textbf{kb.syneto.eu:80}, \textbf{lp.syneto.eu}, \textbf{lp.syneto.eu:8080}, \textbf{lp.syneto.eu:8443}
+\item \textbf{datatalks.syneto.eu:443}, \textbf{datatalks.syneto.eu:80}, \textbf{email.syneto.eu}, \textbf{email.syneto.eu:443}, \textbf{email.syneto.eu:8080}, \textbf{email.syneto.eu:8443}, \textbf{kb.syneto.eu:8080}, \textbf{kb.syneto.eu:8443}, \textbf{lp.syneto.eu:443}, \textbf{lp.syneto.eu:80}
+\item \textbf{sizer.syneto.eu}, \textbf{sizer.syneto.eu:443}, \textbf{sizer.syneto.eu:50002}, \textbf{sizer.syneto.eu:80}
+\item \textbf{syneto.eu}, \textbf{syneto.eu:22}, \textbf{syneto.eu:443}, \textbf{syneto.eu:80}, \textbf{www.syneto.eu}, \textbf{www.syneto.eu:22}, \textbf{www.syneto.eu:443}
+\item \textbf{minio.syneto.eu}, \textbf{minio.syneto.eu:22}, \textbf{minio.syneto.eu:443}, \textbf{minio.syneto.eu:9000}
+\item \textbf{IP:}
+\item \textbf{199.60.103.30}
+\item \textbf{199.60.103.226}
+\item \textbf{40.85.118.186}
+\item \textbf{134.209.245.103}
+\item \textbf{81.196.33.98}
+\item \textbf{Paesi:}
+\item \textbf{US}
+\item \textbf{US}
+\item \textbf{IE}
+\item \textbf{DE}
+\item \textbf{RO}
+\item \textbf{Città:}
+\item \textbf{Cambridge}
+\item \textbf{Cambridge}
+\item \textbf{Dublin}
+\item \textbf{Frankfurt am Main}
+\item \textbf{Timişoara}
+\end{itemize}
+\section{Geolocalizzazione dei 5 Host più Vulnerabili}
+
+I 5 host più vulnerabili sono stati identificati con le seguenti geolocalizzazioni:
+\begin{itemize}
+\item \textbf{IP 199.60.103.30}: \textbf{US} (Cambridge)
+\item \textbf{IP 199.60.103.226}: \textbf{US} (Cambridge)
+\item \textbf{IP 40.85.118.186}: \textbf{IE} (Dublin)
+\item \textbf{IP 134.209.245.103}: \textbf{DE} (Frankfurt am Main)
+\item \textbf{IP 81.196.33.98}: \textbf{RO} (Timişoara)
+\end{itemize}
+\section{Schemi o Correlazioni tra Posizione e Vulnerabilità}
+
+I dati suggeriscono una correlazione tra la posizione geografica e la vulnerabilità dei host. I host più vulnerabili sono stati identificati con IP di rete che appartengono a paesi con economie avanzate (US, IE, DE) e città con un alto livello di tecnologia e innovazione (Cambridge, Dublin, Frankfurt am Main). Inoltre, alcuni host hanno IP di rete che appartengono a paesi con economie in via di sviluppo (RO), il che potrebbe indicare una mancanza di conoscenza e di implementazione di misure di sicurezza adeguati.
+
+\section{Conclusione}
+
+L'analisi della superficie di attacco per Syneto ha evidenziato una correlazione tra la posizione geografica e la vulnerabilità dei host. I 5 host più vulnerabili sono stati identificati con IP di rete che appartengono a paesi con economie avanzate e città con un alto livello di tecnologia e innovazione. Queste scoperte possono essere utilizzate per migliorare la sicurezza del sistema e prevenire future attacchi.
+
 \chapter{Analisi dei Risultati dei Test di Penetrazione}
 
 \section{Introduzione}
 
-L'analisi dei dati di geolocalizzazione per il sistema Web di Euroscatola ha rivelato informazioni interessanti sulla distribuzione degli host vulnerabili e sulla loro geolocalizzazione. In questo capitolo, analizzeremo i risultati dei test di penetrazione, focalizzandoci sulle caratteristiche degli host più vulnerabili e sulla loro posizione geografica.
+L'analisi dei risultati dei test di penetrazione è stata eseguita sui server host forniti per verificare le vulnerabilità. I test sono stati eseguiti utilizzando il comando `nmap` per scoprire le porte aperte e le versioni dei servizi. In questo capitolo, si presenteranno i risultati dei test e si analizzeranno le vulnerabilità scoperte.
 
-\section{Distribuzione Generale}
+\section{Risultati dei Test}
 
-La distribuzione generale degli host per i paesi e le città è la seguente:
+I risultati dei test sono stati eseguiti sui seguenti host:
 \begin{itemize}
-\item \textbf{Paesi}: \{'US': 2, 'IT': 2\}
-\item L'America del Nord è rappresentata da 2 host, entrambi situati negli Stati Uniti.
-\item L'Italia è rappresentata da 2 host, entrambi situati nella regione del Piemonte.
-\item \textbf{Città}: \{'Menifee': 2, 'Brescia': 1, 'Turin': 1\}
-\item Menifee è rappresentata da 2 host, entrambi situati in California.
-\item Brescia è rappresentata da 1 host, situato in Lombardia.
-\item Torino è rappresentata da 1 host, situato in Piemonte.
+\item `81.196.33.98`
+\item `81.196.33.97`
+\item `81.196.33.100`
+\item `81.196.33.99`
 \end{itemize}
-\section{I 5 Host Più Vulnerabili}
-
-I 5 host più vulnerabili sono stati identificati come segue:
+I risultati dei test sono stati i seguenti:
 \begin{itemize}
-\item \textbf{Host}: [['autodiscover.euroscatola.it', 'cpanel.euroscatola.it', 'cpcalendars.euroscatola.it', 'cpcontacts.euroscatola.it', 'euroscatola.it','mail.euroscatola.it', 'webdisk.euroscatola.it', 'webmail.euroscatola.it', 'www.euroscatola.it'], ['voip.euroscatola.it'], ['cpanel.cotonificio1890.it', 'cpcalendars.cotonificio1890.it', 'cpcontacts.cotonificio1890.it', 'www.cotonificio1890.it'], ['cpanel.euroscatola.com', 'euroscatola.com', 'www.euroscatola.com']]
-\item \textbf{IP}: ['81.31.145.134', '31.44.164.157', '192.124.249.175', '192.124.249.17']
-\item \textbf{Paesi}: ['IT', 'IT', 'US', 'US']
-\item \textbf{Città}: ['Turin', 'Brescia', 'Menifee', 'Menifee']
+\item `81.196.33.98`:
+\item Porta 22: aperta con OpenSSH 9.4 (protocol 2.0)
+\item Connessione SSH: fallita
+\item `81.196.33.97`:
+\item Porta 22: aperta con OpenSSH 9.4 (protocol 2.0)
+\item Connessione SSH: fallita
+\item `81.196.33.100`:
+\item Porta 22: aperta con OpenSSH 9.4 (protocol 2.0)
+\item Connessione SSH: fallita
+\item `81.196.33.99`:
+\item Porta 22: filtrata (non aperta)
+\item Connessione SSH: fallita
 \end{itemize}
-\section{Geolocalizzazione dei 5 Host più Vulnerabili}
+\section{Analisi delle Vulnerabilità}
 
-I 5 host più vulnerabili sono stati geolocalizzati nella seguente maniera:
+Le vulnerabilità scoperte sono le seguenti:
 \begin{itemize}
-\item \textbf{Host 1}: ['autodiscover.euroscatola.it', 'cpanel.euroscatola.it', 'cpcalendars.euroscatola.it', 'cpcontacts.euroscatola.it', 'euroscatola.it','mail.euroscatola.it', 'webdisk.euroscatola.it', 'webmail.euroscatola.it', 'www.euroscatola.it']
-\item \textbf{IP}: '81.31.145.134'
-\item \textbf{Paese}: Italia
-\item \textbf{Città}: Torino
-\item \textbf{Host 2}: ['voip.euroscatola.it']
-\item \textbf{IP}: '31.44.164.157'
-\item \textbf{Paese}: Italia
-\item \textbf{Città}: Brescia
-\item \textbf{Host 3}: ['cpanel.cotonificio1890.it', 'cpcalendars.cotonificio1890.it', 'cpcontacts.cotonificio1890.it', 'www.cotonificio1890.it']
-\item \textbf{IP}: '192.124.249.175'
-\item \textbf{Paese}: Italia
-\item \textbf{Città}: Torino
-\item \textbf{Host 4}: ['cpanel.euroscatola.com', 'euroscatola.com', 'www.euroscatola.com']
-\item \textbf{IP}: '192.124.249.17'
-\item \textbf{Paese}: Italia
-\item \textbf{Città}: Torino
-\item \textbf{Host 5}: ['autodiscover.cotonificio1890.it', 'cpanel.cotonificio1890.it', 'cpcalendars.cotonificio1890.it', 'cpcontacts.cotonificio1890.it', 'www.cotonificio1890.it']
-\item \textbf{IP}: '81.31.145.134'
-\item \textbf{Paese}: Italia
-\item \textbf{Città}: Torino
+\item `81.196.33.98`:
+\item Nessuna vulnerabilità critica scoperta
+\item `81.196.33.97`:
+\item Nessuna vulnerabilità critica scoperta
+\item `81.196.33.100`:
+\item Nessuna vulnerabilità critica scoperta
+\item `81.196.33.99`:
+\item Porta 22 filtrata: potenziale vulnerabilità di iniezione di codice
+\item Nessuna vulnerabilità critica scoperta
 \end{itemize}
-\section{Schemi o Correlazioni tra Posizione e Vulnerabilità}
-
-La geolocalizzazione dei 5 host più vulnerabili sembra essere correlata alla posizione geografica della loro ubicazione. Tutti i 5 host sono stati identificati in Italia, con la maggior parte dei 4 host identificati a Torino e Brescia. Questo suggerisce che la vulnerabilità dei 5 host sia correlata alla loro posizione geografica e che possa essere un indicatore di un problema di sicurezza più ampio nel sistema Web di Euroscatola.
-
 \section{Conclusioni}
 
-L'analisi dei dati di geolocalizzazione per il sistema Web di Euroscatola ha rivelato informazioni interessanti sulla distribuzione degli host vulnerabili e sulla loro geolocalizzazione. La correlazione tra la posizione geografica e la vulnerabilità dei 5 host più vulnerabili suggerisce che possa essere un indicatore di un problema di sicurezza più ampio nel sistema Web di Euroscatola.
+Gli risultati dei test di penetrazione hanno rivelato alcune vulnerabilità sui server host forniti. La porta 22 è aperta su tutti i server, ma la connessione SSH è fallita su tutti i server. La porta 22 filtrata su `81.196.33.99` potrebbe rappresentare una vulnerabilità di iniezione di codice. È importante eseguire ulteriori test per verificare la presenza di altre vulnerabilità e implementare misure di sicurezza per proteggere i server host.
+
+\subsection{Elenco delle vulnerabilità scoperte:}
+\begin{itemize}
+\item Porta 22 filtrata su `81.196.33.99`
+\item Nessuna vulnerabilità critica scoperta su altri server
+\end{itemize}
+
+\subsection*{minio.syneto.eu:22}
+
+\begin{lstlisting}[language=bash,breaklines=true,postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}]
+$ nmap -A -p 22 81.196.33.98
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-10-04 16:45 CEST
+Nmap scan report for 81.196.33.98
+Host is up (0.051s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.4 (protocol 2.0)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 91.49 seconds
 
 
+$ ssh -T root@81.196.33.98 -p 22
+
+connection timed out.\end{lstlisting}
+
+\subsection*{files.syneto.eu:22}
+
+\begin{lstlisting}[language=bash,breaklines=true,postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}]
+$ nmap -A -p 22 81.196.33.97
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-10-04 16:49 CEST
+Nmap scan report for 81.196.33.97
+Host is up (0.039s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.4 (protocol 2.0)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 91.64 seconds
+
+
+$ ssh -T root@81.196.33.97 -p 22
+
+connection timed out.\end{lstlisting}
+
+\subsection*{support-data.syneto.eu:22}
+
+\begin{lstlisting}[language=bash,breaklines=true,postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}]
+$ nmap -A -p 22 81.196.33.100
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-10-04 16:52 CEST
+Nmap scan report for 81.196.33.100
+Host is up (0.036s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.4 (protocol 2.0)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 91.45 seconds
+
+
+$ ssh -T root@81.196.33.100 -p 22
+
+connection timed out.\end{lstlisting}
+
+\subsection*{beta-updates.syneto.eu:22}
+
+\begin{lstlisting}[language=bash,breaklines=true,postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}]
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-10-04 16:56 CEST
+Nmap scan report for 81.196.33.99
+Host is up.
+
+PORT   STATE    SERVICE VERSION
+22/tcp filtered ssh
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 7.23 seconds
+
+
+$ ssh -T root@81.196.33.99 -p 22
+
+connection timed out.\end{lstlisting}
 
 \chapter{Top 10 Vulnerabilities}
 
-\section*{Vulnerability 1 - www.euroscatola.it}
+\section*{Vulnerability 1 - partners.syneto.eu:443}
+
+\section*{Template Information}
+\textbf{ID:} credentials-disclosure
+
+\textbf{Name:} Credentials Disclosure Check
+
+\textbf{Severity:} unknown
+
+\textbf{Description:} Look for keys/tokens/passwords in HTTP responses, exposed keys/tokens/secrets requires manual verification for impact evaluation.
+
+\textbf{Classification:}
+\begin{itemize}
+\item CVSS Score: N/A
+\item CVSS Metrics: N/A
+\item CWE-ID: N/A
+\item EPSS Score: N/A
+\item EPSS Percentile: N/A
+\end{itemize}
+
+
+
+\section*{Vulnerability 2 - minio.syneto.eu:22}
 
 \section*{CWE Information}
 \subsection*{ID}
-601
+354
 
 \subsection*{Name}
-URL Redirection to Untrusted Site ('Open Redirect')
+Improper Validation of Integrity Check Value
 
 \subsection*{Abstraction}
 Base
@@ -351,142 +516,91 @@ Simple
 Draft
 
 \subsection*{Description}
-A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks.
+The product does not validate or incorrectly validates the integrity check values or "checksums" of a message. This may prevent it from detecting if the data has been modified or corrupted in transmission.
 
 \subsection*{Extended\_Description}
-An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL. By modifying the URL value to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts have a more trustworthy appearance. Whether this issue poses a vulnerability will be subject to the intended behavior of the application. For example, a search engine might intentionally provide redirects to arbitrary URLs.
+Improper validation of checksums before use results in an unnecessary risk that can easily be mitigated. The protocol specification describes the algorithm used for calculating the checksum. It is then a simple matter of implementing the calculation and verifying that the calculated checksum and the received checksum match. Improper verification of the calculated checksum and the received checksum can lead to far greater consequences.
 
 \subsection*{Related\_Weaknesses}
-ChildOf:610\\
-ChildOf:610\\
+ChildOf:345\\
+ChildOf:345\\
+ChildOf:754\\
+PeerOf:353\\
 \subsection*{Weakness\_Ordinalities}
 \subsection*{Applicable\_Platforms}
 Language: \\
-Technology: Web Based\\
+Technology: \\
 \subsection*{Background\_Details}
-Phishing is a general term for deceptive attempts to coerce private information from users that will be used for identity theft.\\
 \subsection*{Alternate\_Terms}
-Open Redirect: None\\
-Cross-site Redirect: None\\
-Cross-domain Redirect: None\\
 \subsection*{Modes\_Of\_Introduction}
-Architecture and Design: OMISSION: This weakness is caused by missing a security tactic during the architecture and design phase.\\
-Implementation: None\\
+Architecture and Design: None\\
+Implementation: REALIZATION: This weakness is caused during implementation of an architectural security tactic.\\
 \subsection*{Likelihood\_Of\_Exploit}
-Low
+Medium
 
 \subsection*{Common\_Consequences}
-Access Control: Bypass Protection Mechanism\\
-Access Control: Bypass Protection Mechanism\\
+Integrity: Modify Application Data\\
+Integrity: Other\\
+Non-Repudiation: Hide Activities\\
 \subsection*{Detection\_Methods}
-Manual Static Analysis: Since this weakness does not typically appear frequently within a single software package, manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all potentially-vulnerable operations can be assessed within limited time constraints.\\
-Automated Dynamic Analysis: Automated black box tools that supply URLs to every input may be able to spot Location header modifications, but test case coverage is a factor, and custom redirects may not be detected.\\
-Automated Static Analysis: Automated static analysis tools may not be able to determine whether input influences the beginning of a URL, which is important for reducing false positives.\\
-Automated Static Analysis: Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then searching for potentially-vulnerable patterns that connect "sources" (origins of input) with "sinks" (destinations where the data interacts with external components, a lower layer such as the OS, etc.)\\
-Automated Static Analysis - Binary or Bytecode: 
-                  \\
-Dynamic Analysis with Automated Results Interpretation: 
-                  \\
-Dynamic Analysis with Manual Results Interpretation: 
-                  \\
-Manual Static Analysis - Source Code: 
-                  \\
-Automated Static Analysis - Source Code: 
-                  \\
-Architecture or Design Review: 
-                  \\
 \subsection*{Potential\_Mitigations}
 Phase: Implementation
-Description: 
-                  \\
-Phase: Architecture and Design
-Description: Use an intermediate disclaimer page that provides the user with a clear warning that they are leaving the current site. Implement a long timeout before the redirect occurs, or force the user to click on the link. Be careful to avoid XSS problems (CWE-79) when generating the disclaimer page.\\
-Phase: Architecture and Design
-Description: 
-                  \\
-Phase: Architecture and Design
-Description: Ensure that no externally-supplied requests are honored by requiring that all redirect requests include a unique nonce generated by the application [REF-483]. Be sure that the nonce is not predictable (CWE-330).
-Notes: Note that this can be bypassed using XSS (CWE-79).\\
-Phase: Architecture and Design
-Description: 
-                  \\
-Phase: Operation
-Description: Use an application firewall that can detect attacks against this weakness. It can be beneficial in cases in which the code cannot be fixed (because it is controlled by a third party), as an emergency prevention measure while more comprehensive software assurance measures are applied, or to provide defense in depth.
-Effectiveness: Moderate
-Notes: An application firewall might not cover all possible input vectors. In addition, attack techniques might be available to bypass the protection mechanism, such as using malformed inputs that can still be processed by the component that receives those inputs. Depending on functionality, an application firewall might inadvertently reject or modify legitimate requests. Finally, some manual effort may be required for customization.\\
+Description: Ensure that the checksums present in messages are properly checked in accordance with the protocol specification before they are parsed and used.\\
 \subsection*{Demonstrative\_Examples}
 \begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-php
-$redirect_url = $_GET['url'];header("Location: " . $redirect_url);
-\end{lstlisting}
-
-\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-http://example.com/example.php?url=http://malicious.example.com
-\end{lstlisting}
-
-\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-java
-public class RedirectServlet extends HttpServlet {
-                     
-                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains("url")) {String url = request.getParameter("url");response.sendRedirect(url);}}
+c
+sd = socket(AF_INET, SOCK_DGRAM, 0); serv.sin_family = AF_INET;serv.sin_addr.s_addr = htonl(INADDR_ANY);servr.sin_port = htons(1008);bind(sd, (struct sockaddr *) & serv, sizeof(serv));while (1) {
+                        
+                           memset(msg, 0x0, MAX_MSG);clilen = sizeof(cli);if (inet_ntoa(cli.sin_addr)==...) n = recvfrom(sd, msg, MAX_MSG, 0, (struct sockaddr *) & cli, &clilen);
                      }
 \end{lstlisting}
 
 \begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-html
-<a href="http://bank.example.com/redirect?url=http://attacker.example.net">Click here to log in</a>
+java
+while(true) {DatagramPacket packet = new DatagramPacket(data,data.length,IPAddress, port);socket.send(sendPacket);}
 \end{lstlisting}
 
 \subsection*{Observed\_Examples}
-CVE-2005-4206: URL parameter loads the URL into a frame and causes it to appear to be part of a valid page.\\
-CVE-2008-2951: An open redirect vulnerability in the search script in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL as a parameter to the proper function.\\
-CVE-2008-2052: Open redirect vulnerability in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL in the proper parameter.\\
-CVE-2020-11053: Chain: Go-based Oauth2 reverse proxy can send the authenticated user to another site at the end of the authentication flow. A redirect URL with HTML-encoded whitespace characters can bypass the validation (CWE-1289) to redirect to a malicious site (CWE-601)\\
 \subsection*{Related\_Attack\_Patterns}
-CAPEC-178\\
+CAPEC-145\\
+CAPEC-463\\
+CAPEC-75\\
 \subsection*{References}
-REF-483\\
-\href{Page 43)}{REF-484 (Section}\\
-REF-485\\
-REF-45\\
+REF-18\\
 \subsection*{Taxonomy\_Mappings}
-WASC: None\\
-Software Fault Patterns: None\\
+ISA/IEC 62443: None\\
+CLASP: None\\
 \subsection*{Notes}
 \subsection*{CVEs}
-CVE-2005-4206\\
-CVE-2008-2951\\
-CVE-2008-2052\\
-CVE-2020-11053\\
 \section*{Template Information}
-\textbf{ID:} CVE-2018-11784
+\textbf{ID:} CVE-2023-48795
 
-\textbf{Name:} Apache Tomcat - Open Redirect
+\textbf{Name:} OpenSSH Terrapin Attack - Detection
 
 \textbf{Severity:} medium
 
-\textbf{Description:} Apache Tomcat versions prior to 9.0.12, 8.5.34, and 7.0.91 are prone to an open-redirection vulnerability because it fails to properly sanitize user-supplied input.
+\textbf{Description:} The SSH transport protocol with certain OpenSSH extensions, found in OpenSSH before 9.6 and other products, allows remote attackers to bypass integrity checks such that some packets are omitted (from the extension negotiation message), and a client and server may consequently end up with a connection for which some security features have been downgraded or disabled, aka a Terrapin attack. This occurs because the SSH Binary Packet Protocol (BPP), implemented by these extensions, mishandles the handshake phase and mishandles use of sequence numbers. For example, there is an effective attack against SSH's use of ChaCha20-Poly1305 (and CBC with Encrypt-then-MAC). The bypass occurs in chacha20-poly1305@openssh.com and (if CBC is used) the -etm@openssh.com MAC algorithms. This also affects Maverick Synergy Java SSH API before 3.1.0-SNAPSHOT, Dropbear through 2022.83, Ssh before 5.1.1 in Erlang/OTP, PuTTY before 0.80, AsyncSSH before 2.14.2, golang.org/x/crypto before 0.17.0, libssh before 0.10.6, libssh2 through 1.11.0, Thorn Tech SFTP Gateway before 3.4.6, Tera Term before 5.1, Paramiko before 3.4.0, jsch before 0.2.15, SFTPGo before 2.5.6, Netgate pfSense Plus through 23.09.1, Netgate pfSense CE through 2.7.2, HPN-SSH through 18.2.0, ProFTPD before 1.3.8b (and before 1.3.9rc2), ORYX CycloneSSH before 2.3.4, NetSarang XShell 7 before Build 0144, CrushFTP before 10.6.0, ConnectBot SSH library before 2.2.22, Apache MINA sshd through 2.11.0, sshj through 0.37.0, TinySSH through 20230101, trilead-ssh2 6401, LANCOM LCOS and LANconfig, FileZilla before 3.66.4, Nova before 11.8, PKIX-SSH before 14.4, SecureCRT before 9.4.3, Transmit5 before 5.10.4, Win32-OpenSSH before 9.5.0.0p1-Beta, WinSCP before 6.2.2, Bitvise SSH Server before 9.32, Bitvise SSH Client before 9.33, KiTTY through 0.76.1.13, the net-ssh gem 7.2.0 for Ruby, the mscdex ssh2 module before 1.15.0 for Node.js, the thrussh library before 0.35.1 for Rust, and the Russh crate before 0.40.2 for Rust.
 
 
 \textbf{Classification:}
 \begin{itemize}
-\item CVSS Score: 4.3
-\item CVSS Metrics: CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N
-\item CWE-ID: CWE-601
-\item EPSS Score: 0.79069
-\item EPSS Percentile: 0.9827
+\item CVSS Score: 5.9
+\item CVSS Metrics: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N
+\item CWE-ID: CWE-354
+\item EPSS Score: 0.69474
+\item EPSS Percentile: 0.97955
 \end{itemize}
 
 
 
-\section*{Vulnerability 2 - euroscatola.it}
+\section*{Vulnerability 3 - files.syneto.eu:22}
 
 \section*{CWE Information}
 \subsection*{ID}
-601
+354
 
 \subsection*{Name}
-URL Redirection to Untrusted Site ('Open Redirect')
+Improper Validation of Integrity Check Value
 
 \subsection*{Abstraction}
 Base
@@ -498,142 +612,91 @@ Simple
 Draft
 
 \subsection*{Description}
-A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks.
+The product does not validate or incorrectly validates the integrity check values or "checksums" of a message. This may prevent it from detecting if the data has been modified or corrupted in transmission.
 
 \subsection*{Extended\_Description}
-An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL. By modifying the URL value to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts have a more trustworthy appearance. Whether this issue poses a vulnerability will be subject to the intended behavior of the application. For example, a search engine might intentionally provide redirects to arbitrary URLs.
+Improper validation of checksums before use results in an unnecessary risk that can easily be mitigated. The protocol specification describes the algorithm used for calculating the checksum. It is then a simple matter of implementing the calculation and verifying that the calculated checksum and the received checksum match. Improper verification of the calculated checksum and the received checksum can lead to far greater consequences.
 
 \subsection*{Related\_Weaknesses}
-ChildOf:610\\
-ChildOf:610\\
+ChildOf:345\\
+ChildOf:345\\
+ChildOf:754\\
+PeerOf:353\\
 \subsection*{Weakness\_Ordinalities}
 \subsection*{Applicable\_Platforms}
 Language: \\
-Technology: Web Based\\
+Technology: \\
 \subsection*{Background\_Details}
-Phishing is a general term for deceptive attempts to coerce private information from users that will be used for identity theft.\\
 \subsection*{Alternate\_Terms}
-Open Redirect: None\\
-Cross-site Redirect: None\\
-Cross-domain Redirect: None\\
 \subsection*{Modes\_Of\_Introduction}
-Architecture and Design: OMISSION: This weakness is caused by missing a security tactic during the architecture and design phase.\\
-Implementation: None\\
+Architecture and Design: None\\
+Implementation: REALIZATION: This weakness is caused during implementation of an architectural security tactic.\\
 \subsection*{Likelihood\_Of\_Exploit}
-Low
+Medium
 
 \subsection*{Common\_Consequences}
-Access Control: Bypass Protection Mechanism\\
-Access Control: Bypass Protection Mechanism\\
+Integrity: Modify Application Data\\
+Integrity: Other\\
+Non-Repudiation: Hide Activities\\
 \subsection*{Detection\_Methods}
-Manual Static Analysis: Since this weakness does not typically appear frequently within a single software package, manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all potentially-vulnerable operations can be assessed within limited time constraints.\\
-Automated Dynamic Analysis: Automated black box tools that supply URLs to every input may be able to spot Location header modifications, but test case coverage is a factor, and custom redirects may not be detected.\\
-Automated Static Analysis: Automated static analysis tools may not be able to determine whether input influences the beginning of a URL, which is important for reducing false positives.\\
-Automated Static Analysis: Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then searching for potentially-vulnerable patterns that connect "sources" (origins of input) with "sinks" (destinations where the data interacts with external components, a lower layer such as the OS, etc.)\\
-Automated Static Analysis - Binary or Bytecode: 
-                  \\
-Dynamic Analysis with Automated Results Interpretation: 
-                  \\
-Dynamic Analysis with Manual Results Interpretation: 
-                  \\
-Manual Static Analysis - Source Code: 
-                  \\
-Automated Static Analysis - Source Code: 
-                  \\
-Architecture or Design Review: 
-                  \\
 \subsection*{Potential\_Mitigations}
 Phase: Implementation
-Description: 
-                  \\
-Phase: Architecture and Design
-Description: Use an intermediate disclaimer page that provides the user with a clear warning that they are leaving the current site. Implement a long timeout before the redirect occurs, or force the user to click on the link. Be careful to avoid XSS problems (CWE-79) when generating the disclaimer page.\\
-Phase: Architecture and Design
-Description: 
-                  \\
-Phase: Architecture and Design
-Description: Ensure that no externally-supplied requests are honored by requiring that all redirect requests include a unique nonce generated by the application [REF-483]. Be sure that the nonce is not predictable (CWE-330).
-Notes: Note that this can be bypassed using XSS (CWE-79).\\
-Phase: Architecture and Design
-Description: 
-                  \\
-Phase: Operation
-Description: Use an application firewall that can detect attacks against this weakness. It can be beneficial in cases in which the code cannot be fixed (because it is controlled by a third party), as an emergency prevention measure while more comprehensive software assurance measures are applied, or to provide defense in depth.
-Effectiveness: Moderate
-Notes: An application firewall might not cover all possible input vectors. In addition, attack techniques might be available to bypass the protection mechanism, such as using malformed inputs that can still be processed by the component that receives those inputs. Depending on functionality, an application firewall might inadvertently reject or modify legitimate requests. Finally, some manual effort may be required for customization.\\
+Description: Ensure that the checksums present in messages are properly checked in accordance with the protocol specification before they are parsed and used.\\
 \subsection*{Demonstrative\_Examples}
 \begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-php
-$redirect_url = $_GET['url'];header("Location: " . $redirect_url);
-\end{lstlisting}
-
-\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-http://example.com/example.php?url=http://malicious.example.com
-\end{lstlisting}
-
-\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-java
-public class RedirectServlet extends HttpServlet {
-                     
-                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains("url")) {String url = request.getParameter("url");response.sendRedirect(url);}}
+c
+sd = socket(AF_INET, SOCK_DGRAM, 0); serv.sin_family = AF_INET;serv.sin_addr.s_addr = htonl(INADDR_ANY);servr.sin_port = htons(1008);bind(sd, (struct sockaddr *) & serv, sizeof(serv));while (1) {
+                        
+                           memset(msg, 0x0, MAX_MSG);clilen = sizeof(cli);if (inet_ntoa(cli.sin_addr)==...) n = recvfrom(sd, msg, MAX_MSG, 0, (struct sockaddr *) & cli, &clilen);
                      }
 \end{lstlisting}
 
 \begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-html
-<a href="http://bank.example.com/redirect?url=http://attacker.example.net">Click here to log in</a>
+java
+while(true) {DatagramPacket packet = new DatagramPacket(data,data.length,IPAddress, port);socket.send(sendPacket);}
 \end{lstlisting}
 
 \subsection*{Observed\_Examples}
-CVE-2005-4206: URL parameter loads the URL into a frame and causes it to appear to be part of a valid page.\\
-CVE-2008-2951: An open redirect vulnerability in the search script in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL as a parameter to the proper function.\\
-CVE-2008-2052: Open redirect vulnerability in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL in the proper parameter.\\
-CVE-2020-11053: Chain: Go-based Oauth2 reverse proxy can send the authenticated user to another site at the end of the authentication flow. A redirect URL with HTML-encoded whitespace characters can bypass the validation (CWE-1289) to redirect to a malicious site (CWE-601)\\
 \subsection*{Related\_Attack\_Patterns}
-CAPEC-178\\
+CAPEC-145\\
+CAPEC-463\\
+CAPEC-75\\
 \subsection*{References}
-REF-483\\
-\href{Page 43)}{REF-484 (Section}\\
-REF-485\\
-REF-45\\
+REF-18\\
 \subsection*{Taxonomy\_Mappings}
-WASC: None\\
-Software Fault Patterns: None\\
+ISA/IEC 62443: None\\
+CLASP: None\\
 \subsection*{Notes}
 \subsection*{CVEs}
-CVE-2005-4206\\
-CVE-2008-2951\\
-CVE-2008-2052\\
-CVE-2020-11053\\
 \section*{Template Information}
-\textbf{ID:} CVE-2018-11784
+\textbf{ID:} CVE-2023-48795
 
-\textbf{Name:} Apache Tomcat - Open Redirect
+\textbf{Name:} OpenSSH Terrapin Attack - Detection
 
 \textbf{Severity:} medium
 
-\textbf{Description:} Apache Tomcat versions prior to 9.0.12, 8.5.34, and 7.0.91 are prone to an open-redirection vulnerability because it fails to properly sanitize user-supplied input.
+\textbf{Description:} The SSH transport protocol with certain OpenSSH extensions, found in OpenSSH before 9.6 and other products, allows remote attackers to bypass integrity checks such that some packets are omitted (from the extension negotiation message), and a client and server may consequently end up with a connection for which some security features have been downgraded or disabled, aka a Terrapin attack. This occurs because the SSH Binary Packet Protocol (BPP), implemented by these extensions, mishandles the handshake phase and mishandles use of sequence numbers. For example, there is an effective attack against SSH's use of ChaCha20-Poly1305 (and CBC with Encrypt-then-MAC). The bypass occurs in chacha20-poly1305@openssh.com and (if CBC is used) the -etm@openssh.com MAC algorithms. This also affects Maverick Synergy Java SSH API before 3.1.0-SNAPSHOT, Dropbear through 2022.83, Ssh before 5.1.1 in Erlang/OTP, PuTTY before 0.80, AsyncSSH before 2.14.2, golang.org/x/crypto before 0.17.0, libssh before 0.10.6, libssh2 through 1.11.0, Thorn Tech SFTP Gateway before 3.4.6, Tera Term before 5.1, Paramiko before 3.4.0, jsch before 0.2.15, SFTPGo before 2.5.6, Netgate pfSense Plus through 23.09.1, Netgate pfSense CE through 2.7.2, HPN-SSH through 18.2.0, ProFTPD before 1.3.8b (and before 1.3.9rc2), ORYX CycloneSSH before 2.3.4, NetSarang XShell 7 before Build 0144, CrushFTP before 10.6.0, ConnectBot SSH library before 2.2.22, Apache MINA sshd through 2.11.0, sshj through 0.37.0, TinySSH through 20230101, trilead-ssh2 6401, LANCOM LCOS and LANconfig, FileZilla before 3.66.4, Nova before 11.8, PKIX-SSH before 14.4, SecureCRT before 9.4.3, Transmit5 before 5.10.4, Win32-OpenSSH before 9.5.0.0p1-Beta, WinSCP before 6.2.2, Bitvise SSH Server before 9.32, Bitvise SSH Client before 9.33, KiTTY through 0.76.1.13, the net-ssh gem 7.2.0 for Ruby, the mscdex ssh2 module before 1.15.0 for Node.js, the thrussh library before 0.35.1 for Rust, and the Russh crate before 0.40.2 for Rust.
 
 
 \textbf{Classification:}
 \begin{itemize}
-\item CVSS Score: 4.3
-\item CVSS Metrics: CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N
-\item CWE-ID: CWE-601
-\item EPSS Score: 0.79069
-\item EPSS Percentile: 0.9827
+\item CVSS Score: 5.9
+\item CVSS Metrics: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N
+\item CWE-ID: CWE-354
+\item EPSS Score: 0.69474
+\item EPSS Percentile: 0.97955
 \end{itemize}
 
 
 
-\section*{Vulnerability 3 - euroscatola.it}
+\section*{Vulnerability 4 - support-data.syneto.eu:22}
 
 \section*{CWE Information}
 \subsection*{ID}
-601
+354
 
 \subsection*{Name}
-URL Redirection to Untrusted Site ('Open Redirect')
+Improper Validation of Integrity Check Value
 
 \subsection*{Abstraction}
 Base
@@ -645,141 +708,91 @@ Simple
 Draft
 
 \subsection*{Description}
-A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks.
+The product does not validate or incorrectly validates the integrity check values or "checksums" of a message. This may prevent it from detecting if the data has been modified or corrupted in transmission.
 
 \subsection*{Extended\_Description}
-An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL. By modifying the URL value to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts have a more trustworthy appearance. Whether this issue poses a vulnerability will be subject to the intended behavior of the application. For example, a search engine might intentionally provide redirects to arbitrary URLs.
+Improper validation of checksums before use results in an unnecessary risk that can easily be mitigated. The protocol specification describes the algorithm used for calculating the checksum. It is then a simple matter of implementing the calculation and verifying that the calculated checksum and the received checksum match. Improper verification of the calculated checksum and the received checksum can lead to far greater consequences.
 
 \subsection*{Related\_Weaknesses}
-ChildOf:610\\
-ChildOf:610\\
+ChildOf:345\\
+ChildOf:345\\
+ChildOf:754\\
+PeerOf:353\\
 \subsection*{Weakness\_Ordinalities}
 \subsection*{Applicable\_Platforms}
 Language: \\
-Technology: Web Based\\
+Technology: \\
 \subsection*{Background\_Details}
-Phishing is a general term for deceptive attempts to coerce private information from users that will be used for identity theft.\\
 \subsection*{Alternate\_Terms}
-Open Redirect: None\\
-Cross-site Redirect: None\\
-Cross-domain Redirect: None\\
 \subsection*{Modes\_Of\_Introduction}
-Architecture and Design: OMISSION: This weakness is caused by missing a security tactic during the architecture and design phase.\\
-Implementation: None\\
+Architecture and Design: None\\
+Implementation: REALIZATION: This weakness is caused during implementation of an architectural security tactic.\\
 \subsection*{Likelihood\_Of\_Exploit}
-Low
+Medium
 
 \subsection*{Common\_Consequences}
-Access Control: Bypass Protection Mechanism\\
-Access Control: Bypass Protection Mechanism\\
+Integrity: Modify Application Data\\
+Integrity: Other\\
+Non-Repudiation: Hide Activities\\
 \subsection*{Detection\_Methods}
-Manual Static Analysis: Since this weakness does not typically appear frequently within a single software package, manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all potentially-vulnerable operations can be assessed within limited time constraints.\\
-Automated Dynamic Analysis: Automated black box tools that supply URLs to every input may be able to spot Location header modifications, but test case coverage is a factor, and custom redirects may not be detected.\\
-Automated Static Analysis: Automated static analysis tools may not be able to determine whether input influences the beginning of a URL, which is important for reducing false positives.\\
-Automated Static Analysis: Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then searching for potentially-vulnerable patterns that connect "sources" (origins of input) with "sinks" (destinations where the data interacts with external components, a lower layer such as the OS, etc.)\\
-Automated Static Analysis - Binary or Bytecode: 
-                  \\
-Dynamic Analysis with Automated Results Interpretation: 
-                  \\
-Dynamic Analysis with Manual Results Interpretation: 
-                  \\
-Manual Static Analysis - Source Code: 
-                  \\
-Automated Static Analysis - Source Code: 
-                  \\
-Architecture or Design Review: 
-                  \\
 \subsection*{Potential\_Mitigations}
 Phase: Implementation
-Description: 
-                  \\
-Phase: Architecture and Design
-Description: Use an intermediate disclaimer page that provides the user with a clear warning that they are leaving the current site. Implement a long timeout before the redirect occurs, or force the user to click on the link. Be careful to avoid XSS problems (CWE-79) when generating the disclaimer page.\\
-Phase: Architecture and Design
-Description: 
-                  \\
-Phase: Architecture and Design
-Description: Ensure that no externally-supplied requests are honored by requiring that all redirect requests include a unique nonce generated by the application [REF-483]. Be sure that the nonce is not predictable (CWE-330).
-Notes: Note that this can be bypassed using XSS (CWE-79).\\
-Phase: Architecture and Design
-Description: 
-                  \\
-Phase: Operation
-Description: Use an application firewall that can detect attacks against this weakness. It can be beneficial in cases in which the code cannot be fixed (because it is controlled by a third party), as an emergency prevention measure while more comprehensive software assurance measures are applied, or to provide defense in depth.
-Effectiveness: Moderate
-Notes: An application firewall might not cover all possible input vectors. In addition, attack techniques might be available to bypass the protection mechanism, such as using malformed inputs that can still be processed by the component that receives those inputs. Depending on functionality, an application firewall might inadvertently reject or modify legitimate requests. Finally, some manual effort may be required for customization.\\
+Description: Ensure that the checksums present in messages are properly checked in accordance with the protocol specification before they are parsed and used.\\
 \subsection*{Demonstrative\_Examples}
 \begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-php
-$redirect_url = $_GET['url'];header("Location: " . $redirect_url);
-\end{lstlisting}
-
-\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-http://example.com/example.php?url=http://malicious.example.com
-\end{lstlisting}
-
-\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-java
-public class RedirectServlet extends HttpServlet {
-                     
-                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains("url")) {String url = request.getParameter("url");response.sendRedirect(url);}}
+c
+sd = socket(AF_INET, SOCK_DGRAM, 0); serv.sin_family = AF_INET;serv.sin_addr.s_addr = htonl(INADDR_ANY);servr.sin_port = htons(1008);bind(sd, (struct sockaddr *) & serv, sizeof(serv));while (1) {
+                        
+                           memset(msg, 0x0, MAX_MSG);clilen = sizeof(cli);if (inet_ntoa(cli.sin_addr)==...) n = recvfrom(sd, msg, MAX_MSG, 0, (struct sockaddr *) & cli, &clilen);
                      }
 \end{lstlisting}
 
 \begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-html
-<a href="http://bank.example.com/redirect?url=http://attacker.example.net">Click here to log in</a>
+java
+while(true) {DatagramPacket packet = new DatagramPacket(data,data.length,IPAddress, port);socket.send(sendPacket);}
 \end{lstlisting}
 
 \subsection*{Observed\_Examples}
-CVE-2005-4206: URL parameter loads the URL into a frame and causes it to appear to be part of a valid page.\\
-CVE-2008-2951: An open redirect vulnerability in the search script in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL as a parameter to the proper function.\\
-CVE-2008-2052: Open redirect vulnerability in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL in the proper parameter.\\
-CVE-2020-11053: Chain: Go-based Oauth2 reverse proxy can send the authenticated user to another site at the end of the authentication flow. A redirect URL with HTML-encoded whitespace characters can bypass the validation (CWE-1289) to redirect to a malicious site (CWE-601)\\
 \subsection*{Related\_Attack\_Patterns}
-CAPEC-178\\
+CAPEC-145\\
+CAPEC-463\\
+CAPEC-75\\
 \subsection*{References}
-REF-483\\
-\href{Page 43)}{REF-484 (Section}\\
-REF-485\\
-REF-45\\
+REF-18\\
 \subsection*{Taxonomy\_Mappings}
-WASC: None\\
-Software Fault Patterns: None\\
+ISA/IEC 62443: None\\
+CLASP: None\\
 \subsection*{Notes}
 \subsection*{CVEs}
-CVE-2005-4206\\
-CVE-2008-2951\\
-CVE-2008-2052\\
-CVE-2020-11053\\
 \section*{Template Information}
-\textbf{ID:} open-redirect-generic
+\textbf{ID:} CVE-2023-48795
 
-\textbf{Name:} Open Redirect - Detection
+\textbf{Name:} OpenSSH Terrapin Attack - Detection
 
 \textbf{Severity:} medium
 
-\textbf{Description:} An open redirect vulnerability was detected. An attacker can redirect a user to a malicious site and possibly obtain sensitive information, modify data, and/or execute unauthorized operations.
+\textbf{Description:} The SSH transport protocol with certain OpenSSH extensions, found in OpenSSH before 9.6 and other products, allows remote attackers to bypass integrity checks such that some packets are omitted (from the extension negotiation message), and a client and server may consequently end up with a connection for which some security features have been downgraded or disabled, aka a Terrapin attack. This occurs because the SSH Binary Packet Protocol (BPP), implemented by these extensions, mishandles the handshake phase and mishandles use of sequence numbers. For example, there is an effective attack against SSH's use of ChaCha20-Poly1305 (and CBC with Encrypt-then-MAC). The bypass occurs in chacha20-poly1305@openssh.com and (if CBC is used) the -etm@openssh.com MAC algorithms. This also affects Maverick Synergy Java SSH API before 3.1.0-SNAPSHOT, Dropbear through 2022.83, Ssh before 5.1.1 in Erlang/OTP, PuTTY before 0.80, AsyncSSH before 2.14.2, golang.org/x/crypto before 0.17.0, libssh before 0.10.6, libssh2 through 1.11.0, Thorn Tech SFTP Gateway before 3.4.6, Tera Term before 5.1, Paramiko before 3.4.0, jsch before 0.2.15, SFTPGo before 2.5.6, Netgate pfSense Plus through 23.09.1, Netgate pfSense CE through 2.7.2, HPN-SSH through 18.2.0, ProFTPD before 1.3.8b (and before 1.3.9rc2), ORYX CycloneSSH before 2.3.4, NetSarang XShell 7 before Build 0144, CrushFTP before 10.6.0, ConnectBot SSH library before 2.2.22, Apache MINA sshd through 2.11.0, sshj through 0.37.0, TinySSH through 20230101, trilead-ssh2 6401, LANCOM LCOS and LANconfig, FileZilla before 3.66.4, Nova before 11.8, PKIX-SSH before 14.4, SecureCRT before 9.4.3, Transmit5 before 5.10.4, Win32-OpenSSH before 9.5.0.0p1-Beta, WinSCP before 6.2.2, Bitvise SSH Server before 9.32, Bitvise SSH Client before 9.33, KiTTY through 0.76.1.13, the net-ssh gem 7.2.0 for Ruby, the mscdex ssh2 module before 1.15.0 for Node.js, the thrussh library before 0.35.1 for Rust, and the Russh crate before 0.40.2 for Rust.
+
 
 \textbf{Classification:}
 \begin{itemize}
-\item CVSS Score: 6.1
-\item CVSS Metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
-\item CWE-ID: CWE-601
-\item EPSS Score: N/A
-\item EPSS Percentile: N/A
+\item CVSS Score: 5.9
+\item CVSS Metrics: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N
+\item CWE-ID: CWE-354
+\item EPSS Score: 0.69474
+\item EPSS Percentile: 0.97955
 \end{itemize}
 
 
 
-\section*{Vulnerability 4 - www.euroscatola.it}
+\section*{Vulnerability 5 - beta-updates.syneto.eu:22}
 
 \section*{CWE Information}
 \subsection*{ID}
-601
+354
 
 \subsection*{Name}
-URL Redirection to Untrusted Site ('Open Redirect')
+Improper Validation of Integrity Check Value
 
 \subsection*{Abstraction}
 Base
@@ -791,143 +804,93 @@ Simple
 Draft
 
 \subsection*{Description}
-A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks.
+The product does not validate or incorrectly validates the integrity check values or "checksums" of a message. This may prevent it from detecting if the data has been modified or corrupted in transmission.
 
 \subsection*{Extended\_Description}
-An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL. By modifying the URL value to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts have a more trustworthy appearance. Whether this issue poses a vulnerability will be subject to the intended behavior of the application. For example, a search engine might intentionally provide redirects to arbitrary URLs.
+Improper validation of checksums before use results in an unnecessary risk that can easily be mitigated. The protocol specification describes the algorithm used for calculating the checksum. It is then a simple matter of implementing the calculation and verifying that the calculated checksum and the received checksum match. Improper verification of the calculated checksum and the received checksum can lead to far greater consequences.
 
 \subsection*{Related\_Weaknesses}
-ChildOf:610\\
-ChildOf:610\\
+ChildOf:345\\
+ChildOf:345\\
+ChildOf:754\\
+PeerOf:353\\
 \subsection*{Weakness\_Ordinalities}
 \subsection*{Applicable\_Platforms}
 Language: \\
-Technology: Web Based\\
+Technology: \\
 \subsection*{Background\_Details}
-Phishing is a general term for deceptive attempts to coerce private information from users that will be used for identity theft.\\
 \subsection*{Alternate\_Terms}
-Open Redirect: None\\
-Cross-site Redirect: None\\
-Cross-domain Redirect: None\\
 \subsection*{Modes\_Of\_Introduction}
-Architecture and Design: OMISSION: This weakness is caused by missing a security tactic during the architecture and design phase.\\
-Implementation: None\\
+Architecture and Design: None\\
+Implementation: REALIZATION: This weakness is caused during implementation of an architectural security tactic.\\
 \subsection*{Likelihood\_Of\_Exploit}
-Low
+Medium
 
 \subsection*{Common\_Consequences}
-Access Control: Bypass Protection Mechanism\\
-Access Control: Bypass Protection Mechanism\\
+Integrity: Modify Application Data\\
+Integrity: Other\\
+Non-Repudiation: Hide Activities\\
 \subsection*{Detection\_Methods}
-Manual Static Analysis: Since this weakness does not typically appear frequently within a single software package, manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all potentially-vulnerable operations can be assessed within limited time constraints.\\
-Automated Dynamic Analysis: Automated black box tools that supply URLs to every input may be able to spot Location header modifications, but test case coverage is a factor, and custom redirects may not be detected.\\
-Automated Static Analysis: Automated static analysis tools may not be able to determine whether input influences the beginning of a URL, which is important for reducing false positives.\\
-Automated Static Analysis: Automated static analysis, commonly referred to as Static Application Security Testing (SAST), can find some instances of this weakness by analyzing source code (or binary/compiled code) without having to execute it. Typically, this is done by building a model of data flow and control flow, then searching for potentially-vulnerable patterns that connect "sources" (origins of input) with "sinks" (destinations where the data interacts with external components, a lower layer such as the OS, etc.)\\
-Automated Static Analysis - Binary or Bytecode: 
-                  \\
-Dynamic Analysis with Automated Results Interpretation: 
-                  \\
-Dynamic Analysis with Manual Results Interpretation: 
-                  \\
-Manual Static Analysis - Source Code: 
-                  \\
-Automated Static Analysis - Source Code: 
-                  \\
-Architecture or Design Review: 
-                  \\
 \subsection*{Potential\_Mitigations}
 Phase: Implementation
-Description: 
-                  \\
-Phase: Architecture and Design
-Description: Use an intermediate disclaimer page that provides the user with a clear warning that they are leaving the current site. Implement a long timeout before the redirect occurs, or force the user to click on the link. Be careful to avoid XSS problems (CWE-79) when generating the disclaimer page.\\
-Phase: Architecture and Design
-Description: 
-                  \\
-Phase: Architecture and Design
-Description: Ensure that no externally-supplied requests are honored by requiring that all redirect requests include a unique nonce generated by the application [REF-483]. Be sure that the nonce is not predictable (CWE-330).
-Notes: Note that this can be bypassed using XSS (CWE-79).\\
-Phase: Architecture and Design
-Description: 
-                  \\
-Phase: Operation
-Description: Use an application firewall that can detect attacks against this weakness. It can be beneficial in cases in which the code cannot be fixed (because it is controlled by a third party), as an emergency prevention measure while more comprehensive software assurance measures are applied, or to provide defense in depth.
-Effectiveness: Moderate
-Notes: An application firewall might not cover all possible input vectors. In addition, attack techniques might be available to bypass the protection mechanism, such as using malformed inputs that can still be processed by the component that receives those inputs. Depending on functionality, an application firewall might inadvertently reject or modify legitimate requests. Finally, some manual effort may be required for customization.\\
+Description: Ensure that the checksums present in messages are properly checked in accordance with the protocol specification before they are parsed and used.\\
 \subsection*{Demonstrative\_Examples}
 \begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-php
-$redirect_url = $_GET['url'];header("Location: " . $redirect_url);
-\end{lstlisting}
-
-\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-http://example.com/example.php?url=http://malicious.example.com
-\end{lstlisting}
-
-\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-java
-public class RedirectServlet extends HttpServlet {
-                     
-                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains("url")) {String url = request.getParameter("url");response.sendRedirect(url);}}
+c
+sd = socket(AF_INET, SOCK_DGRAM, 0); serv.sin_family = AF_INET;serv.sin_addr.s_addr = htonl(INADDR_ANY);servr.sin_port = htons(1008);bind(sd, (struct sockaddr *) & serv, sizeof(serv));while (1) {
+                        
+                           memset(msg, 0x0, MAX_MSG);clilen = sizeof(cli);if (inet_ntoa(cli.sin_addr)==...) n = recvfrom(sd, msg, MAX_MSG, 0, (struct sockaddr *) & cli, &clilen);
                      }
 \end{lstlisting}
 
 \begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
-html
-<a href="http://bank.example.com/redirect?url=http://attacker.example.net">Click here to log in</a>
+java
+while(true) {DatagramPacket packet = new DatagramPacket(data,data.length,IPAddress, port);socket.send(sendPacket);}
 \end{lstlisting}
 
 \subsection*{Observed\_Examples}
-CVE-2005-4206: URL parameter loads the URL into a frame and causes it to appear to be part of a valid page.\\
-CVE-2008-2951: An open redirect vulnerability in the search script in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL as a parameter to the proper function.\\
-CVE-2008-2052: Open redirect vulnerability in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL in the proper parameter.\\
-CVE-2020-11053: Chain: Go-based Oauth2 reverse proxy can send the authenticated user to another site at the end of the authentication flow. A redirect URL with HTML-encoded whitespace characters can bypass the validation (CWE-1289) to redirect to a malicious site (CWE-601)\\
 \subsection*{Related\_Attack\_Patterns}
-CAPEC-178\\
+CAPEC-145\\
+CAPEC-463\\
+CAPEC-75\\
 \subsection*{References}
-REF-483\\
-\href{Page 43)}{REF-484 (Section}\\
-REF-485\\
-REF-45\\
+REF-18\\
 \subsection*{Taxonomy\_Mappings}
-WASC: None\\
-Software Fault Patterns: None\\
+ISA/IEC 62443: None\\
+CLASP: None\\
 \subsection*{Notes}
 \subsection*{CVEs}
-CVE-2005-4206\\
-CVE-2008-2951\\
-CVE-2008-2052\\
-CVE-2020-11053\\
 \section*{Template Information}
-\textbf{ID:} open-redirect-generic
+\textbf{ID:} CVE-2023-48795
 
-\textbf{Name:} Open Redirect - Detection
+\textbf{Name:} OpenSSH Terrapin Attack - Detection
 
 \textbf{Severity:} medium
 
-\textbf{Description:} An open redirect vulnerability was detected. An attacker can redirect a user to a malicious site and possibly obtain sensitive information, modify data, and/or execute unauthorized operations.
+\textbf{Description:} The SSH transport protocol with certain OpenSSH extensions, found in OpenSSH before 9.6 and other products, allows remote attackers to bypass integrity checks such that some packets are omitted (from the extension negotiation message), and a client and server may consequently end up with a connection for which some security features have been downgraded or disabled, aka a Terrapin attack. This occurs because the SSH Binary Packet Protocol (BPP), implemented by these extensions, mishandles the handshake phase and mishandles use of sequence numbers. For example, there is an effective attack against SSH's use of ChaCha20-Poly1305 (and CBC with Encrypt-then-MAC). The bypass occurs in chacha20-poly1305@openssh.com and (if CBC is used) the -etm@openssh.com MAC algorithms. This also affects Maverick Synergy Java SSH API before 3.1.0-SNAPSHOT, Dropbear through 2022.83, Ssh before 5.1.1 in Erlang/OTP, PuTTY before 0.80, AsyncSSH before 2.14.2, golang.org/x/crypto before 0.17.0, libssh before 0.10.6, libssh2 through 1.11.0, Thorn Tech SFTP Gateway before 3.4.6, Tera Term before 5.1, Paramiko before 3.4.0, jsch before 0.2.15, SFTPGo before 2.5.6, Netgate pfSense Plus through 23.09.1, Netgate pfSense CE through 2.7.2, HPN-SSH through 18.2.0, ProFTPD before 1.3.8b (and before 1.3.9rc2), ORYX CycloneSSH before 2.3.4, NetSarang XShell 7 before Build 0144, CrushFTP before 10.6.0, ConnectBot SSH library before 2.2.22, Apache MINA sshd through 2.11.0, sshj through 0.37.0, TinySSH through 20230101, trilead-ssh2 6401, LANCOM LCOS and LANconfig, FileZilla before 3.66.4, Nova before 11.8, PKIX-SSH before 14.4, SecureCRT before 9.4.3, Transmit5 before 5.10.4, Win32-OpenSSH before 9.5.0.0p1-Beta, WinSCP before 6.2.2, Bitvise SSH Server before 9.32, Bitvise SSH Client before 9.33, KiTTY through 0.76.1.13, the net-ssh gem 7.2.0 for Ruby, the mscdex ssh2 module before 1.15.0 for Node.js, the thrussh library before 0.35.1 for Rust, and the Russh crate before 0.40.2 for Rust.
+
 
 \textbf{Classification:}
 \begin{itemize}
-\item CVSS Score: 6.1
-\item CVSS Metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
-\item CWE-ID: CWE-601
-\item EPSS Score: N/A
-\item EPSS Percentile: N/A
+\item CVSS Score: 5.9
+\item CVSS Metrics: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N
+\item CWE-ID: CWE-354
+\item EPSS Score: 0.69474
+\item EPSS Percentile: 0.97955
 \end{itemize}
 
 
 
-\section*{Vulnerability 5 - cpanel.euroscatola.it}
+\section*{Vulnerability 6 - email.syneto.eu}
 
 \section*{Template Information}
-\textbf{ID:} default-apache-test-all
+\textbf{ID:} weak-cipher-suites
 
-\textbf{Name:} Apache HTTP Server Test Page
+\textbf{Name:} Weak Cipher Suites Detection
 
-\textbf{Severity:} info
+\textbf{Severity:} low
 
-\textbf{Description:} Detects default installations of apache (not just apache2 or installations on CentOS)
+\textbf{Description:} A weak cipher is defined as an encryption/decryption algorithm that uses a key of insufficient length. Using an insufficient length for a key in an encryption/decryption algorithm opens up the possibility (or probability) that the encryption scheme could be broken.
 
 \textbf{Classification:}
 \begin{itemize}
@@ -940,16 +903,16 @@ CVE-2020-11053\\
 
 
 
-\section*{Vulnerability 6 - cpcontacts.euroscatola.it}
+\section*{Vulnerability 7 - kb.syneto.eu}
 
 \section*{Template Information}
-\textbf{ID:} options-method
+\textbf{ID:} weak-cipher-suites
 
-\textbf{Name:} Allowed Options Method
+\textbf{Name:} Weak Cipher Suites Detection
 
-\textbf{Severity:} info
+\textbf{Severity:} low
 
-\textbf{Description:} N/A
+\textbf{Description:} A weak cipher is defined as an encryption/decryption algorithm that uses a key of insufficient length. Using an insufficient length for a key in an encryption/decryption algorithm opens up the possibility (or probability) that the encryption scheme could be broken.
 
 \textbf{Classification:}
 \begin{itemize}
@@ -962,16 +925,16 @@ CVE-2020-11053\\
 
 
 
-\section*{Vulnerability 7 - webmail.euroscatola.it}
+\section*{Vulnerability 8 - email.syneto.eu}
 
 \section*{Template Information}
-\textbf{ID:} options-method
+\textbf{ID:} weak-cipher-suites
 
-\textbf{Name:} Allowed Options Method
+\textbf{Name:} Weak Cipher Suites Detection
 
-\textbf{Severity:} info
+\textbf{Severity:} low
 
-\textbf{Description:} N/A
+\textbf{Description:} A weak cipher is defined as an encryption/decryption algorithm that uses a key of insufficient length. Using an insufficient length for a key in an encryption/decryption algorithm opens up the possibility (or probability) that the encryption scheme could be broken.
 
 \textbf{Classification:}
 \begin{itemize}
@@ -984,17 +947,16 @@ CVE-2020-11053\\
 
 
 
-\section*{Vulnerability 8 - cpanel.euroscatola.it}
+\section*{Vulnerability 9 - kb.syneto.eu}
 
 \section*{Template Information}
-\textbf{ID:} http-missing-security-headers
+\textbf{ID:} weak-cipher-suites
 
-\textbf{Name:} HTTP Missing Security Headers
+\textbf{Name:} Weak Cipher Suites Detection
 
-\textbf{Severity:} info
+\textbf{Severity:} low
 
-\textbf{Description:} This template searches for missing HTTP security headers. The impact of these missing headers can vary.
-
+\textbf{Description:} A weak cipher is defined as an encryption/decryption algorithm that uses a key of insufficient length. Using an insufficient length for a key in an encryption/decryption algorithm opens up the possibility (or probability) that the encryption scheme could be broken.
 
 \textbf{Classification:}
 \begin{itemize}
@@ -1007,17 +969,16 @@ CVE-2020-11053\\
 
 
 
-\section*{Vulnerability 9 - cpanel.euroscatola.it}
+\section*{Vulnerability 10 - lp.syneto.eu}
 
 \section*{Template Information}
-\textbf{ID:} http-missing-security-headers
+\textbf{ID:} weak-cipher-suites
 
-\textbf{Name:} HTTP Missing Security Headers
+\textbf{Name:} Weak Cipher Suites Detection
 
-\textbf{Severity:} info
+\textbf{Severity:} low
 
-\textbf{Description:} This template searches for missing HTTP security headers. The impact of these missing headers can vary.
-
+\textbf{Description:} A weak cipher is defined as an encryption/decryption algorithm that uses a key of insufficient length. Using an insufficient length for a key in an encryption/decryption algorithm opens up the possibility (or probability) that the encryption scheme could be broken.
 
 \textbf{Classification:}
 \begin{itemize}
@@ -1030,25 +991,105 @@ CVE-2020-11053\\
 
 
 
-\section*{Vulnerability 10 - cpanel.euroscatola.it}
-
-\section*{Template Information}
-\textbf{ID:} email-extractor
-
-\textbf{Name:} Email Extractor
-
-\textbf{Severity:} info
-
-\textbf{Description:} N/A
-
-\textbf{Classification:}
-\begin{itemize}
-\item CVSS Score: N/A
-\item CVSS Metrics: N/A
-\item CWE-ID: N/A
-\item EPSS Score: N/A
-\item EPSS Percentile: N/A
-\end{itemize}
+\chapter{Screenshots}
 
 
-
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/partners.syneto.eu:443_unknown.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: partners.syneto.eu:443 | Severity: unknown}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/sizer.syneto.eu_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: sizer.syneto.eu | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/email.syneto.eu_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: email.syneto.eu | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/vpn.backup.syneto.eu:5000_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: vpn.backup.syneto.eu:5000 | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/blog.syneto.eu_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: blog.syneto.eu | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/lp.syneto.eu_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: lp.syneto.eu | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/beta-updates.syneto.eu_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: beta-updates.syneto.eu | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/minio.syneto.eu:9000_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: minio.syneto.eu:9000 | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/kb.syneto.eu_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: kb.syneto.eu | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/support-data.syneto.eu_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: support-data.syneto.eu | Severity: low}
+                                \end{center}
+                                
+                                
+                                \begin{center}
+                                \tcbox{
+                                    \includegraphics[width=\linewidth]{screenshots/sizer.syneto.eu:50002_low.png}
+                                }
+                                \vspace{0cm}
+                                \captionof{figure}{Hostname: sizer.syneto.eu:50002 | Severity: low}
+                                \end{center}
+                                
+                                

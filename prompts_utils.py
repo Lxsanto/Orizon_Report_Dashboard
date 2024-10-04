@@ -1,6 +1,6 @@
 import streamlit as st
 
-vuln_defs_eng = '# Vulnerabilities Definition\n'\
+vuln_defs_eng = '## Vulnerabilities Definition\n'\
                 '## Critical Severity\n'\
                 '* Exploitation is straightforward and usually results in system-level compromise. It is advised to form a plan of action and patch immediately.\n\n'\
                 '## High Severity\n'\
@@ -12,7 +12,7 @@ vuln_defs_eng = '# Vulnerabilities Definition\n'\
                 '## Informational Severity\n'\
                 '* No known vulnerability exists. Additional information is provided regarding items noticed during testing, strong controls, and additional documentation.\n'
 
-vuln_defs_ita = '# Definizione Vulnerabilità\n'\
+vuln_defs_ita = '## Definizione Vulnerabilità\n'\
                 '## Gravità Critica\n'\
                 '* Lo sfruttamento è semplice e di solito comporta una compromissione a livello di sistema. Si consiglia di pianificare un\'azione correttiva e applicare una patch immediatamente.\n\n'\
                 '## Gravità Alta\n'\
@@ -24,7 +24,7 @@ vuln_defs_ita = '# Definizione Vulnerabilità\n'\
                 '## Gravità Informativa\n'\
                 '* Non esiste alcuna vulnerabilità nota. Vengono fornite informazioni aggiuntive riguardanti elementi osservati durante i test, controlli solidi e documentazione aggiuntiva.\n'
 
-vuln_defs_esp = '# Definición de vulnerabilidades\n'\
+vuln_defs_esp = '## Definición de vulnerabilidades\n'\
                 '## Gravedad Crítica\n'\
                 '* La explotación es sencilla y generalmente resulta en una compromisión a nivel de sistema. Se aconseja planificar una acción correctiva y aplicar un parche inmediatamente.\n\n'\
                 '## Gravedad Alta\n'\

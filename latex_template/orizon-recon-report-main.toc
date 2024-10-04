@@ -9,49 +9,57 @@
 \contentsline {section}{\numberline {1.7}Panoramica della Postura di Sicurezza e Livello di Rischio Complessivo}{3}{section.1.7}%
 \contentsline {section}{\numberline {1.8}Considerazioni sul Numero Totale di Vulnerabilità}{3}{section.1.8}%
 \contentsline {section}{\numberline {1.9}Discussione sulla Suddivisione dei Tipi di Vulnerabilità}{3}{section.1.9}%
-\contentsline {subsection}{\numberline {1.9.1}Vulnerabilità Critiche (0)}{3}{subsection.1.9.1}%
+\contentsline {subsection}{\numberline {1.9.1}Vulnerabilità Critiche (1)}{3}{subsection.1.9.1}%
 \contentsline {subsection}{\numberline {1.9.2}Vulnerabilità Alte (0)}{3}{subsection.1.9.2}%
 \contentsline {subsection}{\numberline {1.9.3}Vulnerabilità Medie (4)}{3}{subsection.1.9.3}%
-\contentsline {subsection}{\numberline {1.9.4}Vulnerabilità Basse (0)}{3}{subsection.1.9.4}%
+\contentsline {subsection}{\numberline {1.9.4}Vulnerabilità Basse (35)}{3}{subsection.1.9.4}%
 \contentsline {chapter}{\numberline {2}Analisi della Distribuzione delle Gravità delle Vulnerabilità}{5}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Riepilogo della Distribuzione delle Gravità}{5}{section.2.1}%
 \contentsline {section}{\numberline {2.2}Livello di Gravità più Comune}{5}{section.2.2}%
 \contentsline {section}{\numberline {2.3}Percentuale di Ciascun Livello di Gravità}{5}{section.2.3}%
 \contentsline {section}{\numberline {2.4}Impatto delle Vulnerabilità Critiche e Alte}{5}{section.2.4}%
 \contentsline {section}{\numberline {2.5}Urgenza della Risoluzione}{5}{section.2.5}%
-\contentsline {section}{\numberline {2.6}Rischio Cumulativo delle Vulnerabilità Medie e Bassa}{5}{section.2.6}%
+\contentsline {section}{\numberline {2.6}Rischio Cumulativo delle Vulnerabilità Medie e Basse}{5}{section.2.6}%
 \contentsline {section}{\numberline {2.7}Rischio Complessivo e Impatto su Conformità/Sicurezza}{5}{section.2.7}%
-\contentsline {chapter}{\numberline {3}Analisi delle Vulnerabilità del Sistema}{7}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Riepilogo dei Tipi Prevalenti e dell'Impatto}{7}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Analisi di 'Apache HTTP Server Test Page'}{7}{section.3.2}%
-\contentsline {subsection}{\numberline {3.2.1}Cause:}{7}{subsection.3.2.1}%
-\contentsline {subsection}{\numberline {3.2.2}Vettori di Attacco:}{7}{subsection.3.2.2}%
-\contentsline {subsection}{\numberline {3.2.3}Conseguenze:}{7}{subsection.3.2.3}%
-\contentsline {section}{\numberline {3.3}Host Colpiti e Impatto sulla Rete}{7}{section.3.3}%
-\contentsline {section}{\numberline {3.4}Perché www.euroscatola.it è il più colpito?}{7}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Temi Comuni e Problemi Sistemici}{7}{subsection.3.4.1}%
+\contentsline {chapter}{\numberline {3}Analisi delle vulnerabilità del sistema}{7}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Riepilogo dei tipi prevalenti e dell'impatto}{7}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Analisi di 'OpenSSH Terrapin Attack - Detection'}{7}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Host colpiti e impatto sulla rete}{7}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Support-data.syneto.eu: il più colpito}{7}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Temi comuni e problemi sistemici}{7}{section.3.5}%
 \contentsline {chapter}{\numberline {4}Analisi della Superficie di Attacco per}{9}{chapter.4}%
 \contentsline {section}{\numberline {4.1}Riepilogo della Distribuzione dei Tipi di Vulnerabilità}{9}{section.4.1}%
 \contentsline {section}{\numberline {4.2}Analisi Iniziale delle Sfide di Sicurezza}{9}{section.4.2}%
 \contentsline {section}{\numberline {4.3}Analisi Dettagliata di 'HTTP Missing Security Headers'}{9}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Analisi Dettagliata dei 10 Tipi Principali}{9}{section.4.4}%
+\contentsline {subsection}{\numberline {4.3.1}Cause}{9}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Vettori d'Attacco}{9}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Impatto}{9}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Breve Descrizione dei Tipi di Vulnerabilità}{9}{section.4.4}%
 \contentsline {subsection}{\numberline {4.4.1}HTTP Missing Security Headers}{9}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}CAA Record}{9}{subsection.4.4.2}%
-\contentsline {subsection}{\numberline {4.4.3}HTTP TRACE method enabled}{10}{subsection.4.4.3}%
-\contentsline {subsection}{\numberline {4.4.4}Apache HTTP Server Test Page}{10}{subsection.4.4.4}%
+\contentsline {subsection}{\numberline {4.4.2}TLS Version - Detect}{9}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}CAA Record}{10}{subsection.4.4.3}%
+\contentsline {subsection}{\numberline {4.4.4}Wappalyzer Technology Detection}{10}{subsection.4.4.4}%
 \contentsline {subsection}{\numberline {4.4.5}WAF Detection}{10}{subsection.4.4.5}%
-\contentsline {subsection}{\numberline {4.4.6}Allowed Options Method}{10}{subsection.4.4.6}%
-\contentsline {subsection}{\numberline {4.4.7}Email Extractor}{10}{subsection.4.4.7}%
-\contentsline {subsection}{\numberline {4.4.8}Wappalyzer Technology Detection}{10}{subsection.4.4.8}%
-\contentsline {subsection}{\numberline {4.4.9}Apache Tomcat - Open Redirect}{10}{subsection.4.4.9}%
-\contentsline {subsection}{\numberline {4.4.10}Open Redirect - Detection}{10}{subsection.4.4.10}%
-\contentsline {section}{\numberline {4.5}Valutazione del Rischio Complessivo}{11}{section.4.5}%
-\contentsline {chapter}{\numberline {5}Analisi dei Risultati dei Test di Penetrazione}{13}{chapter.5}%
+\contentsline {subsection}{\numberline {4.4.6}Detect SSL Certificate Issuer}{10}{subsection.4.4.6}%
+\contentsline {subsection}{\numberline {4.4.7}SSL DNS Names}{10}{subsection.4.4.7}%
+\contentsline {subsection}{\numberline {4.4.8}Cookies without Secure attribute - Detect}{10}{subsection.4.4.8}%
+\contentsline {subsection}{\numberline {4.4.9}Deprecated TLS Detection}{10}{subsection.4.4.9}%
+\contentsline {subsection}{\numberline {4.4.10}Weak Cipher Suites Detection}{10}{subsection.4.4.10}%
+\contentsline {section}{\numberline {4.5}Analisi della Distribuzione e Identificazione di Schemi}{10}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Valutazione del Rischio Complessivo}{10}{section.4.6}%
+\contentsline {chapter}{\numberline {5}Analisi della Superficie di Attacco per Syneto}{13}{chapter.5}%
 \contentsline {section}{\numberline {5.1}Introduzione}{13}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Distribuzione Generale}{13}{section.5.2}%
-\contentsline {section}{\numberline {5.3}I 5 Host Più Vulnerabili}{13}{section.5.3}%
-\contentsline {section}{\numberline {5.4}Geolocalizzazione dei 5 Host più Vulnerabili}{13}{section.5.4}%
+\contentsline {section}{\numberline {5.2}Distribuzione Generale degli Host}{13}{section.5.2}%
+\contentsline {section}{\numberline {5.3}5 Host più Vulnerabili}{13}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Geolocalizzazione dei 5 Host più Vulnerabili}{14}{section.5.4}%
 \contentsline {section}{\numberline {5.5}Schemi o Correlazioni tra Posizione e Vulnerabilità}{14}{section.5.5}%
-\contentsline {section}{\numberline {5.6}Conclusioni}{14}{section.5.6}%
-\contentsline {chapter}{\numberline {6}Top 10 Vulnerabilities}{15}{chapter.6}%
+\contentsline {section}{\numberline {5.6}Conclusione}{14}{section.5.6}%
+\contentsline {chapter}{\numberline {6}Analisi dei Risultati dei Test di Penetrazione}{15}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Introduzione}{15}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Risultati dei Test}{15}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Analisi delle Vulnerabilità}{15}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Conclusioni}{15}{section.6.4}%
+\contentsline {subsection}{\numberline {6.4.1}Elenco delle vulnerabilità scoperte:}{16}{subsection.6.4.1}%
+\contentsline {chapter}{\numberline {7}Top 10 Vulnerabilities}{17}{chapter.7}%
+\contentsline {chapter}{\numberline {8}Screenshots}{27}{chapter.8}%
 \contentsfinish 

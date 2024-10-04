@@ -9,11 +9,47 @@ import yaml
 import xml.etree.ElementTree as ET
 import pandas as pd
 import numpy as np
+from PIL import Image
 
 
 # XML and YAML file paths
 xml_file = "CWEs_folders/cwec_v4.15.xml"
 yaml_path = 'CWEs_folders/nuclei-templates'
+
+def add_screenshots_chapter(input_dir, latex_content):
+    screenshot_dir = os.path.join(input_dir, 'screenshots')
+    if not os.path.exists(screenshot_dir):
+        print(f"Warning: Screenshot directory {screenshot_dir} not found.")
+        return latex_content
+ 
+    latex_content += r"\chapter{Screenshots}" + "\n\n"
+ 
+    screenshot_files = [f for f in os.listdir(screenshot_dir) if f.lower().endswith('.png')]
+    
+    for screenshot_file in screenshot_files:
+        file_path = os.path.join(screenshot_dir, screenshot_file)
+        
+        # Extract hostname and severity from filename
+        hostname, severity = os.path.splitext(screenshot_file)[0].split('_')
+        
+        # Get image dimensions
+        with Image.open(file_path) as img:
+            width, height = img.size
+        
+        # Calculate scaling factor to fit within text width
+        scale_factor = r"\linewidth"
+        
+        latex_content += f"""
+                                \\begin{{center}}
+                                \\tcbox{{
+                                    \\includegraphics[width={scale_factor}]{{screenshots/{screenshot_file}}}
+                                }}
+                                \\vspace{{0cm}}
+                                \\captionof{{figure}}{{Hostname: {hostname} | Severity: {severity}}}
+                                \\end{{center}}
+                                
+                                """
+    return latex_content
 
 def escape_latex(text):
     """Escape special LaTeX characters while preserving LaTeX commands."""
@@ -484,9 +520,9 @@ def md_to_latex(input_dir, output_file):
         if image_files:
             image_latex = f"\n\\begin{{center}}\n"
             for img_file in image_files:
-                image_latex += f"\\includegraphics[width=\\linewidth]{{pngs/{img_file}}}\n"
-                image_latex += f"\\vspace{{1cm}}"
-            image_latex += f"\\caption{{Images related to Chapter {index + 1}}}\n\\end{{center}}\n"
+                image_latex += f"\\tcbox{{\\includegraphics[width=\\linewidth]{{pngs/{img_file}}}}}\n"
+                image_latex += f"\\vspace{{0cm}}"
+            image_latex += f"\\captionof{{figure}}{{Images related to Chapter {index + 1}}}\n\\end{{center}}\n"
 
         # Special handling for Chapter 1
         if index == 0 and image_files:
@@ -499,9 +535,9 @@ def md_to_latex(input_dir, output_file):
                 # Add the first image right after the chapter title
                 first_image = image_files[0]
                 first_image_latex = f"\n\\begin{{center}}\n"
-                first_image_latex += f"\\includegraphics[width=\\linewidth]{{pngs/{first_image}}}\n"
-                first_image_latex += f"\\vspace{{1cm}}"
-                first_image_latex += f"\\caption{{First image of Chapter {index + 1}}}\n\\end{{center}}\n"
+                first_image_latex += f"\\tcbox{{\\includegraphics[width=\\linewidth]{{pngs/{first_image}}}}}\n"
+                first_image_latex += f"\\vspace{{0cm}}"
+                first_image_latex += f"\\captionof{{figure}}{{First image of Chapter {index + 1}}}\n\\end{{center}}\n"
                 
                 latex_content += f"{chapter_title}\n\n{first_image_latex}\n{rest_of_content}\n\n"
                 
@@ -564,6 +600,7 @@ def md_to_latex(input_dir, output_file):
         # Add the vulnerability info to the LaTeX content
         latex_content += vulnerability_info + "\n\n"
 
+    latex_content = add_screenshots_chapter(input_dir, latex_content)
 
     # Write the LaTeX content to the output file
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -581,6 +618,21 @@ def generate_tex_zip(input_directory, output_directory):
     if not os.path.exists(f'{output_directory}/pngs'):
         os.makedirs(f'{output_directory}/pngs')
 
+    if not os.path.exists(f'{output_directory}/screenshots'):
+        os.makedirs(f'{output_directory}/screenshots')
+    
+    # Itera attraverso tutti i file nella cartella di origine
+    for filename in os.listdir(f'{input_directory}/screenshots'):
+        # Controlla se il file è un PNG
+        if filename.lower().endswith('.png'):
+            # Costruisci i percorsi completi per il file di origine e destinazione
+            source_file = os.path.join(f'{input_directory}/screenshots', filename)
+            destination_file = os.path.join(f'{output_directory}/screenshots', filename)
+            
+            # Copia il file
+            shutil.copy2(source_file, destination_file)
+            print(f"Copiato: {filename}")
+
     # Itera attraverso tutti i file nella cartella di origine
     for filename in os.listdir(f'{input_directory}/pngs'):
         # Controlla se il file è un PNG
@@ -592,6 +644,8 @@ def generate_tex_zip(input_directory, output_directory):
             # Copia il file
             shutil.copy2(source_file, destination_file)
             print(f"Copiato: {filename}")
+    
+
 
     zip_buffer = io.BytesIO()
     
