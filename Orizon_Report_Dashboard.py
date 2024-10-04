@@ -67,8 +67,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = True
-run_LLM = True
+are_you_on_CUDA = False
+run_LLM = False
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -1020,9 +1020,6 @@ def main():
         # Export Options
         st.header("Export Dashboard")
 
-        # Flag per controllare se i file sono stati generati
-        files_generated = st.session_state.get('files_generated', False)
-
         # Genera il report solo se il bottone viene cliccato
         if st.button("Generate Report", key="generate_report"):
             tex_files, pdf_file = generate_files()
@@ -1038,16 +1035,82 @@ def main():
                 st.download_button(
                     label='Download .tex files ZIP',
                     data=st.session_state['tex_files'],
-                    file_name='tex_files.zip',
+                    file_name=f'Orizon_Recon_{name_client}_texfiles.zip',
                     mime='application/zip'
                 )
             with col2:
                 st.download_button(
                     label='Download .pdf file',
                     data=st.session_state['pdf_file'],
-                    file_name='pdf_file.pdf',
+                    file_name=f'Orizon_Recon_{name_client}.pdf',
                     mime='application/pdf'
                 )
+
+        def format_time(seconds):
+            minutes, seconds = divmod(int(seconds), 60)
+            if minutes > 0:
+                return f"{minutes} min {seconds} sec"
+            else:
+                return f"{seconds} sec"
+
+        if st.button("Generate technical csv", key='csv'):
+            # Ottieni la lista degli ID
+            id_list = filtered_vulnerabilities['template_id'].to_list()
+            total_iterations = len(id_list)
+
+            # Crea una barra di progresso
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            series = []
+            start_time = time.time()
+
+            for i, id in enumerate(id_list):
+                # Calcola il tempo trascorso
+                elapsed_time = time.time() - start_time
+                
+                # Stima il tempo rimanente
+                if i > 0:
+                    avg_time_per_iteration = elapsed_time / i
+                    estimated_time_remaining = avg_time_per_iteration * (total_iterations - i)
+                else:
+                    estimated_time_remaining = 0
+
+                # Aggiorna la barra di progresso
+                progress = (i + 1) / total_iterations
+                progress_bar.progress(progress)
+                
+                # Formatta e aggiorna il testo di stato con la stima del tempo rimanente
+                formatted_time = format_time(estimated_time_remaining)
+                status_text.text(f'Parsing all vulnerabilities from MITRE database, estimated remaining time: {formatted_time}')
+                
+                # Esegui l'operazione
+                serie = from_id_to_serie(id)
+                series.append(serie)
+
+            # Completa la barra di progresso
+            progress_bar.progress(1.0)
+            status_text.text('Elaborazione completata!')
+                
+            df_tot_vuln = pd.DataFrame(series)
+
+            # Creiamo un buffer BytesIO
+            buffer_csv = BytesIO()
+
+            # Salviamo il DataFrame come CSV nel buffer
+            df_tot_vuln.to_csv(buffer_csv, index=False, encoding='utf-8')
+
+            # Riportiamo il cursore all'inizio del buffer
+            buffer_csv.seek(0)
+
+            st.download_button(
+                label='Download technical annex in .CSV',
+                data=buffer_csv,
+                file_name=f'technical_{name_client}.csv',
+                mime='application/csv'
+            )
+
+
 
     else:
         st.info("Please upload a JSON file in the sidebar to begin the analysis.")

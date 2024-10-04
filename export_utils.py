@@ -7,6 +7,9 @@ from zipfile import ZipFile
 import subprocess
 import yaml
 import xml.etree.ElementTree as ET
+import pandas as pd
+import numpy as np
+
 
 # XML and YAML file paths
 xml_file = "CWEs_folders/cwec_v4.15.xml"
@@ -657,28 +660,83 @@ def generate_pdf(input_directory):
     except Exception as e:
         print(f'Errore nella lettura del file PDF: {e}')
 
+def format_output_to_serie(cwe_info, yaml_info):
+    output = pd.Series(dtype=object)
 
+    def set_value(key, value):
+        if value is None or pd.isna(value) or value == '' or value == []:
+            output[key] = np.nan
+        else:
+            output[key] = value
 
+    if not cwe_info.empty:
+        for column in cwe_info.columns:
+            value = cwe_info[column].values[0]
+            if isinstance(value, list):
+                value = ', '.join(str(item) for item in value if item is not None and item != '')
+            elif isinstance(value, dict):
+                value = ', '.join(f"{k}: {', '.join(str(v) for v in vs if v is not None and v != '')}" for k, vs in value.items() if vs)
+            set_value(f"CWE_{column}", value)
 
+    if yaml_info:
+        set_value('Template_ID', yaml_info.get('id'))
+        set_value('Template_Name', yaml_info.get('info', {}).get('name'))
+        set_value('Template_Severity', yaml_info.get('info', {}).get('severity'))
+        set_value('Template_Description', yaml_info.get('info', {}).get('description'))
+        
+        classification = yaml_info.get('info', {}).get('classification', {})
+        set_value('Template_CVSS_Score', classification.get('cvss-score'))
+        set_value('Template_CVSS_Metrics', classification.get('cvss-metrics'))
+        set_value('Template_CWE_ID', classification.get('cwe-id'))
+        set_value('Template_EPSS_Score', classification.get('epss-score'))
+        set_value('Template_EPSS_Percentile', classification.get('epss-percentile'))
+        
+        set_value('Template_Remediation', yaml_info.get('remediation'))
+        set_value('Template_Impact', yaml_info.get('impact'))
+        
+        if 'metadata' in yaml_info:
+            for key, value in yaml_info['metadata'].items():
+                set_value(f'Template_Metadata_{key}', value)
+        
+        tags = yaml_info.get('tags', [])
+        set_value('Template_Tags', ', '.join(tag for tag in tags if tag is not None and tag != '') if tags else np.nan)
+        
+        references = yaml_info.get('reference', [])
+        set_value('Template_References', ', '.join(ref for ref in references if ref is not None and ref != '') if references else np.nan)
+        
+        if 'requests' in yaml_info:
+            set_value('Template_Requests', str(yaml_info['requests']))
+        
+        for field in ['verified', 'max-request', 'shodan-query']:
+            set_value(f'Template_{field.capitalize().replace("-", "_")}', yaml_info.get(field))
 
+    return output
 
+def from_id_to_serie(template_id):
+    
+    # Load CWE data
+    root = load_xml(xml_file)
+    cwe_df = get_cwe_info(root)
+    
+    yaml_info = fetch_and_parse_yaml(yaml_path, template_id)
+    
+    if yaml_info:
+        cwe_id = yaml_info.get('info', {}).get('classification', {}).get('cwe-id')
+        if cwe_id:
+            # Extract the numeric part of the CWE ID
+            cwe_number = cwe_id.split('-')[-1]
+            cwe_info = cwe_df[cwe_df['ID'] == cwe_number]
+            if cwe_info.empty:
+                print(f"CWE-{cwe_number} not found in the database.")
+            else:
+                print(f"Found CWE-{cwe_number} in the database.")
+        else:
+            cwe_info = pd.DataFrame()
+            print(f"No CWE ID found for template {template_id}")
+    else:
+        print(f"Template {template_id} not found")
+        return
+    
+    serie = format_output_to_serie(cwe_info, yaml_info)
 
-
-if __name__ == "__main__":
-    try:
-        input_directory = 'trial_txts'  # Current directory
-        output_directory = 'latex_template'
-
-        zip_buffer = generate_tex_zip(input_directory, output_directory)
-
-        # Definisci il nome del file di output
-        output_filename = "Orizon_report.zip"
-
-        # Scrivi il contenuto del buffer in un file locale
-        with open(output_filename, "wb") as f:
-            f.write(zip_buffer.getvalue())
-
-        print(f"File ZIP creato con successo: {os.path.abspath(output_filename)}")
-
-    except Exception as e:
-        print(f"Si è verificato un errore: {str(e)}")
+    return serie
