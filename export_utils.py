@@ -341,67 +341,7 @@ def md_to_latex(input_dir, output_file):
     md_files = sorted([f for f in os.listdir(input_dir) if f.endswith('.txt')], key=lambda x: int(x.split('.')[0]))
 
     # LaTeX preamble
-    latex_content = r"""
-
-                            \lstset{
-                            breaklines=true,
-                            postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
-                            frame=single,
-                            numbers=left,
-                            numberstyle=\tiny\color{gray},
-                            basicstyle=\ttfamily\footnotesize,
-                            keywordstyle=\color{blue},
-                            commentstyle=\color{green!40!black},
-                            stringstyle=\color{orange},
-                            showstringspaces=false,
-                            columns=flexible,
-                            keepspaces=true,
-                            breakatwhitespace=false
-                        }
-
-                        \tableofcontents"""
-
-# \lstset{
-#     breaklines=true,
-#     postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
-#     frame=single,
-#     numbers=left,
-#     numberstyle=\tiny\color{gray},
-#     basicstyle=\ttfamily\footnotesize,
-#     keywordstyle=\color{blue},
-#     commentstyle=\color{green!40!black},
-#     stringstyle=\color{orange},
-#     showstringspaces=false,
-#     columns=flexible,
-#     keepspaces=true,
-#     breakatwhitespace=false
-# }
-
-# \lstdefinestyle{bashstyle}{
-#   language=bash,
-#   basicstyle=\ttfamily\footnotesize,
-#   breaklines=true,
-#   postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
-#   commentstyle=\color{green!40!black},
-#   keywordstyle=\color{blue},
-#   stringstyle=\color{orange},
-#   numbers=left,
-#   numberstyle=\tiny\color{gray},
-#   stepnumber=1,
-#   numbersep=5pt,
-#   backgroundcolor=\color{white},
-#   showspaces=false,
-#   showstringspaces=false,
-#   showtabs=false,
-#   tabsize=2,
-#   captionpos=b,
-#   breakatwhitespace=false,
-#   breakautoindent=true,
-#   escapeinside={\%*}{*)},
-#   linewidth=\textwidth,
-#   basewidth=0.5em,
-# }
-# \lstset{style=bashstyle}
+    latex_content = r''
 
 
     def process_markdown(md_content, is_chapter_start=False):

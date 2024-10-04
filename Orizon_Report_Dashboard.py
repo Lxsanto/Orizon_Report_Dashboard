@@ -884,9 +884,7 @@ def main():
                             severity = sev_row['severity'].values[0] if not sev_row.empty else "unknown"
 
                             # salve le immagini in locale nella cartella screenshot
-                            local_image_path = os.path.join("/txts/screenshots", f"{host}_{severity}.png")
-                            with open(local_image_path, 'wb') as f:
-                                f.write(img_byte_arr)
+                            image.save(f'txts/screenshots/{host}_{severity}.png', format='PNG')
 
                     # Resettiamo il puntatore del buffer
                     zip_buffer.seek(0)

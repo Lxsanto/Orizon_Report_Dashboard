@@ -117,7 +117,7 @@ def save_figure(fig, index):
             print(f"Tipo di figura non supportato per l'elemento in posizione {index}: {type(fig)}")
     
     except Exception as e:
-        print(f"Errore nel salvataggio della figura in posizione {index}: {e}")
+        print(f"Errore nel salvataggio della figura in posizione {index}: {e}, -- {type(fig)}")
 
 @st.cache_data
 def resolve_hostname(hostname):
