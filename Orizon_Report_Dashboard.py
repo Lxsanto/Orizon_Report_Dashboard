@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import streamlit as st
 import torch
+import re
 import cProfile
 import pstats
 from dotenv import load_dotenv
@@ -943,8 +944,13 @@ def main():
         else:
             print(f"Cartella '{pngs_dir}' già esistente.")
 
+        vuln_defs += "\n\n"
+        # trovare il primo titolo e due newline consecutivi
+        pattern = r"(# .+\n)(\n)"
+
+        overview_analysis = re.sub(pattern, r'\1\2' + vuln_defs, overview_analysis, count=1)
         
-        texts_LLM = {'Vulnerabilites definition': vuln_defs,
+        texts_LLM = {#'Vulnerabilites definition': vuln_defs,
             'Security Posture Overview': overview_analysis,
                 'Vulnerability Severity Distribution': severity_analysis,
                 'Top 10 Critical Vulnerabilities': top_vuln_analysis,
