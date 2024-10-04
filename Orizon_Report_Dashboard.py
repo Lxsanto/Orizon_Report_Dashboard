@@ -380,6 +380,16 @@ def main():
             shutil.rmtree(folder)
         else:
             print(f"Cartella '{folder}' non trovata, passo oltre.")
+    
+    # cartelle da creare 
+    folders = ['txts', 'txts/screenshots', 'txts/pngs', 'txts/ports_scanning', 'txts/dfs']
+
+    for folder in folders:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+            print(f"Cartella '{folder}' creata")
+        else:
+            print(f"Cartella '{folder}' trovata, passo oltre.")
 
     st.sidebar.title("Orizon Security Dashboard")
     
@@ -759,6 +769,10 @@ def main():
             # Filter the dataframe
             filtered_df = df[~df['severity'].isin(['info'])]
 
+            if filtered_df.empty:
+                # if we have only info we take the fistrs 5
+                filtered_df = df[df['severity'] == 'info'].head(10)
+
             # Get unique hosts
             unique_hosts = filtered_df['host'].unique()
 
@@ -842,6 +856,14 @@ def main():
                             
                             # Aggiungiamo l'immagine al file zip
                             zip_file.writestr(f"image_{host}.png", img_byte_arr)
+
+                            sev_row = filtered_df[filtered_df['host'] == host].head(1)
+                            severity = sev_row['severity'].values[0] if not sev_row.empty else "unknown"
+
+                            # salve le immagini in locale nella cartella screenshot
+                            local_image_path = os.path.join("/txts/screenshots", f"{host}_{severity}.png")
+                            with open(local_image_path, 'wb') as f:
+                                f.write(img_byte_arr)
 
                     # Resettiamo il puntatore del buffer
                     zip_buffer.seek(0)
