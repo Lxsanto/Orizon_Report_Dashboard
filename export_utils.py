@@ -535,7 +535,7 @@ def md_to_latex(input_dir, output_file):
             # Extract the chapter title
             chapter_title_match = re.search(r'\\chapter{(.+?)}', processed_content)
             if chapter_title_match:
-                chapter_title = chapter_title_match.group(1)
+                chapter_title = chapter_title_match.group(0)
                 rest_of_content = processed_content[chapter_title_match.end():].strip()
                 
                 # Add the first image right after the chapter title

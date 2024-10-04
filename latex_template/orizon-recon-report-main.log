@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex 2024.9.28)  3 OCT 2024 15:55
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex 2024.9.28)  3 OCT 2024 17:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1733,16 +1733,20 @@ File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 [1
 
 ]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.69003pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.69003pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.69003pt}.
+
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
- [2]
+[2]
 Chapter 1.
-File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
-<use figures/orizon-logo-white-simplified-black.pdf>
-[3]
 File: pngs/1_1.png Graphic file (type bmp)
 <pngs/1_1.png>
-
 
 ! Package caption Error: \caption outside float.
 
@@ -1750,7 +1754,7 @@ See the caption package documentation for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.133 \vspace{1cm}\caption
+l.100 \vspace{1cm}\caption
                           {Images related to Chapter 2}
 If you do not understand this error, please take a closer look
 at the documentation of the `caption' package, especially the
@@ -1760,12 +1764,19 @@ If that doesn't work, type  X <return>  to quit.
 
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
+[3]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.69003pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.69003pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.69003pt}.
+
+File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
+<use figures/orizon-logo-white-simplified-black.pdf>
 [4]
 Chapter 2.
-Missing character: There is no ≈ (U+2248) in font [lmroman10-regular]:mapping=t
-ex-text;!
-Missing character: There is no ≈ (U+2248) in font [lmroman10-regular]:mapping=t
-ex-text;!
 File: pngs/2_1.png Graphic file (type bmp)
 <pngs/2_1.png>
 File: pngs/2_2.png Graphic file (type bmp)
@@ -1777,7 +1788,7 @@ See the caption package documentation for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.178 \vspace{1cm}\caption
+l.140 \vspace{1cm}\caption
                           {Images related to Chapter 3}
 If you do not understand this error, please take a closer look
 at the documentation of the `caption' package, especially the
@@ -1788,9 +1799,17 @@ If that doesn't work, type  X <return>  to quit.
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
 [5]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.69003pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.69003pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.69003pt}.
+
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
- [6]
+[6]
 Chapter 3.
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
@@ -1807,7 +1826,7 @@ See the caption package documentation for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.235 \vspace{1cm}\caption
+l.215 \vspace{1cm}\caption
                           {Images related to Chapter 4}
 If you do not understand this error, please take a closer look
 at the documentation of the `caption' package, especially the
@@ -1815,12 +1834,28 @@ section about errors.
 Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
 
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.69003pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.69003pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.69003pt}.
+
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
 [8]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.69003pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.69003pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.69003pt}.
+
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
- [9]
+[9]
 Chapter 4.
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
@@ -1829,330 +1864,179 @@ File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
  [11]
 Chapter 5.
-
-Overfull \hbox (4.12248pt too wide) in paragraph at lines 334--335
-[]\TU/lmr/b/n/10 autodiscover.euroscatola.it\TU/lmr/m/n/10 , \TU/lmr/b/n/10 cpa
-nel.euroscatola.it\TU/lmr/m/n/10 , \TU/lmr/b/n/10 cpcalendars.euroscatola.it\TU
-/lmr/m/n/10 ,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 334--335
-\TU/lmr/b/n/10 cpcontacts.euroscatola.it\TU/lmr/m/n/10 , \TU/lmr/b/n/10 eurosca
-tola.it\TU/lmr/m/n/10 , \TU/lmr/b/n/10 mail.euroscatola.it\TU/lmr/m/n/10 , \TU/
-lmr/b/n/10 web-
- []
-
-
-Overfull \hbox (40.68248pt too wide) in paragraph at lines 336--337
-[]\TU/lmr/b/n/10 cpanel.cotonificio1890.it\TU/lmr/m/n/10 , \TU/lmr/b/n/10 cpcal
-endars.cotonificio1890.it\TU/lmr/m/n/10 , \TU/lmr/b/n/10 cpcontacts.cotonificio
-1890.it\TU/lmr/m/n/10 ,
- []
-
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
 [12]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.69003pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.69003pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.69003pt}.
+
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
- [13]
+[13]
 Chapter 6.
-
-Underfull \hbox (badness 10000) in paragraph at lines 405--407
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 409--411
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 412--413
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 414--417
-
- []
-
-File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
-<use figures/orizon-logo-white-simplified-black.pdf>
-[14]
-Underfull \hbox (badness 10000) in paragraph at lines 418--420
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 424--426
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 427--443
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 444--462
-
- []
-
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `lmtt' (encoding: TU).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 464.
+(Font)              <8> on input line 351.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 464.
+(Font)              <6> on input line 351.
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
-[15]
-Underfull \hbox (badness 10000) in paragraph at lines 486--490
+[14]
+File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
+<use figures/orizon-logo-white-simplified-black.pdf>
+ [15]
+Chapter 7.
+
+Underfull \hbox (badness 10000) in paragraph at lines 457--461
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 491--492
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 493--497
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 498--500
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 502--506
+Underfull \hbox (badness 10000) in paragraph at lines 463--465
 
  []
 
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
 [16]
-Underfull \hbox (badness 10000) in paragraph at lines 552--554
+Underfull \hbox (badness 10000) in paragraph at lines 468--470
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 556--558
+Underfull \hbox (badness 10000) in paragraph at lines 474--477
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 559--560
+Underfull \hbox (badness 10000) in paragraph at lines 479--481
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 561--564
+Underfull \hbox (badness 10000) in paragraph at lines 497--500
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 565--567
+Underfull \hbox (badness 10000) in paragraph at lines 501--502
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 571--573
+Underfull \hbox (badness 10000) in paragraph at lines 503--505
 
  []
 
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
 [17]
-Underfull \hbox (badness 10000) in paragraph at lines 574--590
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 591--609
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 633--637
-
- []
-
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
-[18]
-Underfull \hbox (badness 10000) in paragraph at lines 638--639
+ [18]
+Underfull \hbox (badness 10000) in paragraph at lines 553--557
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 640--644
+Underfull \hbox (badness 10000) in paragraph at lines 559--561
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 645--647
+Underfull \hbox (badness 10000) in paragraph at lines 564--566
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 649--653
+Underfull \hbox (badness 10000) in paragraph at lines 570--573
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 575--577
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 593--596
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 597--598
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 599--601
 
  []
 
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
 [19]
-Underfull \hbox (badness 10000) in paragraph at lines 699--701
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 703--705
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 706--707
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 708--711
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 712--714
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 718--720
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 721--737
-
- []
-
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
-[20]
-Underfull \hbox (badness 10000) in paragraph at lines 738--756
+ [20]
+Underfull \hbox (badness 10000) in paragraph at lines 649--653
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 780--784
+Underfull \hbox (badness 10000) in paragraph at lines 655--657
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 660--662
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 666--669
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 671--673
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 689--692
 
  []
 
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
 [21]
-Underfull \hbox (badness 10000) in paragraph at lines 785--786
+Underfull \hbox (badness 10000) in paragraph at lines 693--694
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 787--791
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 792--794
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 796--800
+Underfull \hbox (badness 10000) in paragraph at lines 695--697
 
  []
 
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
 [22]
-Underfull \hbox (badness 10000) in paragraph at lines 845--847
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 849--851
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 852--853
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 854--857
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 858--860
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 864--866
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 867--883
-
- []
-
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
-[23]
-Underfull \hbox (badness 10000) in paragraph at lines 884--902
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 926--930
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 931--932
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 933--937
-
- []
-
+ [23])
 File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
 <use figures/orizon-logo-white-simplified-black.pdf>
-[24]
-Underfull \hbox (badness 10000) in paragraph at lines 938--940
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 942--946
-
- []
-
-File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
-<use figures/orizon-logo-white-simplified-black.pdf>
-[25])
-File: figures/orizon-logo-white-simplified-black.pdf Graphic file (type pdf)
-<use figures/orizon-logo-white-simplified-black.pdf>
- [26]
+ [24]
 File: figures/cover/orizon-recon-report-template-cover-back-background-export.j
 pg Graphic file (type bmp)
 <figures/cover/orizon-recon-report-template-cover-back-background-export.jpg>
@@ -2162,7 +2046,7 @@ c file (type bmp)
 File: figures/cover/orizon-recon-report-template-cover-back-logo-export.png Gra
 phic file (type bmp)
 <figures/cover/orizon-recon-report-template-cover-back-logo-export.png>
- [27
+ [25
 
 ] (./orizon-recon-report-main.aux)
  ***********
@@ -2180,19 +2064,19 @@ Package rerunfilecheck Warning: File `orizon-recon-report-main.out' has changed
 (rerunfilecheck)                or use package `bookmark'.
 
 Package rerunfilecheck Info: Checksums for `orizon-recon-report-main.out':
-(rerunfilecheck)             Before: A43961DFC72D3486BC4E3C5138D5C70A;11812
-(rerunfilecheck)             After:  E1576A4675D7624CEEC5E26B4E819EF6;11590.
+(rerunfilecheck)             Before: EF9EA3A37CE87F00EC9838DACF5D5D31;9355
+(rerunfilecheck)             After:  AC726A298B3CB815A31364BD224136E5;10699.
 Package logreq Info: Writing requests to 'orizon-recon-report-main.run.xml'.
 \openout1 = `orizon-recon-report-main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 46061 strings out of 474878
- 964863 string characters out of 5762516
- 2066627 words of memory out of 5000000
- 67392 multiletter control sequences out of 15000+600000
+ 46102 strings out of 474878
+ 965205 string characters out of 5762516
+ 2117627 words of memory out of 5000000
+ 67433 multiletter control sequences out of 15000+600000
  578991 words of font info for 99 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 99i,15n,123p,1213b,4619s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 99i,15n,123p,2102b,4615s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on orizon-recon-report-main.pdf (28 pages).
+Output written on orizon-recon-report-main.pdf (26 pages).
