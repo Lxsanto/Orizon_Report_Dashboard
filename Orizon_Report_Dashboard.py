@@ -390,7 +390,7 @@ def main():
         file_path = os.path.join(directory, file_name)
         if os.path.exists(file_path):
             print(f"Eliminando il file: {file_name}")
-            os.remove(file_path)
+            #os.remove(file_path)
         else:
             print(f"File non trovato: {file_name}")
 

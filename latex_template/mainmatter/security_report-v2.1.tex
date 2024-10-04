@@ -6,7 +6,7 @@
 \vspace{1cm}\caption{First image of Chapter 1}
 \end{center}
 
-\chapter{Definizione Vulnerabilità}
+\section{Definizione Vulnerabilità}
 \section{Gravità Critica}
 \begin{itemize}
 \item Lo sfruttamento è semplice e di solito comporta una compromissione a livello di sistema. Si consiglia di pianificare un'azione correttiva e applicare una patch immediatamente.
@@ -353,32 +353,32 @@ Draft
 \subsection*{Description}
 A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks.
 
-\subsection*{Extended Description}
+\subsection*{Extended\_Description}
 An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL. By modifying the URL value to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts have a more trustworthy appearance. Whether this issue poses a vulnerability will be subject to the intended behavior of the application. For example, a search engine might intentionally provide redirects to arbitrary URLs.
 
-\subsection*{Related Weaknesses}
+\subsection*{Related\_Weaknesses}
 ChildOf:610\\
 ChildOf:610\\
-\subsection*{Weakness Ordinalities}
-\subsection*{Applicable Platforms}
+\subsection*{Weakness\_Ordinalities}
+\subsection*{Applicable\_Platforms}
 Language: \\
 Technology: Web Based\\
-\subsection*{Background Details}
+\subsection*{Background\_Details}
 Phishing is a general term for deceptive attempts to coerce private information from users that will be used for identity theft.\\
-\subsection*{Alternate Terms}
+\subsection*{Alternate\_Terms}
 Open Redirect: None\\
 Cross-site Redirect: None\\
 Cross-domain Redirect: None\\
-\subsection*{Modes Of Introduction}
+\subsection*{Modes\_Of\_Introduction}
 Architecture and Design: OMISSION: This weakness is caused by missing a security tactic during the architecture and design phase.\\
 Implementation: None\\
-\subsection*{Likelihood Of Exploit}
+\subsection*{Likelihood\_Of\_Exploit}
 Low
 
-\subsection*{Common Consequences}
+\subsection*{Common\_Consequences}
 Access Control: Bypass Protection Mechanism\\
 Access Control: Bypass Protection Mechanism\\
-\subsection*{Detection Methods}
+\subsection*{Detection\_Methods}
 Manual Static Analysis: Since this weakness does not typically appear frequently within a single software package, manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all potentially-vulnerable operations can be assessed within limited time constraints.\\
 Automated Dynamic Analysis: Automated black box tools that supply URLs to every input may be able to spot Location header modifications, but test case coverage is a factor, and custom redirects may not be detected.\\
 Automated Static Analysis: Automated static analysis tools may not be able to determine whether input influences the beginning of a URL, which is important for reducing false positives.\\
@@ -395,7 +395,7 @@ Automated Static Analysis - Source Code:
                   \\
 Architecture or Design Review: 
                   \\
-\subsection*{Potential Mitigations}
+\subsection*{Potential\_Mitigations}
 Phase: Implementation
 Description: 
                   \\
@@ -414,53 +414,42 @@ Phase: Operation
 Description: Use an application firewall that can detect attacks against this weakness. It can be beneficial in cases in which the code cannot be fixed (because it is controlled by a third party), as an emergency prevention measure while more comprehensive software assurance measures are applied, or to provide defense in depth.
 Effectiveness: Moderate
 Notes: An application firewall might not cover all possible input vectors. In addition, attack techniques might be available to bypass the protection mechanism, such as using malformed inputs that can still be processed by the component that receives those inputs. Depending on functionality, an application firewall might inadvertently reject or modify legitimate requests. Finally, some manual effort may be required for customization.\\
-\subsection*{Demonstrative Examples}
-The following code obtains a URL from the query string and then redirects the user to that URL.
+\subsection*{Demonstrative\_Examples}
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+php
+$redirect_url = $_GET['url'];header("Location: " . $redirect_url);
+\end{lstlisting}
 
-The problem with the above code is that an attacker could use this page as part of a phishing scam by redirecting users to a malicious site. For example, assume the above code is in the file example.php. An attacker could supply a user with the following link:
-
-Nature: Bad
-Language: PHP
-```php
-\$redirect\_url = \$\_GET['url'];header("Location: " . \$redirect\_url);
-```
-
-Nature: Attack
-Language: 
-```
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
 http://example.com/example.php?url=http://malicious.example.com
-```\\
-The following code is a Java servlet that will receive a GET request with a url parameter in the request to redirect the browser to the address specified in the url parameter. The servlet will retrieve the url parameter value from the request and send a response to redirect the browser to the url address.
+\end{lstlisting}
 
-The problem with this Java servlet code is that an attacker could use the RedirectServlet as part of an e-mail phishing scam to redirect users to a malicious site. An attacker could send an HTML formatted e-mail directing the user to log into their account by including in the e-mail the following link:
-
-Nature: Bad
-Language: Java
-```java
-public class RedirectServlet extends HttpServlet \{
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+java
+public class RedirectServlet extends HttpServlet {
                      
-                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException \{String query = request.getQueryString();if (query.contains("url")) \{String url = request.getParameter("url");response.sendRedirect(url);\}\}
-                     \}
-```
+                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains("url")) {String url = request.getParameter("url");response.sendRedirect(url);}}
+                     }
+\end{lstlisting}
 
-Nature: Attack
-Language: HTML
-```html
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+html
 <a href="http://bank.example.com/redirect?url=http://attacker.example.net">Click here to log in</a>
-```\\
-\subsection*{Observed Examples}
+\end{lstlisting}
+
+\subsection*{Observed\_Examples}
 CVE-2005-4206: URL parameter loads the URL into a frame and causes it to appear to be part of a valid page.\\
 CVE-2008-2951: An open redirect vulnerability in the search script in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL as a parameter to the proper function.\\
 CVE-2008-2052: Open redirect vulnerability in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL in the proper parameter.\\
 CVE-2020-11053: Chain: Go-based Oauth2 reverse proxy can send the authenticated user to another site at the end of the authentication flow. A redirect URL with HTML-encoded whitespace characters can bypass the validation (CWE-1289) to redirect to a malicious site (CWE-601)\\
-\subsection*{Related Attack\_Patterns}
+\subsection*{Related\_Attack\_Patterns}
 CAPEC-178\\
 \subsection*{References}
 REF-483\\
 \href{Page 43)}{REF-484 (Section}\\
 REF-485\\
 REF-45\\
-\subsection*{Taxonomy Mappings}
+\subsection*{Taxonomy\_Mappings}
 WASC: None\\
 Software Fault Patterns: None\\
 \subsection*{Notes}
@@ -511,32 +500,32 @@ Draft
 \subsection*{Description}
 A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks.
 
-\subsection*{Extended Description}
+\subsection*{Extended\_Description}
 An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL. By modifying the URL value to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts have a more trustworthy appearance. Whether this issue poses a vulnerability will be subject to the intended behavior of the application. For example, a search engine might intentionally provide redirects to arbitrary URLs.
 
-\subsection*{Related Weaknesses}
+\subsection*{Related\_Weaknesses}
 ChildOf:610\\
 ChildOf:610\\
-\subsection*{Weakness Ordinalities}
-\subsection*{Applicable Platforms}
+\subsection*{Weakness\_Ordinalities}
+\subsection*{Applicable\_Platforms}
 Language: \\
 Technology: Web Based\\
-\subsection*{Background Details}
+\subsection*{Background\_Details}
 Phishing is a general term for deceptive attempts to coerce private information from users that will be used for identity theft.\\
-\subsection*{Alternate Terms}
+\subsection*{Alternate\_Terms}
 Open Redirect: None\\
 Cross-site Redirect: None\\
 Cross-domain Redirect: None\\
-\subsection*{Modes Of Introduction}
+\subsection*{Modes\_Of\_Introduction}
 Architecture and Design: OMISSION: This weakness is caused by missing a security tactic during the architecture and design phase.\\
 Implementation: None\\
-\subsection*{Likelihood Of Exploit}
+\subsection*{Likelihood\_Of\_Exploit}
 Low
 
-\subsection*{Common Consequences}
+\subsection*{Common\_Consequences}
 Access Control: Bypass Protection Mechanism\\
 Access Control: Bypass Protection Mechanism\\
-\subsection*{Detection Methods}
+\subsection*{Detection\_Methods}
 Manual Static Analysis: Since this weakness does not typically appear frequently within a single software package, manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all potentially-vulnerable operations can be assessed within limited time constraints.\\
 Automated Dynamic Analysis: Automated black box tools that supply URLs to every input may be able to spot Location header modifications, but test case coverage is a factor, and custom redirects may not be detected.\\
 Automated Static Analysis: Automated static analysis tools may not be able to determine whether input influences the beginning of a URL, which is important for reducing false positives.\\
@@ -553,7 +542,7 @@ Automated Static Analysis - Source Code:
                   \\
 Architecture or Design Review: 
                   \\
-\subsection*{Potential Mitigations}
+\subsection*{Potential\_Mitigations}
 Phase: Implementation
 Description: 
                   \\
@@ -572,53 +561,42 @@ Phase: Operation
 Description: Use an application firewall that can detect attacks against this weakness. It can be beneficial in cases in which the code cannot be fixed (because it is controlled by a third party), as an emergency prevention measure while more comprehensive software assurance measures are applied, or to provide defense in depth.
 Effectiveness: Moderate
 Notes: An application firewall might not cover all possible input vectors. In addition, attack techniques might be available to bypass the protection mechanism, such as using malformed inputs that can still be processed by the component that receives those inputs. Depending on functionality, an application firewall might inadvertently reject or modify legitimate requests. Finally, some manual effort may be required for customization.\\
-\subsection*{Demonstrative Examples}
-The following code obtains a URL from the query string and then redirects the user to that URL.
+\subsection*{Demonstrative\_Examples}
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+php
+$redirect_url = $_GET['url'];header("Location: " . $redirect_url);
+\end{lstlisting}
 
-The problem with the above code is that an attacker could use this page as part of a phishing scam by redirecting users to a malicious site. For example, assume the above code is in the file example.php. An attacker could supply a user with the following link:
-
-Nature: Bad
-Language: PHP
-```php
-\$redirect\_url = \$\_GET['url'];header("Location: " . \$redirect\_url);
-```
-
-Nature: Attack
-Language: 
-```
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
 http://example.com/example.php?url=http://malicious.example.com
-```\\
-The following code is a Java servlet that will receive a GET request with a url parameter in the request to redirect the browser to the address specified in the url parameter. The servlet will retrieve the url parameter value from the request and send a response to redirect the browser to the url address.
+\end{lstlisting}
 
-The problem with this Java servlet code is that an attacker could use the RedirectServlet as part of an e-mail phishing scam to redirect users to a malicious site. An attacker could send an HTML formatted e-mail directing the user to log into their account by including in the e-mail the following link:
-
-Nature: Bad
-Language: Java
-```java
-public class RedirectServlet extends HttpServlet \{
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+java
+public class RedirectServlet extends HttpServlet {
                      
-                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException \{String query = request.getQueryString();if (query.contains("url")) \{String url = request.getParameter("url");response.sendRedirect(url);\}\}
-                     \}
-```
+                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains("url")) {String url = request.getParameter("url");response.sendRedirect(url);}}
+                     }
+\end{lstlisting}
 
-Nature: Attack
-Language: HTML
-```html
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+html
 <a href="http://bank.example.com/redirect?url=http://attacker.example.net">Click here to log in</a>
-```\\
-\subsection*{Observed Examples}
+\end{lstlisting}
+
+\subsection*{Observed\_Examples}
 CVE-2005-4206: URL parameter loads the URL into a frame and causes it to appear to be part of a valid page.\\
 CVE-2008-2951: An open redirect vulnerability in the search script in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL as a parameter to the proper function.\\
 CVE-2008-2052: Open redirect vulnerability in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL in the proper parameter.\\
 CVE-2020-11053: Chain: Go-based Oauth2 reverse proxy can send the authenticated user to another site at the end of the authentication flow. A redirect URL with HTML-encoded whitespace characters can bypass the validation (CWE-1289) to redirect to a malicious site (CWE-601)\\
-\subsection*{Related Attack\_Patterns}
+\subsection*{Related\_Attack\_Patterns}
 CAPEC-178\\
 \subsection*{References}
 REF-483\\
 \href{Page 43)}{REF-484 (Section}\\
 REF-485\\
 REF-45\\
-\subsection*{Taxonomy Mappings}
+\subsection*{Taxonomy\_Mappings}
 WASC: None\\
 Software Fault Patterns: None\\
 \subsection*{Notes}
@@ -669,32 +647,32 @@ Draft
 \subsection*{Description}
 A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks.
 
-\subsection*{Extended Description}
+\subsection*{Extended\_Description}
 An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL. By modifying the URL value to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts have a more trustworthy appearance. Whether this issue poses a vulnerability will be subject to the intended behavior of the application. For example, a search engine might intentionally provide redirects to arbitrary URLs.
 
-\subsection*{Related Weaknesses}
+\subsection*{Related\_Weaknesses}
 ChildOf:610\\
 ChildOf:610\\
-\subsection*{Weakness Ordinalities}
-\subsection*{Applicable Platforms}
+\subsection*{Weakness\_Ordinalities}
+\subsection*{Applicable\_Platforms}
 Language: \\
 Technology: Web Based\\
-\subsection*{Background Details}
+\subsection*{Background\_Details}
 Phishing is a general term for deceptive attempts to coerce private information from users that will be used for identity theft.\\
-\subsection*{Alternate Terms}
+\subsection*{Alternate\_Terms}
 Open Redirect: None\\
 Cross-site Redirect: None\\
 Cross-domain Redirect: None\\
-\subsection*{Modes Of Introduction}
+\subsection*{Modes\_Of\_Introduction}
 Architecture and Design: OMISSION: This weakness is caused by missing a security tactic during the architecture and design phase.\\
 Implementation: None\\
-\subsection*{Likelihood Of Exploit}
+\subsection*{Likelihood\_Of\_Exploit}
 Low
 
-\subsection*{Common Consequences}
+\subsection*{Common\_Consequences}
 Access Control: Bypass Protection Mechanism\\
 Access Control: Bypass Protection Mechanism\\
-\subsection*{Detection Methods}
+\subsection*{Detection\_Methods}
 Manual Static Analysis: Since this weakness does not typically appear frequently within a single software package, manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all potentially-vulnerable operations can be assessed within limited time constraints.\\
 Automated Dynamic Analysis: Automated black box tools that supply URLs to every input may be able to spot Location header modifications, but test case coverage is a factor, and custom redirects may not be detected.\\
 Automated Static Analysis: Automated static analysis tools may not be able to determine whether input influences the beginning of a URL, which is important for reducing false positives.\\
@@ -711,7 +689,7 @@ Automated Static Analysis - Source Code:
                   \\
 Architecture or Design Review: 
                   \\
-\subsection*{Potential Mitigations}
+\subsection*{Potential\_Mitigations}
 Phase: Implementation
 Description: 
                   \\
@@ -730,53 +708,42 @@ Phase: Operation
 Description: Use an application firewall that can detect attacks against this weakness. It can be beneficial in cases in which the code cannot be fixed (because it is controlled by a third party), as an emergency prevention measure while more comprehensive software assurance measures are applied, or to provide defense in depth.
 Effectiveness: Moderate
 Notes: An application firewall might not cover all possible input vectors. In addition, attack techniques might be available to bypass the protection mechanism, such as using malformed inputs that can still be processed by the component that receives those inputs. Depending on functionality, an application firewall might inadvertently reject or modify legitimate requests. Finally, some manual effort may be required for customization.\\
-\subsection*{Demonstrative Examples}
-The following code obtains a URL from the query string and then redirects the user to that URL.
+\subsection*{Demonstrative\_Examples}
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+php
+$redirect_url = $_GET['url'];header("Location: " . $redirect_url);
+\end{lstlisting}
 
-The problem with the above code is that an attacker could use this page as part of a phishing scam by redirecting users to a malicious site. For example, assume the above code is in the file example.php. An attacker could supply a user with the following link:
-
-Nature: Bad
-Language: PHP
-```php
-\$redirect\_url = \$\_GET['url'];header("Location: " . \$redirect\_url);
-```
-
-Nature: Attack
-Language: 
-```
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
 http://example.com/example.php?url=http://malicious.example.com
-```\\
-The following code is a Java servlet that will receive a GET request with a url parameter in the request to redirect the browser to the address specified in the url parameter. The servlet will retrieve the url parameter value from the request and send a response to redirect the browser to the url address.
+\end{lstlisting}
 
-The problem with this Java servlet code is that an attacker could use the RedirectServlet as part of an e-mail phishing scam to redirect users to a malicious site. An attacker could send an HTML formatted e-mail directing the user to log into their account by including in the e-mail the following link:
-
-Nature: Bad
-Language: Java
-```java
-public class RedirectServlet extends HttpServlet \{
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+java
+public class RedirectServlet extends HttpServlet {
                      
-                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException \{String query = request.getQueryString();if (query.contains("url")) \{String url = request.getParameter("url");response.sendRedirect(url);\}\}
-                     \}
-```
+                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains("url")) {String url = request.getParameter("url");response.sendRedirect(url);}}
+                     }
+\end{lstlisting}
 
-Nature: Attack
-Language: HTML
-```html
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+html
 <a href="http://bank.example.com/redirect?url=http://attacker.example.net">Click here to log in</a>
-```\\
-\subsection*{Observed Examples}
+\end{lstlisting}
+
+\subsection*{Observed\_Examples}
 CVE-2005-4206: URL parameter loads the URL into a frame and causes it to appear to be part of a valid page.\\
 CVE-2008-2951: An open redirect vulnerability in the search script in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL as a parameter to the proper function.\\
 CVE-2008-2052: Open redirect vulnerability in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL in the proper parameter.\\
 CVE-2020-11053: Chain: Go-based Oauth2 reverse proxy can send the authenticated user to another site at the end of the authentication flow. A redirect URL with HTML-encoded whitespace characters can bypass the validation (CWE-1289) to redirect to a malicious site (CWE-601)\\
-\subsection*{Related Attack\_Patterns}
+\subsection*{Related\_Attack\_Patterns}
 CAPEC-178\\
 \subsection*{References}
 REF-483\\
 \href{Page 43)}{REF-484 (Section}\\
 REF-485\\
 REF-45\\
-\subsection*{Taxonomy Mappings}
+\subsection*{Taxonomy\_Mappings}
 WASC: None\\
 Software Fault Patterns: None\\
 \subsection*{Notes}
@@ -826,32 +793,32 @@ Draft
 \subsection*{Description}
 A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks.
 
-\subsection*{Extended Description}
+\subsection*{Extended\_Description}
 An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL. By modifying the URL value to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts have a more trustworthy appearance. Whether this issue poses a vulnerability will be subject to the intended behavior of the application. For example, a search engine might intentionally provide redirects to arbitrary URLs.
 
-\subsection*{Related Weaknesses}
+\subsection*{Related\_Weaknesses}
 ChildOf:610\\
 ChildOf:610\\
-\subsection*{Weakness Ordinalities}
-\subsection*{Applicable Platforms}
+\subsection*{Weakness\_Ordinalities}
+\subsection*{Applicable\_Platforms}
 Language: \\
 Technology: Web Based\\
-\subsection*{Background Details}
+\subsection*{Background\_Details}
 Phishing is a general term for deceptive attempts to coerce private information from users that will be used for identity theft.\\
-\subsection*{Alternate Terms}
+\subsection*{Alternate\_Terms}
 Open Redirect: None\\
 Cross-site Redirect: None\\
 Cross-domain Redirect: None\\
-\subsection*{Modes Of Introduction}
+\subsection*{Modes\_Of\_Introduction}
 Architecture and Design: OMISSION: This weakness is caused by missing a security tactic during the architecture and design phase.\\
 Implementation: None\\
-\subsection*{Likelihood Of Exploit}
+\subsection*{Likelihood\_Of\_Exploit}
 Low
 
-\subsection*{Common Consequences}
+\subsection*{Common\_Consequences}
 Access Control: Bypass Protection Mechanism\\
 Access Control: Bypass Protection Mechanism\\
-\subsection*{Detection Methods}
+\subsection*{Detection\_Methods}
 Manual Static Analysis: Since this weakness does not typically appear frequently within a single software package, manual white box techniques may be able to provide sufficient code coverage and reduction of false positives if all potentially-vulnerable operations can be assessed within limited time constraints.\\
 Automated Dynamic Analysis: Automated black box tools that supply URLs to every input may be able to spot Location header modifications, but test case coverage is a factor, and custom redirects may not be detected.\\
 Automated Static Analysis: Automated static analysis tools may not be able to determine whether input influences the beginning of a URL, which is important for reducing false positives.\\
@@ -868,7 +835,7 @@ Automated Static Analysis - Source Code:
                   \\
 Architecture or Design Review: 
                   \\
-\subsection*{Potential Mitigations}
+\subsection*{Potential\_Mitigations}
 Phase: Implementation
 Description: 
                   \\
@@ -887,53 +854,42 @@ Phase: Operation
 Description: Use an application firewall that can detect attacks against this weakness. It can be beneficial in cases in which the code cannot be fixed (because it is controlled by a third party), as an emergency prevention measure while more comprehensive software assurance measures are applied, or to provide defense in depth.
 Effectiveness: Moderate
 Notes: An application firewall might not cover all possible input vectors. In addition, attack techniques might be available to bypass the protection mechanism, such as using malformed inputs that can still be processed by the component that receives those inputs. Depending on functionality, an application firewall might inadvertently reject or modify legitimate requests. Finally, some manual effort may be required for customization.\\
-\subsection*{Demonstrative Examples}
-The following code obtains a URL from the query string and then redirects the user to that URL.
+\subsection*{Demonstrative\_Examples}
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+php
+$redirect_url = $_GET['url'];header("Location: " . $redirect_url);
+\end{lstlisting}
 
-The problem with the above code is that an attacker could use this page as part of a phishing scam by redirecting users to a malicious site. For example, assume the above code is in the file example.php. An attacker could supply a user with the following link:
-
-Nature: Bad
-Language: PHP
-```php
-\$redirect\_url = \$\_GET['url'];header("Location: " . \$redirect\_url);
-```
-
-Nature: Attack
-Language: 
-```
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
 http://example.com/example.php?url=http://malicious.example.com
-```\\
-The following code is a Java servlet that will receive a GET request with a url parameter in the request to redirect the browser to the address specified in the url parameter. The servlet will retrieve the url parameter value from the request and send a response to redirect the browser to the url address.
+\end{lstlisting}
 
-The problem with this Java servlet code is that an attacker could use the RedirectServlet as part of an e-mail phishing scam to redirect users to a malicious site. An attacker could send an HTML formatted e-mail directing the user to log into their account by including in the e-mail the following link:
-
-Nature: Bad
-Language: Java
-```java
-public class RedirectServlet extends HttpServlet \{
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+java
+public class RedirectServlet extends HttpServlet {
                      
-                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException \{String query = request.getQueryString();if (query.contains("url")) \{String url = request.getParameter("url");response.sendRedirect(url);\}\}
-                     \}
-```
+                        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains("url")) {String url = request.getParameter("url");response.sendRedirect(url);}}
+                     }
+\end{lstlisting}
 
-Nature: Attack
-Language: HTML
-```html
+\begin{lstlisting}[breaklines=true,postbreak=\mbox{$\hookrightarrow$\space}]
+html
 <a href="http://bank.example.com/redirect?url=http://attacker.example.net">Click here to log in</a>
-```\\
-\subsection*{Observed Examples}
+\end{lstlisting}
+
+\subsection*{Observed\_Examples}
 CVE-2005-4206: URL parameter loads the URL into a frame and causes it to appear to be part of a valid page.\\
 CVE-2008-2951: An open redirect vulnerability in the search script in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL as a parameter to the proper function.\\
 CVE-2008-2052: Open redirect vulnerability in the software allows remote attackers to redirect users to arbitrary web sites and conduct phishing attacks via a URL in the proper parameter.\\
 CVE-2020-11053: Chain: Go-based Oauth2 reverse proxy can send the authenticated user to another site at the end of the authentication flow. A redirect URL with HTML-encoded whitespace characters can bypass the validation (CWE-1289) to redirect to a malicious site (CWE-601)\\
-\subsection*{Related Attack\_Patterns}
+\subsection*{Related\_Attack\_Patterns}
 CAPEC-178\\
 \subsection*{References}
 REF-483\\
 \href{Page 43)}{REF-484 (Section}\\
 REF-485\\
 REF-45\\
-\subsection*{Taxonomy Mappings}
+\subsection*{Taxonomy\_Mappings}
 WASC: None\\
 Software Fault Patterns: None\\
 \subsection*{Notes}

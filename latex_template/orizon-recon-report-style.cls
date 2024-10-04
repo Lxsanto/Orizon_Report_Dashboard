@@ -1,4 +1,5 @@
 % Orizon Report Template
+\sloppy
 
 %% ----------------------------------------------------------------------
 %%    Setting up the class, main packages, and basic definitions
@@ -54,7 +55,7 @@
 \geometry{a4paper, landscape, left=1.5cm, right=1.5cm, top=2cm, bottom=2cm}
 
 %% Set the space between columns
-\setlength{\columnsep}{2cm} % Adjusted for triple spacing
+\setlength{\columnsep}{1.5cm} % Adjusted for triple spacing --> Dragos on 03.10.2024
 
 %% Increase space between content and footer
 \setlength{\footskip}{1.5cm} % Increased space
@@ -69,33 +70,42 @@
     \RequirePackage{helvet}
     \RequirePackage{amsmath}
 
+    %% Set title styles with Helvetica
     \newcommand{\titlestyle}{\fontfamily{phv}\selectfont}
     \newcommand{\largetitlestyle}{\fontfamily{phv}\bfseries\selectfont}
+
 \else
-    %% If XeLaTeX or LuaLaTeX is set as the compiler, use the uploaded custom fonts
+    %% If XeLaTeX or LuaLaTeX is set as the compiler, use custom fonts
     \RequirePackage[no-math]{fontspec}
 
-    %% Set up Plus Jakarta Sans for body text
-    \setmainfont{Plus Jakarta Sans}[
-        Path = ./fonts/,
-        UprightFont = PlusJakartaSans-VariableFont-wght.ttf,
-        ItalicFont = PlusJakartaSans-Italic-VariableFont-wght.ttf,
-        BoldFont = PlusJakartaSans-VariableFont-wght.ttf,
-        BoldItalicFont = PlusJakartaSans-Italic-VariableFont-wght.ttf
-    ]
 
-    %% Set up Gill Sans for titles
+    %% Set up Gill Sans for titles and subtitles
     \newfontfamily\titlestyle{Gill Sans}[
         Path = ./fonts/,
-        UprightFont = Gill Sans.otf
+        UprightFont = gill-sans.otf,
+        BoldFont = gill-sans-medium.otf,
+        ItalicFont = gill-sans-italic.otf,
+        BoldItalicFont = gill-sans-medium-italic.otf
     ]
 
     %% Optionally, load a specific font style for larger titles
     \newfontfamily\largetitlestyle{Gill Sans}[
         Path = ./fonts/,
-        BoldFont = Gill Sans Heavy.otf
+        UprightFont = gill-sans-bold.otf,
+        BoldFont = gill-sans-bold.otf,
+        ItalicFont = gill-sans-bold-italic.otf
     ]
 \fi
+
+
+%% Redefine \paragraph to be in Gill Sans Bold, #4ac300 color, and start on a new line
+\titleformat{\paragraph}[block]
+    {\titlestyle\bfseries\color[HTML]{4ac300}\fontsize{14}{16}\selectfont}
+    {}
+    {0pt}
+    {}
+\titlespacing*{\paragraph}{0pt}{\baselineskip}{0.5\baselineskip}
+
 
 %% Redefine \paragraph to be in Gill Sans Bold, #4ac300 color, and start on a new line
 \titleformat{\paragraph}[block]
@@ -112,31 +122,32 @@
 %% Format the chapter titles and spacing
 \titleformat{\chapter}[display]
     {\flushright}
-    {\fontsize{96}{96}\selectfont\largetitlestyle\thechapter{\color[HTML]{4ac300}.}}
+    {\fontsize{96}{96}\selectfont\titlestyle\thechapter{\color[HTML]{4ac300}.}} % Use titlestyle for regular Gill Sans
     {0pt}
-    {\Huge\titlestyle\bfseries}
+    {\Huge\largetitlestyle\bfseries}
 \titlespacing*{\chapter}{0pt}{0pt}{2\baselineskip}
 
-%% Format the section titles and spacing
-\titleformat{\section}
-    {\Large\titlestyle\bfseries}
-    {\thesection.}
-    {5pt}
+%% Format the section titles and spacing (Removed numbering for sections)
+\titleformat{\section}[block]
+    {\largetitlestyle\bfseries}
     {}
-\titlespacing*{\section}{0pt}{\baselineskip}{0pt}
+    {0pt}
+    {}
+\titlespacing*{\section}{0pt}{\baselineskip}{0.5\baselineskip}
 
-%% Format the subsections titles and spacing
+
+%% Format the subsections titles and spacing with color change (#4ac300)
 \titleformat{\subsection}
-    {\large\titlestyle\bfseries}
-    {\thesubsection.}
+    {\large\titlestyle\bfseries\color[HTML]{4ac300}} % Add color for subsections
+    {} % No numbering
     {5pt}
     {}
-\titlespacing*{\subsection}{0pt}{\baselineskip}{\baselineskip}
+\titlespacing*{\subsection}{0pt}{\baselineskip}{0.25\baselineskip}
 
-%% Format the subsubsections titles and spacing
+%% Format the subsubsections titles and spacing (with color change if needed)
 \titleformat{\subsubsection}
-    {\titlestyle\bfseries}
-    {\thesubsubsection.}
+    {\titlestyle\bfseries\color[HTML]{4ac300}} % Added color for subsubsections
+    {}
     {5pt}
     {}
 \titlespacing*{\subsubsection}{0pt}{\bigskipamount}{0pt}
@@ -148,20 +159,22 @@
 %%    Formatting the header and footer
 %% ----------------------------------------------------------------------
 
-%% Adjust footer with page number, logo, and copyright
+%% Ensure first letter of chapter title is capitalized and rest is lowercase
+\RequirePackage{titling} % Use this package for capitalizing the first letter
+
+\fancyhf{} % Clear existing header/footer fields
+\fancyhead[L]{\titlestyle\capitalisewords{\leftmark}} % Display chapter title in title case
+\fancyhead[C]{} % Remove center header content
+\fancyhead[R]{} % No right-aligned header content
 \fancyfoot[L]{© Orizon \the\year\ | All rights reserved}
 \fancyfoot[C]{\titlestyle\thepage}
 \fancyfoot[R]{\includegraphics[width=2cm]{figures/orizon-logo-white-simplified-black.pdf}}
 \pagestyle{fancy}
 
-%% Remove header line on chapter pages
-\fancypagestyle{plain}{
-    \fancyhf{} % Clear all header and footer fields
-    \renewcommand{\headrulewidth}{0pt} % Remove header line
-    \fancyfoot[L]{© Orizon \the\year\ | All rights reserved}
-    \fancyfoot[C]{\titlestyle\thepage}
-    \fancyfoot[R]{\includegraphics[width=2cm]{figures/orizon-logo-white-simplified-black.pdf}}
-}
+% Ensure \leftmark only includes the chapter title in title case
+\renewcommand{\chaptermark}[1]{%
+  \markboth{\capitalisewords{#1}}{}}
+
 
 %% ----------------------------------------------------------------------
 %%    Setting up the \makecover command for the cover page
@@ -250,14 +263,49 @@
 
 \RequirePackage{listings}
 
+
+
 \lstset{
-  basicstyle=\ttfamily\footnotesize,
-  backgroundcolor=\color{gray!10},
-  keywordstyle=\color{red!75!black},
-  stringstyle=\color{green!40!black},
-  commentstyle=\color{blue!30!black},
-  numbers=left,
-  numbersep=5pt,
-  numberstyle=\tiny,
-  breaklines=true,
+    breaklines=true,
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!40!black},
+    stringstyle=\color{orange},
+    showstringspaces=false,
+    columns=flexible,
+    keepspaces=true,
+    breakatwhitespace=false,
+    linewidth=\columnwidth, % Adjust to column width --> Dragos on 03.10.2024
+    basewidth=0.5em,
 }
+
+\lstdefinestyle{bashstyle}{
+  language=bash,
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+  commentstyle=\color{green!40!black},
+  keywordstyle=\color{blue},
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  backgroundcolor=\color{white},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  captionpos=b,
+  breakatwhitespace=false,
+  breakautoindent=true,
+  escapeinside={\%*}{*)},
+  linewidth=\columnwidth, % Adjust to column width --> Dragos on 03.10.2024
+  basewidth=0.5em,
+}
+
+\lstset{style=bashstyle}

@@ -566,9 +566,10 @@ def md_to_latex(input_dir, output_file):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(latex_content)
 
+# ----
 def generate_tex_zip(input_directory, output_directory):
 
-    output_file = f'{output_directory}/mainmatter/security_report-v2.0.tex'
+    output_file = f'{output_directory}/mainmatter/security_report-v2.1.tex'
 
     # creating tex file
     md_to_latex(input_directory, output_file)
