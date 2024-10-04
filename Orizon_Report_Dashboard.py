@@ -372,6 +372,28 @@ def Geolocation_of_servers(file_contents, api_key):
 
 def main():
 
+    directory = "latex_template"
+
+    # Lista dei file da verificare ed eliminare se esistono
+    files_to_check = [
+        "orizon-recon-report-main.aux",
+        "orizon-recon-report-main.bcf",
+        "orizon-recon-report-main.log",
+        "orizon-recon-report-main.out",
+        "orizon-recon-report-main.pdf",
+        "orizon-recon-report-main.run.xml",
+        "orizon-recon-report-main.tex",
+        "orizon-recon-report-main.toc"
+    ]
+
+    for file_name in files_to_check:
+        file_path = os.path.join(directory, file_name)
+        if os.path.exists(file_path):
+            print(f"Eliminando il file: {file_name}")
+            os.remove(file_path)
+        else:
+            print(f"File non trovato: {file_name}")
+
     # Cartelle da eliminare
     folders = ['ports_scanning', 'txts']
 
