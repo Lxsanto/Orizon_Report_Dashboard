@@ -10,6 +10,7 @@ import torch
 import re
 import cProfile
 import pstats
+from icecream import ic
 from dotenv import load_dotenv
 
 # Carica le variabili dal file .env
@@ -453,37 +454,38 @@ def Geolocation_of_servers(file_contents, api_key):
 
 def main():
 
-    directory = "latex_template"
+    # directory = "latex_template"
 
     # Lista dei file da verificare ed eliminare se esistono
-    files_to_check = [
-        "orizon-recon-report-main.aux",
-        "orizon-recon-report-main.bcf",
-        "orizon-recon-report-main.log",
-        "orizon-recon-report-main.out",
-        "orizon-recon-report-main.pdf",
-        "orizon-recon-report-main.run.xml",
-        "orizon-recon-report-main.tex",
-        "orizon-recon-report-main.toc"
-    ]
+    # files_to_check = [
+    #     "orizon-recon-report-main.aux",
+    #     "orizon-recon-report-main.bcf",
+    #     "orizon-recon-report-main.log",
+    #     "orizon-recon-report-main.out",
+    #     "orizon-recon-report-main.pdf",
+    #     "orizon-recon-report-main.run.xml",
+    #     "orizon-recon-report-main.tex",
+    #     "orizon-recon-report-main.toc"
+    # ]
 
-    for file_name in files_to_check:
-        file_path = os.path.join(directory, file_name)
-        if os.path.exists(file_path):
-            print(f"Eliminando il file: {file_name}")
-            #os.remove(file_path)
-        else:
-            print(f"File non trovato: {file_name}")
+    # for file_name in files_to_check:
+    #     file_path = os.path.join(directory, file_name)
+    #     if os.path.exists(file_path):
+    #         print(f"Eliminando il file: {file_name}")
+    #         #os.remove(file_path)
+    #     else:
+    #         print(f"File non trovato: {file_name}")
 
     # Cartelle da eliminare
     folders = ['ports_scanning', 'txts']
 
     for folder in folders:
         if os.path.exists(folder):
-            print(f"Cartella '{folder}' trovata, verrà eliminata.")
+            #print(f"Cartella '{folder}' trovata, verrà eliminata.")
             shutil.rmtree(folder)
         else:
-            print(f"Cartella '{folder}' non trovata, passo oltre.")
+            #print(f"Cartella '{folder}' non trovata, passo oltre.")
+            pass
     
     # cartelle da creare 
     folders = ['txts', 'txts/screenshots', 'txts/pngs', 'txts/ports_scanning', 'txts/dfs']
@@ -491,9 +493,10 @@ def main():
     for folder in folders:
         if not os.path.exists(folder):
             os.makedirs(folder)
-            print(f"Cartella '{folder}' creata")
+            #print(f"Cartella '{folder}' creata")
         else:
-            print(f"Cartella '{folder}' trovata, passo oltre.")
+            #print(f"Cartella '{folder}' trovata, passo oltre.")
+            pass
 
     st.sidebar.title("Orizon Security Dashboard")
     
@@ -522,6 +525,8 @@ def main():
     if uploaded_file and name_client:
 
         filtered_vulnerabilities = process_and_filter_vulnerabilities(uploaded_file)
+
+        ic((filtered_vulnerabilities['severity'] == 'critical').sum())
 
         # Main content
         st.title("Orizon Security Dashboard")
@@ -564,11 +569,12 @@ def main():
                 severity_counts[severity] += 1
         
         risk_score = calculate_risk_score1(severity_counts)
-        print(f'RISK: {risk_score}')
         critical_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'critical'])
         high_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'high'])
         medium_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'medium'])
         low_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'low'])
+
+        ic(critical_vulns)
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -1039,23 +1045,26 @@ def main():
         # Verifica se la cartella principale 'txts' esiste, altrimenti la crea
         if not os.path.exists(base_dir):
             os.makedirs(base_dir)
-            print(f"Cartella '{base_dir}' creata.")
+            #print(f"Cartella '{base_dir}' creata.")
         else:
-            print(f"Cartella '{base_dir}' già esistente.")
+            #print(f"Cartella '{base_dir}' già esistente.")
+            pass
 
         # Verifica se la sottocartella 'dfs' esiste, altrimenti la crea
         if not os.path.exists(dfs_dir):
             os.makedirs(dfs_dir)
-            print(f"Cartella '{dfs_dir}' creata.")
+            #print(f"Cartella '{dfs_dir}' creata.")
         else:
-            print(f"Cartella '{dfs_dir}' già esistente.")
+            #print(f"Cartella '{dfs_dir}' già esistente.")
+            pass
 
         # Verifica se la sottocartella 'pngs' esiste, altrimenti la crea
         if not os.path.exists(pngs_dir):
             os.makedirs(pngs_dir)
-            print(f"Cartella '{pngs_dir}' creata.")
+            #print(f"Cartella '{pngs_dir}' creata.")
         else:
-            print(f"Cartella '{pngs_dir}' già esistente.")
+            #print(f"Cartella '{pngs_dir}' già esistente.")
+            pass
 
         vuln_defs += "\n\n"
         # trovare il primo titolo e due newline consecutivi
@@ -1098,6 +1107,9 @@ def main():
         def generate_files():
             input_directory = 'txts'  # select
             output_directory = 'latex_template'
+
+            # elimina file tex esistente
+            # TODO
 
             with st.spinner(text='Generation is in progress...'):
                 tex_files = generate_tex_zip(input_directory, output_directory)

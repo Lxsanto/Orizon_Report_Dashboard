@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from wordcloud import WordCloud
 from matplotlib.colors import LinearSegmentedColormap
+from icecream import ic
 
 # Define brand kit colors
 kelly_green = "#4AC300"
@@ -99,7 +100,6 @@ def create_risk_score_gauge(risk_score):
     
     return fig
 
-@st.cache_data
 def pie(severity_counts):
     """
     Create a pie chart to display vulnerability severity distribution.
@@ -115,6 +115,8 @@ def pie(severity_counts):
     For more information on Plotly pie charts, visit:
     https://plotly.com/python/pie-charts/
     """
+
+    ic(severity_counts['critical'])
     fig_severity = go.Figure(data=[go.Pie(
         labels=severity_counts.index,
         values=severity_counts.values,
@@ -313,7 +315,7 @@ def create_country_bubble_plot(risk_by_ip: pd.DataFrame):
         'normalized_risk_score': 'mean'
     }).reset_index()
 
-    print(country_data)
+    #print(country_data)
 
     country_data = country_data.dropna(axis=0)
 
