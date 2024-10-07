@@ -1,4 +1,5 @@
 import streamlit as st
+from debug_utils import *
 
 vuln_defs_eng = '## Vulnerabilities Definition\n'\
                 '## Critical Severity\n'\
@@ -74,7 +75,7 @@ def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=100000, name_clie
 
 
 @st.cache_data
-def analyze_overview(total, risk_score, critical, high, medium, low, _pipe, language='en', name_client='', clear_cache = False):
+def analyze_overview(total, risk_score, critical, high, medium, low, info, _pipe, language='en', name_client=''):
     """total: int (total number of vulnerabilities)
     risk_score: int (risk score from 0 to 100)
     critical: int (number of critical vulnerabilities)
@@ -86,108 +87,163 @@ def analyze_overview(total, risk_score, critical, high, medium, low, _pipe, lang
     name_client: str (the name of the client)"""
 
     if language == 'en':
-        prompt = f"""You are a cybersecurity expert generating a chapter of a professional report for {name_client}. 
-        Provide a detailed analysis of the following security overview:
 
-        - Total vulnerabilities: {total}
-        - Risk score: {risk_score}/100
-        - Critical vulnerabilities: {critical}
-        - High vulnerabilities: {high}
-        - Medium vulnerabilities: {medium}
-        - Low vulnerabilities: {low}
+        prompt = f"""
+You are a cybersecurity expert generating a chapter of a professional report for {name_client}. 
+Provide a detailed analysis focusing on the overall security risk score, which is 78/100.
 
-        Your analysis should include:
+- Risk score: {risk_score}/100
+- Total vulnerabilities: {total}
+- Critical vulnerabilities: {critical}
+- High vulnerabilities: {high}
+- Medium vulnerabilities: {medium}
+- Low vulnerabilities: {low}
+- Info vulnerabilities: {info}
 
-        - A brief overview of the security posture and the overall risk level, with interpretation of the risk score ({risk_score}/100).
-        - Considerations about the total number of vulnerabilities.
-        - Detailed discussion on the breakdown of vulnerability types: Critical ({critical}), High ({high}), Medium ({medium}), Low ({low}).
+Your analysis should include:
 
-        Ensure the tone is concise, technical, and professional"""
+- A thorough interpretation of the risk score {risk_score}/100 and what it implies for the overall security posture.
+- Considerations about the potential risks associated with this score.
+- Briefly mention the existence of critical, high, and low vulnerabilities without going into detail.
+
+Ensure the tone is concise, technical, and professional.
+"""
 
     if language == 'it':
-        prompt = f"""Sei un esperto di cybersecurity che sta generando un capitolo di un report professionale per {name_client}. 
-        Fornisci un'analisi dettagliata della seguente panoramica di sicurezza:
+        prompt = f"""
+Sei un esperto di cybersecurity e stai generando un capitolo di un report professionale per {name_client}. 
+Fornisci un'analisi dettagliata concentrandoti sul punteggio complessivo di rischio di sicurezza, che è pari a 78/100.
 
-        - Vulnerabilità totali: {total}
-        - Punteggio di rischio: {risk_score}/100
-        - Vulnerabilità critiche: {critical}
-        - Vulnerabilità alte: {high}
-        - Vulnerabilità medie: {medium}
-        - Vulnerabilità basse: {low}
+- Punteggio di rischio: {risk_score}/100
+- Vulnerabilità totali: {total}
+- Vulnerabilità critiche: {critical}
+- Vulnerabilità elevate: {high}
+- Vulnerabilità medie: {medium}
+- Vulnerabilità basse: {low}
+- Vulnerabilità info: {info}
 
-        La tua analisi dovrebbe includere:
+La tua analisi dovrebbe includere:
 
-        - Una breve panoramica della postura di sicurezza e del livello di rischio complessivo, con interpretazione del punteggio di rischio ({risk_score}/100).
-        - Considerazioni sul numero totale di vulnerabilità.
-        - Discussione dettagliata sulla suddivisione dei tipi di vulnerabilità: Critiche ({critical}), Alte ({high}), Medie ({medium}), Basse ({low}).
+- Un'interpretazione approfondita del punteggio di rischio {risk_score}/100 e cosa implica per la postura complessiva di sicurezza.
+- Considerazioni sui potenziali rischi associati a questo punteggio.
+- Menzionare brevemente l'esistenza di vulnerabilità critiche, elevate e basse senza entrare nei dettagli.
 
-        Assicurati che il tono sia conciso, tecnico e professionale"""
+Assicurati che il tono sia conciso, tecnico e professionale.
+"""
+
 
     if language == 'es':
         prompt = f"""Eres un experto en ciberseguridad que está generando un capítulo de un informe profesional para {name_client}. 
-        Proporciona un análisis detallado del siguiente resumen de seguridad:
+Proporciona un análisis detallado del siguiente resumen de seguridad:
 
-        - Vulnerabilidades totales: {total}
-        - Puntuación de riesgo: {risk_score}/100
-        - Vulnerabilidades críticas: {critical}
-        - Vulnerabilidades altas: {high}
-        - Vulnerabilidades medias: {medium}
-        - Vulnerabilidades bajas: {low}
+- Vulnerabilidades totales: {total}
+- Puntuación de riesgo: {risk_score}/100
+- Vulnerabilidades críticas: {critical}
+- Vulnerabilidades altas: {high}
+- Vulnerabilidades medias: {medium}
+- Vulnerabilidades bajas: {low}
+- Vulnerabilidades informativo: {info}
 
-        Tu análisis debe incluir:
+Tu análisis debe incluir:
 
-        - Un breve resumen del estado de seguridad y del nivel general de riesgo, con interpretación de la puntuación de riesgo ({risk_score}/100).
-        - Consideraciones sobre el número total de vulnerabilidades.
-        - Discusión detallada sobre la distribución de los tipos de vulnerabilidades: Críticas ({critical}), Altas ({high}), Medias ({medium}), Bajas ({low}).
+- Un breve resumen del estado de seguridad y del nivel general de riesgo, con interpretación de la puntuación de riesgo ({risk_score}/100).
+- Consideraciones sobre el número total de vulnerabilidades.
+- Discusión detallada sobre la distribución de los tipos de vulnerabilidades.
 
-        Asegúrate de que el tono sea conciso, técnico y profesional"""
+Asegúrate de que el tono sea conciso, técnico y profesional"""
+
+    #save_fstring_to_file(prompt, 'chapter1.txt')
 
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language, vuln_def=True)
 
 @st.cache_data
-def analyze_severity_distribution(severity_counts, _pipe, language='en', name_client='', clear_cache = False):
+def analyze_severity_distribution(total, risk_score, critical, high, medium, low, info, _pipe, language='en', name_client=''):
+
+    perc_critical = round(critical/total * 100, ndigits=2)
+    perc_high = round(high/total * 100, ndigits=2)
+    perc_medium = round(medium/total * 100, ndigits=2)
+    perc_low = round(low/total * 100, ndigits=2)
+    perc_info = round(info/total * 100, ndigits=2)
+
 
     if language == 'en':
-        prompt = f"""Analyze the following vulnerability severity distribution for {name_client}:
+        prompt = f"""
+You are a cybersecurity expert generating a chapter of a professional report for Syneto. 
+Provide a detailed analysis of the distribution of vulnerabilities:
 
-        {severity_counts.to_dict()}
+- Risk score: {risk_score}/100
+- Total vulnerabilities: {total}
+- Critical vulnerabilities: {critical} ({perc_critical}%)
+- High vulnerabilities: {high} ({perc_high}%)
+- Medium vulnerabilities: {medium} ({perc_medium}%)
+- Low vulnerabilities: {low} ({perc_low}%)
+- Info vulnerabilities: {info} ({perc_info}%)
 
-        Focus on:
-        - Severity distribution summary
-        - Most common severity level
-        - Percentage of each severity level
-        - Impact of critical and high vulnerabilities
-        - Urgency of remediation
-        - Cumulative risk from medium and low vulnerabilities
-        - Overall risk and compliance/security impact."""
+Focus on:
+- A summary of the vulnerability severity distribution.
+- Identification of the most common severity level.
+- Percentage calculation of each severity level.
+- Analysis of the impact of vulnerabilities.
+- Urgency of addressing these vulnerabilities.
+- Discussion on the cumulative risk.
+- How this distribution contributes to the overall risk assessment.
+
+Ensure the tone is concise, technical, and professional.
+"""
 
     elif language == 'it':
-        prompt = f"""Analizza la seguente distribuzione della gravità delle vulnerabilità per {name_client}:
+        prompt = f"""
+Sei un esperto di cybersecurity e stai generando un capitolo di un report professionale per Syneto. 
+Fornisci un'analisi dettagliata della distribuzione delle vulnerabilità:
 
-        {severity_counts.to_dict()}
+- Punteggio di rischio: {risk_score}/100
+- Vulnerabilità totali: {total}
+- Vulnerabilità critiche: {critical} ({perc_critical}%)
+- Vulnerabilità elevate: {high} ({perc_high}%)
+- Vulnerabilità medie: {medium} ({perc_medium}%)
+- Vulnerabilità basse: {low} ({perc_low}%)
+- Vulnerabilità informative: {info} ({perc_info}%)
 
-        Concentrati su:
-        - Riepilogo della distribuzione delle gravità
-        - Livello di gravità più comune
-        - Percentuale di ciascun livello di gravità
-        - Impatto delle vulnerabilità critiche e alte
-        - Urgenza della risoluzione
-        - Rischio cumulativo delle vulnerabilità medie e basse
-        - Rischio complessivo e impatto su conformità/sicurezza."""
+Concentrati su:
+- Un riepilogo della distribuzione della gravità delle vulnerabilità.
+- Identificazione del livello di gravità più comune.
+- Calcolo percentuale di ciascun livello di gravità.
+- Analisi dell'impatto delle vulnerabilità.
+- Urgenza di affrontare queste vulnerabilità.
+- Discussione sul rischio cumulativo.
+- Come questa distribuzione contribuisce alla valutazione complessiva del rischio.
+
+Assicurati che il tono sia conciso, tecnico e professionale.
+"""
+
 
     elif language == 'es':
-        prompt = f"""Analiza la siguiente distribución de severidad de vulnerabilidades para {name_client}:
+        prompt = f"""
+Eres un experto en ciberseguridad y estás generando un capítulo de un informe profesional para Syneto. 
+Proporciona un análisis detallado de la distribución de las vulnerabilidades:
 
-        {severity_counts.to_dict()}
+- Puntuación de riesgo: {risk_score}/100
+- Vulnerabilidades totales: {total}
+- Vulnerabilidades críticas: {critical} ({perc_critical}%)
+- Vulnerabilidades altas: {high} ({perc_high}%)
+- Vulnerabilidades medias: {medium} ({perc_medium}%)
+- Vulnerabilidades bajas: {low} ({perc_low}%)
+- Vulnerabilidades informativas: {info} ({perc_info}%)
 
-        Enfócate en:
-        - Resumen de la distribución de severidad
-        - Nivel de severidad más común
-        - Porcentaje de cada nivel de severidad
-        - Impacto de las vulnerabilidades críticas y altas
-        - Urgencia de la remediación
-        - Riesgo acumulativo de las vulnerabilidades medias y bajas
-        - Riesgo general e impacto en cumplimiento/seguridad."""
+Concéntrate en:
+- Un resumen de la distribución de la gravedad de las vulnerabilidades.
+- Identificación del nivel de gravedad más común.
+- Cálculo porcentual de cada nivel de gravedad.
+- Análisis del impacto de las vulnerabilidades.
+- Urgencia de abordar estas vulnerabilidades.
+- Discusión sobre el riesgo acumulado.
+- Cómo esta distribución contribuye a la evaluación general del riesgo.
+
+Asegúrate de que el tono sea conciso, técnico y profesional.
+"""
+
+    
+    #save_fstring_to_file(prompt, 'chapter2.txt')
 
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language, vuln_def=True)
 
@@ -235,6 +291,8 @@ def analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, 
         - Hosts afectados ({hosts_affected}), impacto en la red y riesgo de movimiento lateral.
         - Por qué {most_affected_host} es el más afectado y riesgos asociados.
         - Temas comunes y problemas sistémicos."""
+
+    #save_fstring_to_file(prompt, 'chapter3.txt')
 
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language, vuln_def=True)
 
@@ -284,6 +342,8 @@ def generate_network_analysis(top_central, density, communities, _pipe, language
         - Seguridad entre las {len(communities)} comunidades.
         - Puntos débiles, vectores de ataque y riesgo de movimiento lateral.
         - Recomendaciones para mejorar la resiliencia, segmentación y escalabilidad."""
+
+    #save_fstring_to_file(prompt, 'chapter4.txt')
 
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)
 
@@ -348,6 +408,9 @@ def analyze_cvss_distribution(avg_cvss, high_cvss_count, total_vulns, _pipe, lan
     - Asignación de recursos de seguridad y estimación del esfuerzo según los niveles de gravedad.
 
     Responda a mi pregunta con un tono preciso, use un lenguaje técnico y formal adecuado para un informe PDF profesional."""
+        
+    #save_fstring_to_file(prompt, 'chapter4.txt')
+
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)
 
 @st.cache_data
@@ -393,6 +456,8 @@ def analyze_vulnerability_types(most_common_type, frequency, top_10_types, _pipe
         - Evaluación del riesgo general derivado de la distribución de tipos y efectos de interacción.
         
         Evita proporcionar estrategias de mitigación o recomendaciones de seguridad."""
+    
+    #save_fstring_to_file(prompt, 'chapter5.txt')
 
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)
 
@@ -457,6 +522,8 @@ def analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5,
         - Patrones o correlaciones entre ubicación y vulnerabilidad.
 
         Evita mitigaciones, enfócate solo en el análisis."""
+    
+    #save_fstring_to_file(prompt, 'chapter6.txt')
 
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)
 
@@ -476,5 +543,7 @@ def analyze_bash_results(urls: list, bash_results: list, _pipe, language = 'en',
         prompt = f"""Analiza los resultados obtenidos de los comandos ejecutados en el terminal bash para verificar vulnerabilidades:
                     host: {urls}
                     terminal bash: {bash_results}"""
+    
+    #save_fstring_to_file(prompt, 'chapter7.txt')
 
     return generate_orizon_analysis(prompt, _pipe, name_client=name_client, language=language)

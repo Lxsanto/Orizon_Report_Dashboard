@@ -68,8 +68,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -573,6 +573,7 @@ def main():
         high_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'high'])
         medium_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'medium'])
         low_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'low'])
+        info_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'info'])
 
         ic(critical_vulns)
         
@@ -618,11 +619,29 @@ def main():
             overview_analysis = ''
             if run_LLM:
                 if 'overview' not in st.session_state:
-                    st.session_state['overview'] = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language)
+                    st.session_state['overview'] = analyze_overview(total=total_vulns,
+                                                                    risk_score= risk_score, 
+                                                                    critical= critical_vulns, 
+                                                                    high= high_vulns, 
+                                                                    medium= medium_vulns,
+                                                                    low= low_vulns, 
+                                                                    info=info_vulns, 
+                                                                    name_client=name_client, 
+                                                                    _pipe = pipe, 
+                                                                    language=language)
 
                 if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='oiu'):
                     analyze_overview.clear()
-                    st.session_state['overview'] = analyze_overview(total_vulns, risk_score, critical_vulns, high_vulns, medium_vulns, low_vulns, _pipe = pipe, language=language, clear_cache=True)
+                    st.session_state['overview'] = analyze_overview(total=total_vulns,
+                                                                    risk_score= risk_score, 
+                                                                    critical= critical_vulns, 
+                                                                    high= high_vulns, 
+                                                                    medium= medium_vulns,
+                                                                    low= low_vulns, 
+                                                                    info=info_vulns, 
+                                                                    name_client=name_client, 
+                                                                    _pipe = pipe, 
+                                                                    language=language)
                 overview_analysis = st.session_state['overview']
                 st.write(overview_analysis)
 
@@ -640,11 +659,29 @@ def main():
 
             if run_LLM:
                 if 'severity' not in st.session_state:
-                    st.session_state['severity'] = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language)
+                    st.session_state['severity'] = analyze_severity_distribution(total=total_vulns,
+                                                                    risk_score= risk_score, 
+                                                                    critical= critical_vulns, 
+                                                                    high= high_vulns, 
+                                                                    medium= medium_vulns,
+                                                                    low= low_vulns, 
+                                                                    info=info_vulns, 
+                                                                    name_client=name_client, 
+                                                                    _pipe = pipe, 
+                                                                    language=language)
 
                 if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='uwgs'):
                     analyze_severity_distribution.clear()
-                    st.session_state['severity'] = analyze_severity_distribution(severity_counts, _pipe= pipe, language=language, clear_cache=True)
+                    st.session_state['severity'] = analyze_severity_distribution(total=total_vulns,
+                                                                    risk_score= risk_score, 
+                                                                    critical= critical_vulns, 
+                                                                    high= high_vulns, 
+                                                                    medium= medium_vulns,
+                                                                    low= low_vulns, 
+                                                                    info=info_vulns, 
+                                                                    name_client=name_client, 
+                                                                    _pipe = pipe, 
+                                                                    language=language)
                 severity_analysis = st.session_state['severity']
                 st.write(severity_analysis)
 
@@ -690,7 +727,7 @@ def main():
         top_vuln_analysis = ''
         if run_LLM:
             if 'top' not in st.session_state:
-                st.session_state['top'] = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, _pipe = pipe, language=language)
+                st.session_state['top'] = analyze_top_vulnerabilities(most_common_type, common_types, hosts_affected, most_affected_host, name_client=name_client, _pipe = pipe, language=language)
 
             if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='ywshg'):
                 analyze_top_vulnerabilities.clear()
@@ -752,7 +789,7 @@ def main():
         types_analysis = ''
         if run_LLM:
             if 'types' not in st.session_state:
-                st.session_state['types'] = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), _pipe = pipe, language=language)
+                st.session_state['types'] = analyze_vulnerability_types(vuln_types.index[0], vuln_types.values[0], vuln_types.index.tolist(), name_client=name_client, _pipe = pipe, language=language)
 
             if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='ushqtwkja'):
                 analyze_vulnerability_types.clear()
@@ -867,7 +904,7 @@ def main():
             geo_analysis = ''
             if run_LLM:
                 if 'geo' not in st.session_state:
-                    st.session_state['geo'] = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, _pipe = pipe, language=language)
+                    st.session_state['geo'] = analyze_geolocation(countries, cities, ip_top5, countries_top5, cities_top5, hosts_top5, name_client=name_client, _pipe = pipe, language=language)
 
                 if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='yuqirh'):
                     analyze_geolocation.clear()
@@ -1020,7 +1057,7 @@ def main():
 
                         if run_LLM:
                             if 'bash' not in st.session_state:
-                                st.session_state['bash'] = analyze_bash_results(urls_ports, results_port, _pipe = pipe, language=language)
+                                st.session_state['bash'] = analyze_bash_results(urls_ports, results_port, name_client=name_client, _pipe = pipe, language=language)
 
                             if st.button(label='Regenerate chapter', help='Hit this button to regenerate the text from the LLM', key='quahy6s'):
                                 analyze_bash_results.clear()
