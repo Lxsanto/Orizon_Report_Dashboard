@@ -115,8 +115,9 @@ def pie(severity_counts):
     For more information on Plotly pie charts, visit:
     https://plotly.com/python/pie-charts/
     """
-
-    ic(severity_counts['critical'])
+    if 'critical' in severity_counts.keys():
+        ic(severity_counts['critical'])
+        
     fig_severity = go.Figure(data=[go.Pie(
         labels=severity_counts.index,
         values=severity_counts.values,
