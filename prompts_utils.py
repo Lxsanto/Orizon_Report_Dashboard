@@ -39,21 +39,21 @@ vuln_defs_esp = '## Definición de vulnerabilidades\n'\
 def generate_orizon_analysis(prompt, _pipeline, max_new_tokens=100000, name_client='', language = 'en', vuln_def = False):
 
     if language == 'en':
-        init_prompt = f'''You are a Cybersecurity expert tasked with evaluating the attack surface for {name_client}. Your job is to generate a chapter of a professional report detailing the analysis of penetration test results. 
+        init_prompt = f'''You are a Cybersecurity expert tasked with evaluating the attack surface for {name_client}. Your job is to generate a chapter of a professional report detailing the external analysis of the attachment surface results. 
                      Format your response in Markdown.
                      Ensure the tone is concise, technical, and professional. use only # for the title, and ## for subsections, use - for lists. Do not use tables'''
         if vuln_def:
             init_prompt += f'This is the definition of the vulnerabilities type: {vuln_defs_eng}'
 
     elif language == 'it':
-        init_prompt = f'''Sei un esperto di Cybersecurity incaricato di valutare la superficie di attacco per {name_client}. Il tuo compito è generare un capitolo di un report professionale che dettagli l'analisi dei risultati dei test di penetrazione.
+        init_prompt = f'''Sei un esperto di Cybersecurity incaricato di valutare la superficie di attacco per {name_client}. Il tuo compito è generare un capitolo di un un rapporto professionale che illustri l'analisi esterna dei risultati della superficie d'attacco.
                      Formatta la tua risposta in Markdown.
                      Assicurati che il tono sia conciso, tecnico e professionale. Usa solo # per il titolo e ## per le sottosezioni, usa - per gli elenchi. non utilizzare le tabelle'''
         if vuln_def:
             init_prompt += f'Questa è la definizione del tipo di vulnerabilità: {vuln_defs_ita}'
 
     elif language == 'es':
-        init_prompt = f'''Eres un experto en Ciberseguridad encargado de evaluar la superficie de ataque para {name_client}. Tu trabajo es generar un capítulo de un informe profesional que detalle el análisis de los resultados de las pruebas de penetración.
+        init_prompt = f'''Eres un experto en Ciberseguridad encargado de evaluar la superficie de ataque para {name_client}. Tu trabajo es generar un cun informe profesional que detalle el análisis externo de los resultados de la superficie de fijación.
                      Formatea tu respuesta en Markdown.
                      Asegúrate de que el tono sea conciso, técnico y profesional. Utiliza solo # para el título y ## para las subsecciones, usa - para las listas. No utilice tablas.'''
         if vuln_def:

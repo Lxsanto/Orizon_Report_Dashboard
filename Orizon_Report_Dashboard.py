@@ -792,6 +792,8 @@ def main():
             # Filter the dataframe
             filtered_df = df[~df['severity'].isin(['info'])]
 
+            
+
             if filtered_df.empty:
                 # if we have only info we take the fistrs 5
                 filtered_df = df[df['severity'] == 'info'].head(10)
