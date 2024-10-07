@@ -198,11 +198,11 @@
             \includegraphics[height=2.1cm]{figures/cover/orizon-recon-report-template-cover-ribbon-export.png}};
 
 
-        %% Add the title, centered, ~120pt from top (decreased spacing)
-        \node[anchor=north,yshift=-120pt] at (current page.north) {%
+        %% Add the title, centered, ~110pt from top (decreased spacing)
+        \node[anchor=north,yshift=-110pt] at (current page.north) {%
             \begin{minipage}{0.9\paperwidth}
                 \centering
-                \color{title}\largetitlestyle\bfseries\fontsize{50}{50}\selectfont%
+                \color{title}\largetitlestyle\bfseries\fontsize{50}{55}\selectfont%
                     \@title \\[1ex] % Decreased space between Title and Subtitle
                 %% Subtitle (removed "Service:")
                 \color{white}\titlestyle\fontsize{30}{30}\selectfont%
