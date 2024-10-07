@@ -67,8 +67,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = True
-run_LLM = True
+are_you_on_CUDA = False
+run_LLM = False
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -262,37 +262,118 @@ def load_LLM(model_id = model_id, auth_token = hugging_token):
     except Exception as e:
         st.error(f"Error loading the model: {str(e)}")
 
-
 def calculate_risk_score(vulnerabilities, severity_column):
-    # Severity weights
+    # Definisce i pesi per ogni livello di severità.
+    # I pesi riflettono l'impatto relativo di ciascuna severità sulla valutazione complessiva del rischio.
+    # 'critical' ha un peso di 1000, il più alto, mentre 'info' ha un peso di 1, il più basso.
     severity_weights = {'critical': 1000, 'high': 600, 'medium': 400, 'low': 100, 'info': 1}
     
-    # Count vulnerabilities by severity
+    # Inizializza un dizionario per contare le occorrenze di ciascun livello di severità.
+    # Ogni chiave (livello di severità) è inizializzata a 0.
     severity_counts = {severity: 0 for severity in severity_weights}
+    
+    # Conta il numero di vulnerabilità per ciascun livello di severità.
+    # Converte ogni valore di severità in minuscolo per gestire eventuali differenze di formato.
     for v in vulnerabilities[severity_column]:
         severity = str(v).lower()
+        # Incrementa il conteggio solo se la severità è presente nel dizionario.
         if severity in severity_counts:
             severity_counts[severity] += 1
     
-    # Calculate weighted score
+    # Calcola il punteggio ponderato sommando il prodotto tra il peso di ciascuna severità
+    # e il numero di vulnerabilità corrispondenti.
     weighted_score = sum(severity_weights[severity] * count for severity, count in severity_counts.items())
     
-    # Calculate risk score
+    # Calcola il numero totale di vulnerabilità sommandone i conteggi.
     total_vulnerabilities = sum(severity_counts.values())
+    
+    # Se non ci sono vulnerabilità, restituisce un punteggio di rischio pari a 0.
     if total_vulnerabilities == 0:
         return 0
     
-    # Base the score primarily on the weighted score, but consider the number of vulnerabilities
+    # Calcola il punteggio di rischio basato principalmente sul punteggio ponderato,
+    # normalizzando il punteggio sulla base del numero totale di vulnerabilità e raddoppiandolo per dare maggiore peso.
     risk_score = (weighted_score / total_vulnerabilities) * 2
     
-    # Ensure medium vulnerabilities have a significant impact
+    # Se sono presenti vulnerabilità di livello 'medium', si assicura che abbiano un impatto significativo sul punteggio.
+    # Il punteggio viene aumentato a un minimo di 40 più 5 punti per ogni vulnerabilità 'medium' aggiuntiva.
     if severity_counts['medium'] > 0:
         risk_score = max(risk_score, 40 + (severity_counts['medium'] - 1) * 5)
     
-    # Cap the score at 100
+    # Limita il punteggio massimo a 100 per evitare che superi un valore massimo predefinito.
     risk_score = min(risk_score, 100)
     
+    # Restituisce il punteggio di rischio come intero, per una rappresentazione più pulita.
     return int(risk_score)
+
+def calculate_risk_score1(severity_counts):
+    """
+    Calcola il punteggio di rischio basato sul numero di vulnerabilità di ciascun tipo.
+    
+    Args:
+        severity_counts (dict): Dizionario contenente il numero di vulnerabilità per ciascun livello di severità.
+    
+    Returns:
+        int: Punteggio di rischio calcolato.
+    """
+    
+    # Estrai i valori dal dizionario per una gestione più chiara.
+    info = severity_counts.get('info', 0)
+    low = severity_counts.get('low', 0)
+    medium = severity_counts.get('medium', 0)
+    high = severity_counts.get('high', 0)
+    critical = severity_counts.get('critical', 0)
+
+    # Calcola il numero totale di vulnerabilità significative.
+    total_vuln = medium + high + critical
+    total_low = info + low
+
+    # Caso 1: Nessuna vulnerabilità rilevante.
+    if total_vuln == 0:
+        # Caso 1a: Nessuna vulnerabilità info o low, quindi rischio zero.
+        if total_low == 0:
+            return 0
+        # Caso 1b: Solo vulnerabilità info, restituisce un rischio di 30.
+        if info > 0 and low == 0:
+            return 30
+        # Caso 1c: Solo vulnerabilità low, con un numero maggiore di 5, restituisce un rischio di 45.
+        if low > 5:
+            return 45
+        # Caso 1d: Solo vulnerabilità low o info, meno di 5, restituisce un rischio di 40.
+        return 40
+
+    # Caso 2: Presenza di vulnerabilità significative (medium, high, critical).
+    # Iniziamo con un valore base per il rischio in base al numero di vulnerabilità.
+    risk = 0
+
+    # Definisci un valore base per il rischio in base al numero di vulnerabilità.
+    if total_vuln == 1:
+        risk = 40
+    elif total_vuln == 2:
+        risk = 50
+    elif total_vuln == 3:
+        risk = 55
+    elif total_vuln == 4:
+        risk = 65
+    elif total_vuln == 5:
+        risk = 70
+    elif total_vuln == 6:
+        risk = 80
+    else:
+        risk = 100  # Per più di 6 vulnerabilità significative, restituisce il rischio massimo.
+
+    # Aggiusta il rischio
+    if low > 0:
+        risk += 5
+    if high > 0:
+        risk += 8
+    if critical > 0:
+        risk += 10
+    
+    # Limita il punteggio massimo a 100.
+    risk = min(risk, 100)
+
+    return risk
 
 @st.cache_data
 def process_and_filter_vulnerabilities(uploaded_file):
@@ -473,7 +554,17 @@ def main():
         # Executive Summary
         st.header("Executive Summary", anchor="executive-summary")
         total_vulns = len(filtered_vulnerabilities)
-        risk_score = calculate_risk_score(filtered_vulnerabilities, severity_column)
+
+        severity_counts = {severity: 0 for severity in ['info', 'low', 'medium', 'high', 'critical']}
+
+        for v in filtered_vulnerabilities['severity']:
+            severity = str(v).lower()
+            # Incrementa il conteggio solo se la severità è presente nel dizionario.
+            if severity in severity_counts:
+                severity_counts[severity] += 1
+        
+        risk_score = calculate_risk_score1(severity_counts)
+        print(f'RISK: {risk_score}')
         critical_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'critical'])
         high_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'high'])
         medium_vulns = len(filtered_vulnerabilities[filtered_vulnerabilities[severity_column].str.lower() == 'medium'])
