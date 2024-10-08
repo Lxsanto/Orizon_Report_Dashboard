@@ -132,7 +132,7 @@ def resolve_hostname(hostname):
         hostname (str): The hostname to resolve. Can contain a port, which will be ignored.
     
     Returns:
-        str: The first resolved IP address for the hostname, or None if the resolution fails.
+        list of resolved IPs
     """
     try:
         # If the hostname contains a port, split and use only the hostname part.
@@ -154,8 +154,8 @@ def resolve_hostname(hostname):
         for rdata in answers:
             indirizzi.append(rdata.address)
         
-        # Return the first resolved IP address.
-        return indirizzi[0]
+        # Return all the resolved IPs
+        return indirizzi
     
     except:
         # Return None if there's any exception during the resolution process.
@@ -226,7 +226,7 @@ def scan_ip_port(host=''):
     
     try:
         # Attempt to resolve the hostname into an IP address
-        ip = resolve_hostname(host)
+        ip = resolve_hostname(host)[0]
     except:
         # If hostname resolution fails, return None for both results
         return None, None

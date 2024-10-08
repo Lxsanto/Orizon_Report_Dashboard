@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 import torch
 import re
+import csv
 import cProfile
 import pstats
 from icecream import ic
@@ -68,8 +69,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = True
-run_LLM = True
+are_you_on_CUDA = False
+run_LLM = False
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -421,7 +422,7 @@ def Geolocation_of_servers(file_contents, api_key):
         progress = (id + 1) / len(host_names)
         progress_bar.progress(progress)
         status_text.text(f'Numbers of scanned hosts: {id + 1}/{len(host_names)}')
-        ip = resolve_hostname(host)
+        ip = resolve_hostname(host)[0]
         ips.append(ip)
         d = geolocate_ip(ip, api_key)
         geo_results.append(d)
@@ -1160,10 +1161,10 @@ def main():
         #print(response_text)
 
         # Export Options
-        st.header("Export Dashboard")
+        st.header("Export Options")
 
         # Genera il report solo se il bottone viene cliccato
-        if st.button("Generate Report", key="generate_report"):
+        if st.button("Generate Report .tex and .pdf", key="generate_report"):
             tex_files, pdf_file = generate_files()
             st.session_state['tex_files'] = tex_files
             st.session_state['pdf_file'] = pdf_file
@@ -1195,9 +1196,10 @@ def main():
             else:
                 return f"{seconds} sec"
 
-        if st.button("Generate technical csv", key='csv'):
+        if st.button("Generate Technical annex .csv and .xlsx", key='csv'):
             # Ottieni la lista degli ID
-            id_list = filtered_vulnerabilities['template_id'].to_list()
+            id_list = filtered_vulnerabilities['template_id'].to_list()[:10]
+            host_list = filtered_vulnerabilities['host'].to_list()[:10]
             total_iterations = len(id_list)
 
             # Crea una barra di progresso
@@ -1207,7 +1209,7 @@ def main():
             series = []
             start_time = time.time()
 
-            for i, id in enumerate(id_list):
+            for i, (id, host) in enumerate(zip(id_list, host_list)):
                 # Calcola il tempo trascorso
                 elapsed_time = time.time() - start_time
                 
@@ -1228,6 +1230,16 @@ def main():
                 
                 # Esegui l'operazione
                 serie = from_id_to_serie(id)
+
+                # aggiungi colonna IPs e Host
+                ip = resolve_hostname(host)[0]
+                if ip is None:
+                    ip = np.nan
+                ip_value = pd.Series(ip, index=['ip'])
+                host_value = pd.Series(host, index=['host'])
+
+                serie = pd.concat([host_value, ip_value, serie])
+
                 series.append(serie)
 
             # Completa la barra di progresso
@@ -1240,7 +1252,7 @@ def main():
             buffer_csv = BytesIO()
 
             # Salviamo il DataFrame come CSV nel buffer
-            df_tot_vuln.to_csv(buffer_csv, index=False, encoding='utf-8')
+            df_tot_vuln.to_csv(buffer_csv, index=False, encoding='utf-8', quoting=csv.QUOTE_NONE, escapechar='\\', na_rep='', lineterminator='\n')  
 
             # Riportiamo il cursore all'inizio del buffer
             buffer_csv.seek(0)
@@ -1250,6 +1262,17 @@ def main():
                 data=buffer_csv,
                 file_name=f'technical_{name_client}.csv',
                 mime='application/csv'
+            )
+
+            buffer_xls = BytesIO()
+
+            df_tot_vuln.to_excel(buffer_xls, index=False)
+
+            st.download_button(
+                label='Download technical annex in .xlsx',
+                data=buffer_xls,
+                file_name=f'technical_{name_client}.xlsx',
+                mime='application/vnd.ms-excel'
             )
 
 
