@@ -1155,48 +1155,9 @@ def main():
             
             return tex_files, pdf_file
         
-        #messages = [{'role': 'user', 'content': 'Write a conclusion based on the previous analysis'}]
-        #response = pipe(messages, max_new_tokens=100000000)[0]['generated_text']
-        #response_text = response[-1]['content']
-        #print(response_text)
 
-        # Export Options
-        st.header("Export Options")
+        def generate_files_technical():
 
-        # Genera il report solo se il bottone viene cliccato
-        if st.button("Generate Report .tex and .pdf", key="generate_report"):
-            tex_files, pdf_file = generate_files()
-            st.session_state['tex_files'] = tex_files
-            st.session_state['pdf_file'] = pdf_file
-            st.session_state['files_generated'] = True
-
-        # Mostra i pulsanti di download solo dopo la generazione dei file
-        if st.session_state.get('files_generated', False):
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.download_button(
-                    label='Download .tex files ZIP',
-                    data=st.session_state['tex_files'],
-                    file_name=f'Orizon_Recon_{name_client}_texfiles.zip',
-                    mime='application/zip'
-                )
-            with col2:
-                st.download_button(
-                    label='Download .pdf file',
-                    data=st.session_state['pdf_file'],
-                    file_name=f'Orizon_Recon_{name_client}.pdf',
-                    mime='application/pdf'
-                )
-
-        def format_time(seconds):
-            minutes, seconds = divmod(int(seconds), 60)
-            if minutes > 0:
-                return f"{minutes} min {seconds} sec"
-            else:
-                return f"{seconds} sec"
-
-        if st.button("Generate Technical annex .csv and .xlsx", key='csv'):
             # Ottieni la lista degli ID
             id_list = filtered_vulnerabilities['template_id'].to_list()[:10]
             host_list = filtered_vulnerabilities['host'].to_list()[:10]
@@ -1208,6 +1169,13 @@ def main():
 
             series = []
             start_time = time.time()
+
+            def format_time(seconds):
+                minutes, seconds = divmod(int(seconds), 60)
+                if minutes > 0:
+                    return f"{minutes} min {seconds} sec"
+                else:
+                    return f"{seconds} sec"
 
             for i, (id, host) in enumerate(zip(id_list, host_list)):
                 # Calcola il tempo trascorso
@@ -1248,29 +1216,68 @@ def main():
                 
             df_tot_vuln = pd.DataFrame(series)
 
-            # Creiamo un buffer BytesIO
             buffer_csv = BytesIO()
-
-            # Salviamo il DataFrame come CSV nel buffer
             df_tot_vuln.to_csv(buffer_csv, index=False, encoding='utf-8', quoting=csv.QUOTE_NONE, escapechar='\\', na_rep='', lineterminator='\n')  
+
+            buffer_xls = BytesIO()
+            df_tot_vuln.to_excel(buffer_xls, index=False)
 
             # Riportiamo il cursore all'inizio del buffer
             buffer_csv.seek(0)
+            buffer_xls.seek(0)
+            
+            return buffer_csv, buffer_xls
+        
+        #messages = [{'role': 'user', 'content': 'Write a conclusion based on the previous analysis'}]
+        #response = pipe(messages, max_new_tokens=100000000)[0]['generated_text']
+        #response_text = response[-1]['content']
+        #print(response_text)
+
+        # Export Options
+        st.header("Export Options")
+
+        # Genera il report solo se il bottone viene cliccato
+        if st.button("Generate Report .tex and .pdf", key="generate_report"):
+            tex_files, pdf_file = generate_files()
+            st.session_state['tex_files'] = tex_files
+            st.session_state['pdf_file'] = pdf_file
+            st.session_state['files_generated'] = True
+
+        # Mostra i pulsanti di download solo dopo la generazione dei file
+        if st.session_state.get('files_generated', False):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.download_button(
+                    label='Download .tex files ZIP',
+                    data=st.session_state['tex_files'],
+                    file_name=f'Orizon_Recon_{name_client}_texfiles.zip',
+                    mime='application/zip'
+                )
+            with col2:
+                st.download_button(
+                    label='Download .pdf file',
+                    data=st.session_state['pdf_file'],
+                    file_name=f'Orizon_Recon_{name_client}.pdf',
+                    mime='application/pdf'
+                )
+
+        if st.button("Generate Technical annex .csv and .xlsx", key="generate_report_tech"):
+            csv_buffer, xls_buffer = generate_files_technical()
+            st.session_state['csv_file'] = csv_buffer
+            st.session_state['xls_file'] = xls_buffer
+            st.session_state['files_generated_tech'] = True
 
             st.download_button(
                 label='Download technical annex in .CSV',
-                data=buffer_csv,
+                data=csv_buffer,
                 file_name=f'technical_{name_client}.csv',
                 mime='application/csv'
             )
 
-            buffer_xls = BytesIO()
-
-            df_tot_vuln.to_excel(buffer_xls, index=False)
-
             st.download_button(
                 label='Download technical annex in .xlsx',
-                data=buffer_xls,
+                data=xls_buffer,
                 file_name=f'technical_{name_client}.xlsx',
                 mime='application/vnd.ms-excel'
             )
