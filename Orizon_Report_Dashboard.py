@@ -69,8 +69,8 @@ authenticator = Authenticate(
 )
 
 # Configurazione dell'ambiente CUDA
-are_you_on_CUDA = False
-run_LLM = False
+are_you_on_CUDA = True
+run_LLM = True
 if are_you_on_CUDA:
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
@@ -82,6 +82,9 @@ model_id = "meta-llama/Llama-3.2-3B-Instruct"
 clear = False
 if clear:
     st.cache_resource.clear()
+
+# disable tokenizer parallelism
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 ports = ['20', '21', '22', '23', '25', '53', '110', '135', '139', '143', '445', '3389']
 
@@ -1264,23 +1267,28 @@ def main():
 
         if st.button("Generate Technical annex .csv and .xlsx", key="generate_report_tech"):
             csv_buffer, xls_buffer = generate_files_technical()
-            st.session_state['csv_file'] = csv_buffer
-            st.session_state['xls_file'] = xls_buffer
+            st.session_state['csv_buffer'] = csv_buffer
+            st.session_state['xls_buffer'] = xls_buffer
             st.session_state['files_generated_tech'] = True
+        
+        if st.session_state.get('files_generated_tech', False):
+            col1, col2 = st.columns(2)
 
-            st.download_button(
-                label='Download technical annex in .CSV',
-                data=csv_buffer,
-                file_name=f'technical_{name_client}.csv',
-                mime='application/csv'
-            )
+            with col1:
+                st.download_button(
+                    label='Download technical annex in .CSV',
+                    data=st.session_state['csv_buffer'],
+                    file_name=f'technical_{name_client}.csv',
+                    mime='application/csv'
+                )
 
-            st.download_button(
-                label='Download technical annex in .xlsx',
-                data=xls_buffer,
-                file_name=f'technical_{name_client}.xlsx',
-                mime='application/vnd.ms-excel'
-            )
+            with col2:
+                st.download_button(
+                    label='Download technical annex in .xlsx',
+                    data=st.session_state['xls_buffer'],
+                    file_name=f'technical_{name_client}.xlsx',
+                    mime='application/vnd.ms-excel'
+                )
 
 
 
